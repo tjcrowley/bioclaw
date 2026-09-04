@@ -124,3 +124,27 @@ class DatasetStore:
             )
 
         return ad.read_h5ad(row["path"], backed=backed)
+
+    def list(self, name: str | None = None) -> list[dict]:
+        """Returns registry records for `name`, or all records if `name` is
+        None, ordered by name then version. `qc_config` is deserialized back
+        into a dict (or None)."""
+        with self._connect() as conn:
+            if name is None:
+                rows = conn.execute(
+                    "SELECT * FROM datasets ORDER BY name, version"
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM datasets WHERE name = ? ORDER BY version",
+                    (name,),
+                ).fetchall()
+
+        records = []
+        for row in rows:
+            record = dict(row)
+            record["qc_config"] = (
+                json.loads(record["qc_config"]) if record["qc_config"] is not None else None
+            )
+            records.append(record)
+        return records
