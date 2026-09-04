@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: "Completed 02-01-PLAN.md (Wave 0: igraph dependency, structured_adata fixture, bounded-summary dataclass contracts)"
-last_updated: "2026-09-04T20:18:55.517Z"
-last_activity: "2026-09-04 — Executed 02-01-PLAN.md (Wave 0: igraph dependency, structured_adata fixture, bounded-summary dataclass contracts)"
+stopped_at: "Completed 02-02-PLAN.md (Wave 1: preprocess() -- normalize/HVG/PCA with size guards, ANLYS-01)"
+last_updated: "2026-09-04T20:23:32Z"
+last_activity: "2026-09-04 — Executed 02-02-PLAN.md (Wave 1: analysis/preprocess.py, ANLYS-01)"
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 10
-  completed_plans: 6
-  percent: 60
+  completed_plans: 7
+  percent: 70
 ---
 
 # Project State
@@ -21,34 +21,34 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-03)
 
 **Core value:** A Biopunk Labs researcher can ask a plain-language question about a single-cell dataset and get back a QC'd, annotated, interpreted answer without writing a scanpy script by hand.
-**Current focus:** Phase 2 — Analysis Tool Layer (Wave 0 complete, Wave 1 next)
+**Current focus:** Phase 2 — Analysis Tool Layer (Wave 0 complete; Wave 1 in progress — 02-02 done, 02-03/02-04 running in parallel)
 
 ## Current Position
 
 Phase: 2 of 6 (Analysis Tool Layer) — IN PROGRESS
-Plan: 1 of 5 in current phase — Wave 0 (02-01) complete; Wave 1 (02-02, 02-03, 02-04) next
-Status: 02-01-PLAN.md complete: igraph dependency installed, structured_adata fixture added, analysis/summary.py bounded dataclasses (PreprocessSummary, ClusterSummary, DEGeneResult, DESummary) defined for Wave 1 to build against. Full test suite green (31 tests).
-Last activity: 2026-09-04 — Executed 02-01-PLAN.md (Wave 0: igraph dependency, structured_adata fixture, bounded-summary dataclass contracts)
+Plan: 2 of 5 in current phase — Wave 1 (02-02) complete; 02-03 (cluster.py) and 02-04 (diffexp.py) running in parallel; Wave 2 (02-05 pipeline.py) next after Wave 1 finishes
+Status: 02-02-PLAN.md complete: analysis/preprocess.py implements normalize -> log1p -> HVG -> PCA (ANLYS-01), never mutates caller's AnnData, deterministic given random_state, size-guarded (clamps n_top_genes/n_pcs against actual dataset/HVG dimensions), returns bounded PreprocessSummary. Full test suite green (37 tests).
+Last activity: 2026-09-04 — Executed 02-02-PLAN.md (Wave 1: analysis/preprocess.py, ANLYS-01)
 
-Progress: [██████░░░░] 60% (6/10 plans complete)
+Progress: [███████░░░] 70% (7/10 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
+- Total plans completed: 7
 - Average duration: ~10 min
-- Total execution time: ~63 min
+- Total execution time: ~71 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-ingest-qc-pipeline | 5 | ~55min | ~11min |
-| 02-analysis-tool-layer | 1 | ~8min | ~8min |
+| 02-analysis-tool-layer | 2 | ~16min | ~8min |
 
 **Recent Trend:**
-- Last 5 plans: 25min, 4min, 2min, 9min, 8min
-- Trend: stable/fast (Phase 2 Wave 0 plan came in under Phase 1 average)
+- Last 5 plans: 4min, 2min, 9min, 8min, 8min
+- Trend: stable/fast (Phase 2 plans coming in under Phase 1 average)
 
 *Updated after each plan completion*
 | Phase 01-ingest-qc-pipeline P01 | 13min | 2 tasks | 4 files |
@@ -57,6 +57,7 @@ Progress: [██████░░░░] 60% (6/10 plans complete)
 | Phase 01-ingest-qc-pipeline P04 | 2min | 2 tasks | 2 files |
 | Phase 01-ingest-qc-pipeline P05 | 9min | 2 tasks | 2 files |
 | Phase 02-analysis-tool-layer P01 | 8min | 2 tasks | 6 files |
+| Phase 02 P02 | 8 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -74,10 +75,11 @@ Recent decisions affecting current work:
 - [Phase 01-ingest-qc-pipeline]: 01-05: Re-freeze/re-checksum `layers['counts']` (contract.set_counts_layer) a second time immediately after qc.run(), since QC filtering allocates a new writeable sparse buffer that invalidates the pre-filter checksum — caught only at the full-pipeline integration level, not in any Wave 1 module's own unit tests
 - [Phase 02-analysis-tool-layer]: 02-01: structured_adata fixture uses RNG seed 3 (next unused seed after Phase 1's 0/1/2), 15 marker genes per population at Poisson lam=15 vs. lam=2 background, matching the plan spec exactly
 - [Phase 02-analysis-tool-layer]: 02-01: analysis/summary.py's four dataclasses transcribed verbatim from the plan's `<interfaces>` contract, no additions — three Wave 1 plans (02-02/03/04) depend on this exact shape being stable
+- [Phase 02]: 02-02: Clamped PCA n_comps against the actual post-HVG-selection gene count (n_hvg), not adata.n_vars -- sklearn's arpack solver requires n_components strictly less than min(n_samples, n_features), and HVG selection can silently return fewer genes than requested on small fixtures
 
 ### Pending Todos
 
-None yet. Phase 2 Wave 0 (02-01) complete; next step is Wave 1 (02-02 preprocess.py, 02-03 cluster.py, 02-04 diffexp.py), which can run in parallel since all three depend only on 02-01's igraph dependency, structured_adata fixture, and analysis/summary.py contracts.
+02-02 (preprocess.py) complete. 02-03 (cluster.py) and 02-04 (diffexp.py) still in progress in parallel. Once all three Wave 1 plans are done, Wave 2 (02-05 pipeline.py) composes them into the coarse-grained `analyze()` orchestration entrypoint mirroring `ingest/pipeline.py::ingest_10x()`.
 
 ### Blockers/Concerns
 
@@ -88,6 +90,6 @@ None yet. Phase 2 Wave 0 (02-01) complete; next step is Wave 1 (02-02 preprocess
 
 ## Session Continuity
 
-Last session: 2026-09-04T20:18:55.517Z
-Stopped at: Completed 02-01-PLAN.md (Wave 0: igraph dependency, structured_adata fixture, bounded-summary dataclass contracts)
+Last session: 2026-09-04T20:23:32Z
+Stopped at: Completed 02-02-PLAN.md (Wave 1: analysis/preprocess.py, ANLYS-01)
 Resume file: None
