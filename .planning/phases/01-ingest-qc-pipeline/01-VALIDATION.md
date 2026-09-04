@@ -1,8 +1,8 @@
 ---
 phase: 1
 slug: ingest-qc-pipeline
-status: draft
-nyquist_compliant: false
+status: approved
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-09-03
 ---
@@ -38,13 +38,14 @@ created: 2026-09-03
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 01-01-INGEST-01 | 01 | TBD | INGEST-01 | unit | `pytest tests/test_loaders.py::test_load_mtx_dir -x` / `::test_load_h5 -x` | ❌ W0 | ⬜ pending |
-| 01-01-INGEST-02 | 01 | TBD | INGEST-02 | unit | `pytest tests/test_ingest_contract.py::test_counts_immutable_after_normalize -x` | ❌ W0 | ⬜ pending |
-| 01-01-INGEST-03 | 01 | TBD | INGEST-03 | unit | `pytest tests/test_store.py::test_save_load_roundtrip -x` / `::test_versioning -x` | ❌ W0 | ⬜ pending |
-| 01-01-QC-01 | 01 | TBD | QC-01 | unit | `pytest tests/test_qc.py::test_qc_metrics_present -x` | ❌ W0 | ⬜ pending |
-| 01-01-QC-02 | 01 | TBD | QC-02 | unit | `pytest tests/test_qc.py::test_qc_config_logged -x` / `::test_threshold_changes_filtering -x` | ❌ W0 | ⬜ pending |
+| 01-02-INGEST-01 | 01-02 | 1 | INGEST-01 | unit | `uv run pytest tests/test_loaders.py::test_load_mtx_dir -x` / `::test_load_h5 -x` | ❌ W0 | ⬜ pending |
+| 01-02-INGEST-02 | 01-02 | 1 | INGEST-02 | unit | `uv run pytest tests/test_ingest_contract.py::test_counts_immutable_after_normalize -x` | ❌ W0 | ⬜ pending |
+| 01-04-INGEST-03 | 01-04 | 1 | INGEST-03 | unit | `uv run pytest tests/test_store.py::test_save_load_roundtrip -x` / `::test_versioning -x` | ❌ W0 | ⬜ pending |
+| 01-03-QC-01 | 01-03 | 1 | QC-01 | unit | `uv run pytest tests/test_qc.py::test_qc_metrics_present -x` | ❌ W0 | ⬜ pending |
+| 01-03-QC-02 | 01-03 | 1 | QC-02 | unit | `uv run pytest tests/test_qc.py::test_qc_config_logged -x` / `::test_threshold_changes_filtering -x` | ❌ W0 | ⬜ pending |
+| 01-05-ALL | 01-05 | 2 | INGEST-01/02/03, QC-01/02 (integration) | unit | `uv run pytest tests/test_pipeline.py -x` | ❌ W0 | ⬜ pending |
 
-*Wave/plan columns are TBD pending planner output — this map lists the required test coverage per requirement; the planner assigns exact plan/wave numbers when it creates PLAN.md tasks.*
+Wave 0 (`01-01`): test infra + synthetic 10x fixtures — no requirement IDs of its own, gates all rows above.
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
