@@ -49,10 +49,14 @@ Plans:
   2. Cells cluster via Leiden (`flavor="igraph"`) and a 2D UMAP embedding is produced for any clustered dataset.
   3. Differential expression (Wilcoxon rank-sum) between two clusters or conditions returns a ranked gene result.
   4. Each analysis tool call returns a bounded, structured summary — not a raw matrix dump — sized for later agent context.
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] 02-01: TBD
+- [ ] 02-01-PLAN.md — Wave 0: igraph dependency, structured_adata fixture, bounded-summary dataclass contracts
+- [ ] 02-02-PLAN.md — preprocess() normalize/HVG/PCA (ANLYS-01)
+- [ ] 02-03-PLAN.md — cluster() Leiden (igraph) + UMAP (ANLYS-02)
+- [ ] 02-04-PLAN.md — differential_expression() Wilcoxon rank-sum DE (ANLYS-03)
+- [ ] 02-05-PLAN.md — analyze() pipeline integration: store load/save + counts-integrity checks (ANLYS-01..04)
 
 ### Phase 3: Agent Orchestration Wiring
 **Goal**: A Claude-based agent, running an OpenClaw-style agentic loop via Claude Agent SDK + MCP, plans and calls the Phase 1-2 tools with verifiable execution logging and persistent multi-turn memory — proving the tool-calling contract on cheap, deterministic tools before GPU/bio-FM complexity is introduced.
