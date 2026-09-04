@@ -1,6 +1,6 @@
 # Concept Draft — BioClaw
 
-Status: **DRAFT v0.1** — starting point for discussion with Elliot, not a final proposal.
+Status: **v1.0** — wedge and key open questions confirmed with Elliot 2026-09-03; see `.planning/PROJECT.md` Key Decisions for the full record.
 
 ## The angle
 
@@ -66,18 +66,18 @@ scripting) is real and largely unaddressed by agentic tooling.
 
 ## Open questions to resolve with Elliot
 
-- [ ] What does Biopunk Labs' team actually spend the most manual bioinformatics
-      hours on today? (This should override the single-cell wedge choice if it
-      points somewhere else — see README.)
-- [ ] Does Biopunk Labs generate single-cell data in-house, or would the first
-      real dataset come from a public source (e.g., a GEO/CELLxGENE dataset) for
-      the initial internal-tool validation?
-- [ ] Hosting/compute: does Biopunk Labs have GPU capacity for self-hosting
-      scGPT/Geneformer, or does the MVP need to lean on hosted inference?
+- [x] What does Biopunk Labs' team actually spend the most manual bioinformatics
+      hours on today? — **Confirmed: matches the single-cell wedge.**
+- [x] Does Biopunk Labs generate single-cell data in-house, or would the first
+      real dataset come from a public source? — **Public source** (e.g.
+      `cellxgene-census`, VCC's own public dataset) for the initial build.
+- [x] Hosting/compute: does Biopunk Labs have GPU capacity for self-hosting
+      scGPT/Geneformer, or does the MVP need to lean on hosted inference? —
+      **Self-hosted by default**, with a hosted-inference option kept available.
 - [ ] Any overlap with [Cardiac Base Editor](https://github.com/tjcrowley/cardiac-base-editor)
       or [FDT-BioTech](https://github.com/tjcrowley/fdt-biotech-digital-twins) —
       e.g., could single-cell cardiomyocyte data from either project double as an
-      early real-world test dataset?
+      early real-world test dataset? — still open.
 
 ## Alternative angles considered (not pursued yet)
 
@@ -90,7 +90,7 @@ scripting) is real and largely unaddressed by agentic tooling.
 
 ## Next steps
 
-1. Confirm with Elliot: actual daily bioinformatics pain point, to validate or
-   override the single-cell wedge.
-2. Identify a first real (or public) dataset for the internal-tool pilot.
-3. See `.planning/` for the phased build roadmap.
+1. See `.planning/ROADMAP.md` for the phased build roadmap (6 phases, full
+   requirement traceability) — ready to start with `/gsd:plan-phase 1`.
+2. Remaining open item: overlap check with Cardiac Base Editor / FDT-BioTech
+   on cardiomyocyte single-cell data as an early real-world test dataset.

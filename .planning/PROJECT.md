@@ -21,7 +21,10 @@ writing a scanpy script by hand.
 
 ### Validated
 
-(None yet — ship to validate)
+- Single-cell transcriptomics MVP wedge matches Biopunk Labs' actual daily bioinformatics pain point (confirmed 2026-09-03)
+- Bio-FM hosting: self-hosted by default, with a hosted-inference option/fallback built into the architecture (confirmed 2026-09-03)
+- First dataset: public data (e.g. `cellxgene-census`, VCC's own public dataset) — not waiting on in-house wet-lab data to start the build (confirmed 2026-09-03)
+- Virtual Cell Challenge scope: benchmark against VCC's public task format and official metrics — not a competitive entry against the live 2026 leaderboard (confirmed 2026-09-03)
 
 ### Active
 
@@ -62,9 +65,10 @@ writing a scanpy script by hand.
   (digital twins, NSF-targeted). BioClaw is a separate, new venture — not an
   extension of either — but overlap on data/validation is worth checking with
   Elliot.
-- Compute/hosting for bio foundation models is an open question — self-host
-  (scGPT/Geneformer are self-hostable on modest hardware) vs. hosted inference
-  depends on Biopunk Labs' available GPU capacity.
+- Compute/hosting for bio foundation models: self-hosted by default
+  (scGPT/Geneformer are self-hostable on modest hardware), with a hosted
+  inference option kept available in the tool-layer/client-server split for
+  cases self-hosted capacity can't cover.
 - **Virtual Cell Challenge** (virtualcellchallenge.org): an annual public
   benchmark competition launched 2025 by Arc Institute, sponsored by NVIDIA,
   10x Genomics, and Ultima Genomics ($100K grand prize in 2025; recurring in
@@ -83,19 +87,22 @@ writing a scanpy script by hand.
   (10x Genomics `.mtx`/`.h5`, AnnData `.h5ad`) — the ecosystem researchers
   already use, not a bespoke format.
 - **Team**: Darren builds; Elliot Roth / Biopunk Labs is the domain expert,
-  wet-lab data source, and first-user validation partner — not yet confirmed
-  on scope (this roadmap hasn't been presented to him yet).
+  wet-lab data source, and first-user validation partner.
 - **Deployment**: Internal tool first, no external productization in v1 scope.
-- **Compute**: Bio FM hosting approach (self-host vs. hosted) unresolved
-  pending Biopunk Labs' hardware — affects Phase design for the tool layer.
+- **Compute**: Bio FM tool layer must support self-hosted inference as the
+  default, with a hosted-inference option available behind the same
+  client/server boundary — not a hard either/or choice.
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| MVP wedge = single-cell transcriptomics, not protein-structure or genomics | Best balance of standardized ingest, self-hostable models, and underserved pain (manual scanpy scripting) — see CONCEPT.md comparison table | — Pending Elliot's validation |
-| First user = internal Biopunk Labs tool, not customer-facing SaaS | Validate real usage before productizing externally — same path OpenClaw took | — Pending |
-| Orchestrator = Claude running an OpenClaw-style agentic loop (sessions, subagents, tool routing, memory) | Reuse a proven orchestration pattern instead of building agent infrastructure from scratch | — Pending |
+| MVP wedge = single-cell transcriptomics, not protein-structure or genomics | Best balance of standardized ingest, self-hostable models, and underserved pain (manual scanpy scripting) — see CONCEPT.md comparison table | Confirmed — matches Biopunk Labs' actual daily pain point |
+| First user = internal Biopunk Labs tool, not customer-facing SaaS | Validate real usage before productizing externally — same path OpenClaw took | Confirmed |
+| Orchestrator = Claude running an OpenClaw-style agentic loop (sessions, subagents, tool routing, memory) | Reuse a proven orchestration pattern instead of building agent infrastructure from scratch | Confirmed |
+| Bio-FM hosting = self-hosted default, hosted-inference option available | Biopunk Labs GPU capacity may not always cover inference load; client/server tool-layer split defers this cleanly either way | Confirmed |
+| First dataset = public (e.g. `cellxgene-census`, VCC public dataset) | Don't block the build on in-house wet-lab data availability/timing | Confirmed |
+| VCC benchmark scope = public task format + official metrics, not the live 2026 leaderboard | Leaderboard is zero-shot/cross-cell-line — a materially harder, out-of-scope bar; task-format benchmarking is achievable and still credible | Confirmed |
 
 ---
-*Last updated: 2026-09-03 after initialization*
+*Last updated: 2026-09-03 after Elliot validation round*

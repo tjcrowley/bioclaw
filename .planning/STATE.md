@@ -43,7 +43,7 @@ Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
 - Roadmap: 6 phases, dependency-driven bottom-up order (ingest/QC → analysis → agent wiring → bio-FM annotation → perturbation+VCC → NL Q&A capstone), following research/SUMMARY.md's suggested structure directly.
-- Bio-FM hosting (self-host vs. Modal) remains unresolved — deferred to Phase 4 planning, pending Biopunk Labs' GPU capacity.
+- 2026-09-03: Elliot Roth confirmed — single-cell wedge matches Biopunk Labs' real pain point; bio-FM hosting is self-hosted by default with a hosted-inference option kept in the architecture; first dataset is public (`cellxgene-census`/VCC); VCC benchmark scope is the public task format/metrics, not the live leaderboard. All four now reflected in PROJECT.md Validated requirements and Key Decisions.
 
 ### Pending Todos
 
@@ -51,10 +51,10 @@ None yet.
 
 ### Blockers/Concerns
 
-- Phase 4 (Bio-FM annotation): scGPT/Geneformer VRAM requirements are LOW confidence per research — verify against current model cards before implementation.
-- Phase 5 (Perturbation + VCC): GEARS/cell-gears environment isolation is MEDIUM confidence and version-sensitive (pinned older PyTorch Geometric stack); 2026 VCC task format (zero-shot/cross-cell-line) vs. Biopunk Labs' likely single-cell-type use case needs explicit scope confirmation with Elliot Roth.
+- Phase 4 (Bio-FM annotation): scGPT/Geneformer VRAM requirements are LOW confidence per research — verify against current model cards before implementation. Self-hosted-by-default decision (confirmed 2026-09-03) makes this sizing question load-bearing for Phase 4 planning, not just a nice-to-know.
+- Phase 5 (Perturbation + VCC): GEARS/cell-gears environment isolation is MEDIUM confidence and version-sensitive (pinned older PyTorch Geometric stack). VCC scope question is now resolved (task format/metrics only, confirmed 2026-09-03) — no longer a blocker.
 - Phase 6 (NL Q&A): no established reference pattern for hallucination-mitigation (claim traceability, confidence surfacing) at this agent+scientific-tool combination — flagged as highest-risk phase in research.
-- Project-wide: MVP wedge, orchestration approach, and Biopunk Labs first-user scope are all still "Pending" validation with Elliot Roth per PROJECT.md Key Decisions — roadmap not yet presented to him.
+- Project-wide validation with Elliot Roth: resolved 2026-09-03 (see Decisions above). Remaining open item (non-blocking): check overlap with Cardiac Base Editor / FDT-BioTech on cardiomyocyte single-cell data as an early test dataset (CONCEPT.md).
 
 ## Session Continuity
 
