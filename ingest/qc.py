@@ -61,7 +61,11 @@ def _run_scrublet(adata: AnnData) -> None:
     # rather than leaving a null in a column downstream code expects to
     # always be populated.
     adata.obs["doublet_score"] = adata.obs["doublet_score"].fillna(0.0)
-    adata.obs["predicted_doublet"] = adata.obs["predicted_doublet"].fillna(False)
+    # fillna on a bool column promotes it to object dtype, which silently
+    # breaks `~` (bitwise, not logical, negation on plain Python bools) --
+    # cast back to a real bool dtype so downstream `~adata.obs["predicted_doublet"]`
+    # filtering behaves as logical negation, not bitwise int inversion.
+    adata.obs["predicted_doublet"] = adata.obs["predicted_doublet"].fillna(False).astype(bool)
 
 
 def _compute_metrics(adata: AnnData) -> AnnData:
