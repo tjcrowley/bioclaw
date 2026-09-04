@@ -1,0 +1,16 @@
+[project]
+name = "bioclaw"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "scanpy[scrublet]>=1.12",
+    "anndata>=0.13",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
