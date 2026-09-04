@@ -12,7 +12,7 @@ BioClaw goes from raw 10x Genomics files to a Claude-based agent that answers pl
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Ingest + QC Pipeline** - Raw 10x output becomes canonical, versioned, trustworthy `.h5ad` with an immutable raw-counts contract
+- [x] **Phase 1: Ingest + QC Pipeline** - Raw 10x output becomes canonical, versioned, trustworthy `.h5ad` with an immutable raw-counts contract (completed 2026-09-04)
 - [ ] **Phase 2: Analysis Tool Layer** - Deterministic clustering and differential-expression tools work standalone on canonical data, agent-ready
 - [ ] **Phase 3: Agent Orchestration Wiring** - A Claude-based agent plans, calls, and logs tool invocations against the Phase 1-2 tools with persistent session memory
 - [ ] **Phase 4: Bio-FM Tool Layer — Cell-Type Annotation** - The agent calls a bio foundation model as a tool for cell-type annotation, always paired with a statistical baseline
@@ -31,14 +31,14 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Standard QC metrics (mitochondrial %, doublet score, low-count/gene filtering) are computed for any ingested dataset.
   4. The QC thresholds used for a given run are explicit and logged, so a researcher can see exactly what was filtered and why.
   5. A named, versioned dataset persists in a store that later phases (agent, analysis) can reference by name.
-**Plans**: 4/5 plans executed
+**Plans**: 5/5 plans executed
 
 Plans:
 - [x] 01-01-PLAN.md — Test infrastructure: pytest env + synthetic 10x fixtures (Wave 0)
 - [x] 01-02-PLAN.md — 10x loader + raw-counts immutability contract (INGEST-01, INGEST-02)
 - [x] 01-03-PLAN.md — QC metrics, config, and audit logging (QC-01, QC-02)
 - [x] 01-04-PLAN.md — Versioned dataset store (INGEST-03)
-- [ ] 01-05-PLAN.md — ingest_10x() pipeline entrypoint + end-to-end verification
+- [x] 01-05-PLAN.md — ingest_10x() pipeline entrypoint + end-to-end verification
 
 ### Phase 2: Analysis Tool Layer
 **Goal**: Standard scanpy-backed analyses (clustering, differential expression) work as deterministic, typed, agent-callable tools on canonical Phase 1 data — validated standalone, before any agent or GPU dependency exists.
@@ -115,7 +115,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Ingest + QC Pipeline | 4/5 | In Progress|  |
+| 1. Ingest + QC Pipeline | 5/5 | Complete   | 2026-09-04 |
 | 2. Analysis Tool Layer | 0/TBD | Not started | - |
 | 3. Agent Orchestration Wiring | 0/TBD | Not started | - |
 | 4. Bio-FM Tool Layer — Cell-Type Annotation | 0/TBD | Not started | - |

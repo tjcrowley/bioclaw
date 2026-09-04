@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 01-04-PLAN.md (Versioned dataset store: DatasetStore save/load/list)"
-last_updated: "2026-09-04T15:01:17.147Z"
-last_activity: "2026-09-04 — Executed 01-03-PLAN.md (QC module: QCConfig, metrics, filtering, audit log)"
+stopped_at: "Completed 01-05-PLAN.md (Pipeline integration: ingest_10x() entrypoint, Phase 1 complete)"
+last_updated: "2026-09-04T15:12:00.000Z"
+last_activity: "2026-09-04 — Executed 01-05-PLAN.md (Pipeline integration: ingest_10x() entrypoint, Phase 1 complete)"
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 5
-  completed_plans: 4
-  percent: 80
+  completed_plans: 5
+  percent: 100
 ---
 
 # Project State
@@ -21,39 +21,40 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-03)
 
 **Core value:** A Biopunk Labs researcher can ask a plain-language question about a single-cell dataset and get back a QC'd, annotated, interpreted answer without writing a scanpy script by hand.
-**Current focus:** Phase 1 — Ingest + QC Pipeline
+**Current focus:** Phase 1 — Ingest + QC Pipeline (complete); Phase 2 (Analysis) next
 
 ## Current Position
 
-Phase: 1 of 6 (Ingest + QC Pipeline)
-Plan: 4 of 5 in current phase
-Status: Executing — Wave 1 complete (01-02, 01-03, 01-04 done); 01-05 (pipeline glue) next
-Last activity: 2026-09-04 — Executed 01-04-PLAN.md (Versioned dataset store: DatasetStore save/load/list)
+Phase: 1 of 6 (Ingest + QC Pipeline) — COMPLETE
+Plan: 5 of 5 in current phase — all plans done
+Status: Phase 1 complete. All 5 plans (01-01 through 01-05) executed; full test suite green (30 tests). Ready for phase-goal verification, then Phase 2 planning.
+Last activity: 2026-09-04 — Executed 01-05-PLAN.md (Pipeline integration: ingest_10x() entrypoint, Phase 1 complete)
 
-Progress: [████████░░] 80%
+Progress: [██████████] 100% (Phase 1 of 6)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: - min
-- Total execution time: 0 hours
+- Total plans completed: 5
+- Average duration: ~11 min
+- Total execution time: ~55 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 01-ingest-qc-pipeline | 5 | ~55min | ~11min |
 
 **Recent Trend:**
-- Last 5 plans: -
-- Trend: -
+- Last 5 plans: 13min, 25min, 4min, 2min, 9min
+- Trend: stable/fast (Wave 2 integration plan came in under average despite discovering and fixing a cross-module bug)
 
 *Updated after each plan completion*
-| Phase 01-ingest-qc-pipeline P01 | 13 | 2 tasks | 4 files |
+| Phase 01-ingest-qc-pipeline P01 | 13min | 2 tasks | 4 files |
 | Phase 01 P02 | 25min | 2 tasks | 6 files |
 | Phase 01-ingest-qc-pipeline P03 | 4min | 2 tasks | 2 files |
 | Phase 01-ingest-qc-pipeline P04 | 2min | 2 tasks | 2 files |
+| Phase 01-ingest-qc-pipeline P05 | 9min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -68,10 +69,11 @@ Recent decisions affecting current work:
 - [Phase 01-ingest-qc-pipeline]: 01-03: Filled NaN QC values (mito%, doublet score/flag) for all-zero cells with 0/0.0/False rather than propagating nulls, since QC-01 requires all five columns non-null for every cell
 - [Phase 01-ingest-qc-pipeline]: 01-03: Scrublet n_prin_comps default (30) crashes on small AnnData inputs (PCA bound depends on Scrublet's internal HVG selection, not adata.n_vars) — added a shrink-and-retry loop instead of a fixed smaller constant
 - [Phase 01-ingest-qc-pipeline]: 01-04: Hand-rolled filesystem+SQLite dataset registry (no LaminDB); version = MAX(version)+1 per name, never overwritten
+- [Phase 01-ingest-qc-pipeline]: 01-05: Re-freeze/re-checksum `layers['counts']` (contract.set_counts_layer) a second time immediately after qc.run(), since QC filtering allocates a new writeable sparse buffer that invalidates the pre-filter checksum — caught only at the full-pipeline integration level, not in any Wave 1 module's own unit tests
 
 ### Pending Todos
 
-None yet.
+None yet. Phase 1 fully complete; next step is phase-goal verification (`/gsd:verify-work` or equivalent) followed by Phase 2 (Analysis) planning.
 
 ### Blockers/Concerns
 
@@ -82,6 +84,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-09-04T14:58:50.249Z
-Stopped at: Completed 01-04-PLAN.md (Versioned dataset store: DatasetStore save/load/list)
+Last session: 2026-09-04T15:12:00.000Z
+Stopped at: Completed 01-05-PLAN.md (Pipeline integration: ingest_10x() entrypoint, Phase 1 complete)
 Resume file: None

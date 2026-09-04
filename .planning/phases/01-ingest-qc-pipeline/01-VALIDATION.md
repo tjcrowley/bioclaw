@@ -3,7 +3,7 @@ phase: 1
 slug: ingest-qc-pipeline
 status: approved
 nyquist_compliant: true
-wave_0_complete: false
+wave_0_complete: true
 created: 2026-09-03
 ---
 
@@ -38,12 +38,12 @@ created: 2026-09-03
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 01-02-INGEST-01 | 01-02 | 1 | INGEST-01 | unit | `uv run pytest tests/test_loaders.py::test_load_mtx_dir -x` / `::test_load_h5 -x` | ❌ W0 | ⬜ pending |
-| 01-02-INGEST-02 | 01-02 | 1 | INGEST-02 | unit | `uv run pytest tests/test_ingest_contract.py::test_counts_immutable_after_normalize -x` | ❌ W0 | ⬜ pending |
-| 01-04-INGEST-03 | 01-04 | 1 | INGEST-03 | unit | `uv run pytest tests/test_store.py::test_save_load_roundtrip -x` / `::test_versioning -x` | ❌ W0 | ⬜ pending |
-| 01-03-QC-01 | 01-03 | 1 | QC-01 | unit | `uv run pytest tests/test_qc.py::test_qc_metrics_present -x` | ❌ W0 | ⬜ pending |
-| 01-03-QC-02 | 01-03 | 1 | QC-02 | unit | `uv run pytest tests/test_qc.py::test_qc_config_logged -x` / `::test_threshold_changes_filtering -x` | ❌ W0 | ⬜ pending |
-| 01-05-ALL | 01-05 | 2 | INGEST-01/02/03, QC-01/02 (integration) | unit | `uv run pytest tests/test_pipeline.py -x` | ❌ W0 | ⬜ pending |
+| 01-02-INGEST-01 | 01-02 | 1 | INGEST-01 | unit | `uv run pytest tests/test_loaders.py::test_load_mtx_dir -x` / `::test_load_h5 -x` | ✅ | ✅ green |
+| 01-02-INGEST-02 | 01-02 | 1 | INGEST-02 | unit | `uv run pytest tests/test_ingest_contract.py::test_counts_immutable_after_normalize -x` | ✅ | ✅ green |
+| 01-04-INGEST-03 | 01-04 | 1 | INGEST-03 | unit | `uv run pytest tests/test_store.py::test_save_load_roundtrip -x` / `::test_versioning -x` | ✅ | ✅ green |
+| 01-03-QC-01 | 01-03 | 1 | QC-01 | unit | `uv run pytest tests/test_qc.py::test_qc_metrics_present -x` | ✅ | ✅ green |
+| 01-03-QC-02 | 01-03 | 1 | QC-02 | unit | `uv run pytest tests/test_qc.py::test_qc_config_logged -x` / `::test_threshold_changes_filtering -x` | ✅ | ✅ green |
+| 01-05-ALL | 01-05 | 2 | INGEST-01/02/03, QC-01/02 (integration) | unit | `uv run pytest tests/test_pipeline.py -x` | ✅ | ✅ green |
 
 Wave 0 (`01-01`): test infra + synthetic 10x fixtures — no requirement IDs of its own, gates all rows above.
 
@@ -53,10 +53,10 @@ Wave 0 (`01-01`): test infra + synthetic 10x fixtures — no requirement IDs of 
 
 ## Wave 0 Requirements
 
-- [ ] `tests/conftest.py` — synthetic 10x fixture generators: (a) a tiny `.mtx` directory (`matrix.mtx.gz`/`barcodes.tsv.gz`/`features.tsv.gz`, ~10-20 genes × ~30-50 cells, scipy `mmwrite` + gzip) with a few `MT-`-prefixed genes and one deliberately duplicated gene symbol; (b) an equivalent tiny `.h5` file in Cell Ranger's HDF5 feature-barcode-matrix layout. Both must be small, in-repo, and require no network access (do not rely on `sc.datasets.pbmc3k()`, which downloads from the internet on first use).
-- [ ] `tests/test_loaders.py`, `tests/test_ingest_contract.py`, `tests/test_qc.py`, `tests/test_store.py` — new files, covering INGEST-01/02/03, QC-01/02.
-- [ ] `pyproject.toml` or `pytest.ini` — minimal pytest config (test discovery paths); none exists yet in this greenfield repo.
-- [ ] Framework install: `uv pip install -D pytest`.
+- [x] `tests/conftest.py` — synthetic 10x fixture generators: (a) a tiny `.mtx` directory (`matrix.mtx.gz`/`barcodes.tsv.gz`/`features.tsv.gz`, ~10-20 genes × ~30-50 cells, scipy `mmwrite` + gzip) with a few `MT-`-prefixed genes and one deliberately duplicated gene symbol; (b) an equivalent tiny `.h5` file in Cell Ranger's HDF5 feature-barcode-matrix layout. Both must be small, in-repo, and require no network access (do not rely on `sc.datasets.pbmc3k()`, which downloads from the internet on first use).
+- [x] `tests/test_loaders.py`, `tests/test_ingest_contract.py`, `tests/test_qc.py`, `tests/test_store.py` — new files, covering INGEST-01/02/03, QC-01/02.
+- [x] `pyproject.toml` or `pytest.ini` — minimal pytest config (test discovery paths); none exists yet in this greenfield repo.
+- [x] Framework install: `uv pip install -D pytest`.
 
 ---
 
@@ -78,11 +78,11 @@ Wave 0 (`01-01`): test infra + synthetic 10x fixtures — no requirement IDs of 
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 30s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 30s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved — Phase 1 full test suite green (`uv run pytest tests/ -q`: 30 passed, 0 failed) as of 01-05 (2026-09-04). All five per-task verification rows above are green, including the 01-05 integration row that composes all four Wave 1 modules. Ready for phase-goal verification.
