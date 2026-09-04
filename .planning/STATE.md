@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 01-03-PLAN.md (QC module: QCConfig, metrics, filtering, audit log)"
-last_updated: "2026-09-04T14:54:08.598Z"
+stopped_at: "Completed 01-04-PLAN.md (Versioned dataset store: DatasetStore save/load/list)"
+last_updated: "2026-09-04T15:01:17.147Z"
 last_activity: "2026-09-04 — Executed 01-03-PLAN.md (QC module: QCConfig, metrics, filtering, audit log)"
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 5
-  completed_plans: 3
-  percent: 60
+  completed_plans: 4
+  percent: 80
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-09-03)
 ## Current Position
 
 Phase: 1 of 6 (Ingest + QC Pipeline)
-Plan: 3 of 5 in current phase
-Status: Executing — Wave 1 (01-02, 01-03 complete; 01-04 in parallel, may still be executing)
-Last activity: 2026-09-04 — Executed 01-03-PLAN.md (QC module: QCConfig, metrics, filtering, audit log)
+Plan: 4 of 5 in current phase
+Status: Executing — Wave 1 complete (01-02, 01-03, 01-04 done); 01-05 (pipeline glue) next
+Last activity: 2026-09-04 — Executed 01-04-PLAN.md (Versioned dataset store: DatasetStore save/load/list)
 
-Progress: [████░░░░░░] 40%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
@@ -53,6 +53,7 @@ Progress: [████░░░░░░] 40%
 | Phase 01-ingest-qc-pipeline P01 | 13 | 2 tasks | 4 files |
 | Phase 01 P02 | 25min | 2 tasks | 6 files |
 | Phase 01-ingest-qc-pipeline P03 | 4min | 2 tasks | 2 files |
+| Phase 01-ingest-qc-pipeline P04 | 2min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -66,6 +67,7 @@ Recent decisions affecting current work:
 - [Phase 01-ingest-qc-pipeline]: 01-02: Added pythonpath=["."] to pytest config so ingest.* modules are importable by tests (blocking issue found while writing loader tests)
 - [Phase 01-ingest-qc-pipeline]: 01-03: Filled NaN QC values (mito%, doublet score/flag) for all-zero cells with 0/0.0/False rather than propagating nulls, since QC-01 requires all five columns non-null for every cell
 - [Phase 01-ingest-qc-pipeline]: 01-03: Scrublet n_prin_comps default (30) crashes on small AnnData inputs (PCA bound depends on Scrublet's internal HVG selection, not adata.n_vars) — added a shrink-and-retry loop instead of a fixed smaller constant
+- [Phase 01-ingest-qc-pipeline]: 01-04: Hand-rolled filesystem+SQLite dataset registry (no LaminDB); version = MAX(version)+1 per name, never overwritten
 
 ### Pending Todos
 
@@ -80,6 +82,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-09-04T14:54:08.596Z
-Stopped at: Completed 01-03-PLAN.md (QC module: QCConfig, metrics, filtering, audit log)
+Last session: 2026-09-04T14:58:50.249Z
+Stopped at: Completed 01-04-PLAN.md (Versioned dataset store: DatasetStore save/load/list)
 Resume file: None

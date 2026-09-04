@@ -11,7 +11,7 @@ Requirements for initial internal-tool release. Each maps to a roadmap phase.
 
 - [x] **INGEST-01**: System can ingest standard 10x Genomics single-cell output (`.mtx`, `.h5`) and normalize it to canonical AnnData (`.h5ad`)
 - [x] **INGEST-02**: Ingest persists raw counts to an immutable `adata.layers['counts']` at load time, before any normalization step, so downstream tools always have an uncorrupted source of truth
-- [ ] **INGEST-03**: Canonical datasets are stored in a versioned dataset store the agent can reference by name across a session
+- [x] **INGEST-03**: Canonical datasets are stored in a versioned dataset store the agent can reference by name across a session
 
 ### QC
 
@@ -94,7 +94,7 @@ Populated during roadmap creation (2026-09-03).
 |-------------|-------|--------|
 | INGEST-01 | Phase 1 | Complete |
 | INGEST-02 | Phase 1 | Complete |
-| INGEST-03 | Phase 1 | Pending |
+| INGEST-03 | Phase 1 | Complete |
 | QC-01 | Phase 1 | Complete |
 | QC-02 | Phase 1 | Complete |
 | ANLYS-01 | Phase 2 | Pending |
