@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Phase 1 (Ingest + QC Pipeline) planned — 5 plans in 3 waves (01-01 test infra, 01-02 loaders+contract, 01-03 QC, 01-04 store, 01-05 pipeline integration), plan-checker VERIFICATION PASSED, Nyquist-compliant. Ready for /gsd:execute-phase 1."
-last_updated: "2026-09-04T03:39:59.728Z"
+stopped_at: Completed 01-02-PLAN.md (10x loader + raw-counts immutability contract)
+last_updated: "2026-09-04T14:41:54.322Z"
 last_activity: "2026-09-03 — Phase 1 planned via /gsd:plan-phase 1 (research + Nyquist validation + 5 plans across 3 waves, plan-checker verified, no CONTEXT.md — proceeded without discuss-phase per user choice)"
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 5
-  completed_plans: 1
-  percent: 20
+  completed_plans: 2
+  percent: 40
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-09-03)
 ## Current Position
 
 Phase: 1 of 6 (Ingest + QC Pipeline)
-Plan: 0 of 5 in current phase
-Status: Planned — ready to execute
-Last activity: 2026-09-03 — Phase 1 planned via /gsd:plan-phase 1 (research + Nyquist validation + 5 plans across 3 waves, plan-checker verified, no CONTEXT.md — proceeded without discuss-phase per user choice)
+Plan: 2 of 5 in current phase
+Status: Executing — Wave 1 (01-02 complete; 01-03/01-04 in parallel)
+Last activity: 2026-09-04 — Executed 01-02-PLAN.md (10x loader + raw-counts immutability contract)
 
-Progress: [██░░░░░░░░] 20%
+Progress: [████░░░░░░] 40%
 
 ## Performance Metrics
 
@@ -51,6 +51,7 @@ Progress: [██░░░░░░░░] 20%
 
 *Updated after each plan completion*
 | Phase 01-ingest-qc-pipeline P01 | 13 | 2 tasks | 4 files |
+| Phase 01 P02 | 25min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -61,6 +62,7 @@ Recent decisions affecting current work:
 
 - Roadmap: 6 phases, dependency-driven bottom-up order (ingest/QC → analysis → agent wiring → bio-FM annotation → perturbation+VCC → NL Q&A capstone), following research/SUMMARY.md's suggested structure directly.
 - 2026-09-03: Elliot Roth confirmed — single-cell wedge matches Biopunk Labs' real pain point; bio-FM hosting is self-hosted by default with a hosted-inference option kept in the architecture; first dataset is public (`cellxgene-census`/VCC); VCC benchmark scope is the public task format/metrics, not the live leaderboard. All four now reflected in PROJECT.md Validated requirements and Key Decisions.
+- [Phase 01-ingest-qc-pipeline]: 01-02: Added pythonpath=["."] to pytest config so ingest.* modules are importable by tests (blocking issue found while writing loader tests)
 
 ### Pending Todos
 
@@ -75,6 +77,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-09-03
-Stopped at: Phase 1 (Ingest + QC Pipeline) planned — 5 plans in 3 waves (01-01 test infra, 01-02 loaders+contract, 01-03 QC, 01-04 store, 01-05 pipeline integration), plan-checker VERIFICATION PASSED, Nyquist-compliant. Ready for /gsd:execute-phase 1.
+Last session: 2026-09-04T14:40:58.250Z
+Stopped at: Completed 01-02-PLAN.md (10x loader + raw-counts immutability contract)
 Resume file: None
