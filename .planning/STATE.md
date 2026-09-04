@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: "Completed 02-02-PLAN.md (Wave 1: preprocess() -- normalize/HVG/PCA with size guards, ANLYS-01)"
-last_updated: "2026-09-04T20:23:32Z"
-last_activity: "2026-09-04 — Executed 02-02-PLAN.md (Wave 1: analysis/preprocess.py, ANLYS-01)"
+stopped_at: "Completed 02-03-PLAN.md (Wave 1: analysis/cluster.py, ANLYS-02)"
+last_updated: "2026-09-04T20:32:04.784Z"
+last_activity: "2026-09-04 — Executed 02-03-PLAN.md (Wave 1: analysis/cluster.py, ANLYS-02)"
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 10
-  completed_plans: 7
+  completed_plans: 8
   percent: 70
 ---
 
@@ -21,33 +21,33 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-03)
 
 **Core value:** A Biopunk Labs researcher can ask a plain-language question about a single-cell dataset and get back a QC'd, annotated, interpreted answer without writing a scanpy script by hand.
-**Current focus:** Phase 2 — Analysis Tool Layer (Wave 0 complete; Wave 1 in progress — 02-02 done, 02-03/02-04 running in parallel)
+**Current focus:** Phase 2 — Analysis Tool Layer (Wave 0 complete; Wave 1 in progress — 02-02/02-03 done, 02-04 running in parallel)
 
 ## Current Position
 
 Phase: 2 of 6 (Analysis Tool Layer) — IN PROGRESS
-Plan: 2 of 5 in current phase — Wave 1 (02-02) complete; 02-03 (cluster.py) and 02-04 (diffexp.py) running in parallel; Wave 2 (02-05 pipeline.py) next after Wave 1 finishes
-Status: 02-02-PLAN.md complete: analysis/preprocess.py implements normalize -> log1p -> HVG -> PCA (ANLYS-01), never mutates caller's AnnData, deterministic given random_state, size-guarded (clamps n_top_genes/n_pcs against actual dataset/HVG dimensions), returns bounded PreprocessSummary. Full test suite green (37 tests).
-Last activity: 2026-09-04 — Executed 02-02-PLAN.md (Wave 1: analysis/preprocess.py, ANLYS-01)
+Plan: 3 of 5 in current phase — Wave 1 (02-02, 02-03) complete; 02-04 (diffexp.py) still running in parallel; Wave 2 (02-05 pipeline.py) next after Wave 1 finishes
+Status: 02-03-PLAN.md complete: analysis/cluster.py implements neighbors -> Leiden (flavor="igraph", directed=False, n_iterations=2) -> UMAP (ANLYS-02), never mutates caller's AnnData, Leiden labels deterministic given random_state (UMAP coordinate exactness deliberately not asserted per Pitfall 5), size-guarded (clamps n_neighbors against n_obs-1), returns bounded ClusterSummary. Full test suite green (43 tests).
+Last activity: 2026-09-04 — Executed 02-03-PLAN.md (Wave 1: analysis/cluster.py, ANLYS-02)
 
-Progress: [███████░░░] 70% (7/10 plans complete)
+Progress: [████████░░] 80% (8/10 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
-- Average duration: ~10 min
-- Total execution time: ~71 min
+- Total plans completed: 8
+- Average duration: ~9.5 min
+- Total execution time: ~76 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-ingest-qc-pipeline | 5 | ~55min | ~11min |
-| 02-analysis-tool-layer | 2 | ~16min | ~8min |
+| 02-analysis-tool-layer | 3 | ~21min | ~7min |
 
 **Recent Trend:**
-- Last 5 plans: 4min, 2min, 9min, 8min, 8min
+- Last 5 plans: 2min, 9min, 8min, 8min, 5min
 - Trend: stable/fast (Phase 2 plans coming in under Phase 1 average)
 
 *Updated after each plan completion*
@@ -58,6 +58,7 @@ Progress: [███████░░░] 70% (7/10 plans complete)
 | Phase 01-ingest-qc-pipeline P05 | 9min | 2 tasks | 2 files |
 | Phase 02-analysis-tool-layer P01 | 8min | 2 tasks | 6 files |
 | Phase 02 P02 | 8 | 2 tasks | 2 files |
+| Phase 02-analysis-tool-layer P03 | 5min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -76,10 +77,11 @@ Recent decisions affecting current work:
 - [Phase 02-analysis-tool-layer]: 02-01: structured_adata fixture uses RNG seed 3 (next unused seed after Phase 1's 0/1/2), 15 marker genes per population at Poisson lam=15 vs. lam=2 background, matching the plan spec exactly
 - [Phase 02-analysis-tool-layer]: 02-01: analysis/summary.py's four dataclasses transcribed verbatim from the plan's `<interfaces>` contract, no additions — three Wave 1 plans (02-02/03/04) depend on this exact shape being stable
 - [Phase 02]: 02-02: Clamped PCA n_comps against the actual post-HVG-selection gene count (n_hvg), not adata.n_vars -- sklearn's arpack solver requires n_components strictly less than min(n_samples, n_features), and HVG selection can silently return fewer genes than requested on small fixtures
+- [Phase 02-analysis-tool-layer]: 02-03: flavor='igraph' always paired with explicit directed=False and n_iterations=2; Leiden determinism asserted, UMAP coordinate exactness deliberately not asserted (Pitfall 5)
 
 ### Pending Todos
 
-02-02 (preprocess.py) complete. 02-03 (cluster.py) and 02-04 (diffexp.py) still in progress in parallel. Once all three Wave 1 plans are done, Wave 2 (02-05 pipeline.py) composes them into the coarse-grained `analyze()` orchestration entrypoint mirroring `ingest/pipeline.py::ingest_10x()`.
+02-02 (preprocess.py) and 02-03 (cluster.py) complete. 02-04 (diffexp.py) still in progress in parallel. Once all three Wave 1 plans are done, Wave 2 (02-05 pipeline.py) composes them into the coarse-grained `analyze()` orchestration entrypoint mirroring `ingest/pipeline.py::ingest_10x()`.
 
 ### Blockers/Concerns
 
@@ -90,6 +92,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-09-04T20:23:32Z
-Stopped at: Completed 02-02-PLAN.md (Wave 1: analysis/preprocess.py, ANLYS-01)
+Last session: 2026-09-04T20:32:04.781Z
+Stopped at: Completed 02-03-PLAN.md (Wave 1: analysis/cluster.py, ANLYS-02)
 Resume file: None
