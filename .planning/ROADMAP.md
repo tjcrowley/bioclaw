@@ -49,10 +49,10 @@ Plans:
   2. Cells cluster via Leiden (`flavor="igraph"`) and a 2D UMAP embedding is produced for any clustered dataset.
   3. Differential expression (Wilcoxon rank-sum) between two clusters or conditions returns a ranked gene result.
   4. Each analysis tool call returns a bounded, structured summary — not a raw matrix dump — sized for later agent context.
-**Plans**: 5 plans
+**Plans**: 1/5 plans executed
 
 Plans:
-- [ ] 02-01-PLAN.md — Wave 0: igraph dependency, structured_adata fixture, bounded-summary dataclass contracts
+- [x] 02-01-PLAN.md — Wave 0: igraph dependency, structured_adata fixture, bounded-summary dataclass contracts
 - [ ] 02-02-PLAN.md — preprocess() normalize/HVG/PCA (ANLYS-01)
 - [ ] 02-03-PLAN.md — cluster() Leiden (igraph) + UMAP (ANLYS-02)
 - [ ] 02-04-PLAN.md — differential_expression() Wilcoxon rank-sum DE (ANLYS-03)
@@ -120,7 +120,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Ingest + QC Pipeline | 5/5 | Complete   | 2026-09-04 |
-| 2. Analysis Tool Layer | 0/TBD | Not started | - |
+| 2. Analysis Tool Layer | 1/5 | In Progress|  |
 | 3. Agent Orchestration Wiring | 0/TBD | Not started | - |
 | 4. Bio-FM Tool Layer — Cell-Type Annotation | 0/TBD | Not started | - |
 | 5. Perturbation-Response Tool + VCC Benchmark | 0/TBD | Not started | - |

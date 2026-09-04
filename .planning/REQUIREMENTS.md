@@ -23,7 +23,7 @@ Requirements for initial internal-tool release. Each maps to a roadmap phase.
 - [ ] **ANLYS-01**: System normalizes, selects highly variable genes, and computes PCA as a prerequisite pipeline step
 - [ ] **ANLYS-02**: System clusters cells (Leiden, `flavor="igraph"`) and computes a 2D embedding (UMAP)
 - [ ] **ANLYS-03**: System computes differential expression between clusters or conditions (Wilcoxon rank-sum)
-- [ ] **ANLYS-04**: Each analysis tool call returns a bounded, structured summary (not a raw matrix dump) suitable for agent context
+- [x] **ANLYS-04**: Each analysis tool call returns a bounded, structured summary (not a raw matrix dump) suitable for agent context
 
 ### Bio-FM Annotation
 
@@ -100,7 +100,7 @@ Populated during roadmap creation (2026-09-03).
 | ANLYS-01 | Phase 2 | Pending |
 | ANLYS-02 | Phase 2 | Pending |
 | ANLYS-03 | Phase 2 | Pending |
-| ANLYS-04 | Phase 2 | Pending |
+| ANLYS-04 | Phase 2 | Complete |
 | ANNOT-01 | Phase 4 | Pending |
 | ANNOT-02 | Phase 4 | Pending |
 | ANNOT-03 | Phase 4 | Pending |
