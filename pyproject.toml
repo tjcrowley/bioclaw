@@ -5,6 +5,7 @@ requires-python = ">=3.12"
 dependencies = [
     "scanpy[scrublet]>=1.12",
     "anndata>=0.13",
+    "igraph>=0.10.8",
 ]
 
 [dependency-groups]

@@ -1,9 +1,9 @@
-"""Smoke tests proving the synthetic 10x fixtures in conftest.py are
-structurally valid, network-free 10x-format inputs.
+"""Smoke tests proving the synthetic fixtures in conftest.py are
+structurally valid, network-free inputs.
 
-These tests exist so every later Phase 1 plan can build on `tiny_mtx_dir`,
-`tiny_h5_file`, and `synthetic_adata` with confidence, without re-verifying
-fixture shape/content themselves.
+These tests exist so every later plan can build on `tiny_mtx_dir`,
+`tiny_h5_file`, `synthetic_adata`, and `structured_adata` with confidence,
+without re-verifying fixture shape/content themselves.
 """
 
 import numpy as np
@@ -56,3 +56,26 @@ def test_synthetic_adata_structure(synthetic_adata):
     gene_sums = np.asarray(adata.X.sum(axis=0)).ravel()
     assert (cell_sums == 0).any(), "expected at least one all-zero cell"
     assert (gene_sums == 0).any(), "expected at least one all-zero gene"
+
+
+def test_structured_adata_structure(structured_adata):
+    adata = structured_adata
+
+    assert adata.shape == (200, 80)
+
+    assert sparse.issparse(adata.X)
+    dense = adata.X.toarray()
+    assert np.array_equal(dense, dense.astype(int)), "X must be integer-valued"
+
+    assert set(adata.obs["true_population"].unique()) == {"A", "B"}
+
+    pop_a_mask = (adata.obs["true_population"] == "A").to_numpy()
+    pop_b_mask = (adata.obs["true_population"] == "B").to_numpy()
+
+    marker_genes = dense[:, 0:15]
+    mean_a = marker_genes[pop_a_mask].mean()
+    mean_b = marker_genes[pop_b_mask].mean()
+    assert mean_a > 2 * mean_b, (
+        "expected genes 0-14 to be meaningfully elevated in population A "
+        "vs. population B, proving the fixture has separable structure"
+    )

@@ -1,13 +1,15 @@
-"""Synthetic, in-repo, network-free 10x-format fixtures shared across all
-Phase 1 (ingest + QC pipeline) tests.
+"""Synthetic, in-repo, network-free fixtures shared across Phase 1 (ingest +
+QC pipeline) and Phase 2 (analysis) tests.
 
 Provides:
 - tiny_mtx_dir: a tiny 10x MEX-format directory (matrix.mtx.gz,
   barcodes.tsv.gz, features.tsv.gz).
 - tiny_h5_file: a tiny Cell Ranger-format HDF5 feature-barcode matrix file.
 - synthetic_adata: an in-memory AnnData with raw integer counts in .X.
+- structured_adata: an in-memory AnnData with genuine, testable
+  cluster/population structure for Phase 2 clustering/DE tests.
 
-All three share the same "interesting" characteristics on purpose (MT-
+The first three share the same "interesting" characteristics on purpose (MT-
 prefixed genes, a duplicated gene symbol, an all-zero cell, an all-zero
 gene) so downstream loaders/QC/store code has real edge cases to handle.
 """
@@ -151,6 +153,56 @@ def synthetic_adata() -> AnnData:
     adata = AnnData(
         X=X,
         obs=pd.DataFrame(index=cell_names),
+        var=pd.DataFrame(index=gene_names),
+    )
+    return adata
+
+
+@pytest.fixture
+def structured_adata() -> AnnData:
+    """Returns an in-memory AnnData (raw integer counts, sparse csr_matrix
+    in .X) with genuine, testable cluster/population structure -- unlike
+    `synthetic_adata`, which is deliberately too small/unstructured for
+    clustering and DE (see Phase 2 research Pitfall 4).
+
+    ~200 cells x ~80 genes, two well-separated pseudo-populations of ~100
+    cells each:
+    - Population "A" (cells 0-99): genes 0-14 elevated (Poisson lam=15)
+      vs. background (lam=2) for all other genes.
+    - Population "B" (cells 100-199): genes 15-29 elevated (Poisson lam=15)
+      vs. the same background.
+    - All other genes/cells: background lam=2 Poisson noise only.
+
+    Ground truth population label is stored in `adata.obs["true_population"]`
+    ("A"/"B") so Wave 1's `diffexp.py` tests can run DE directly against a
+    known-correct grouping without depending on `cluster.py`'s output, and
+    `cluster.py` tests can sanity-check that Leiden roughly recovers this
+    structure.
+    """
+    n_genes, n_cells = 80, 200
+    n_pop = 100
+    rng = np.random.default_rng(3)
+
+    background = rng.poisson(lam=2, size=(n_cells, n_genes)).astype(np.int64)
+
+    marker_a = rng.poisson(lam=15, size=(n_pop, 15)).astype(np.int64)
+    marker_b = rng.poisson(lam=15, size=(n_pop, 15)).astype(np.int64)
+
+    counts = background
+    counts[0:n_pop, 0:15] = marker_a
+    counts[n_pop : 2 * n_pop, 15:30] = marker_b
+
+    gene_names = [f"GENE{i:02d}" for i in range(n_genes)]
+    cell_names = [f"CELL{i:04d}" for i in range(n_cells)]
+
+    X = sparse.csr_matrix(counts)
+    obs = pd.DataFrame(
+        {"true_population": ["A"] * n_pop + ["B"] * (n_cells - n_pop)},
+        index=cell_names,
+    )
+    adata = AnnData(
+        X=X,
+        obs=obs,
         var=pd.DataFrame(index=gene_names),
     )
     return adata
