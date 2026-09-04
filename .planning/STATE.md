@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-02-PLAN.md (10x loader + raw-counts immutability contract)
-last_updated: "2026-09-04T14:41:54.322Z"
-last_activity: "2026-09-03 — Phase 1 planned via /gsd:plan-phase 1 (research + Nyquist validation + 5 plans across 3 waves, plan-checker verified, no CONTEXT.md — proceeded without discuss-phase per user choice)"
+stopped_at: "Completed 01-03-PLAN.md (QC module: QCConfig, metrics, filtering, audit log)"
+last_updated: "2026-09-04T14:54:08.598Z"
+last_activity: "2026-09-04 — Executed 01-03-PLAN.md (QC module: QCConfig, metrics, filtering, audit log)"
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 5
-  completed_plans: 2
-  percent: 40
+  completed_plans: 3
+  percent: 60
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-09-03)
 ## Current Position
 
 Phase: 1 of 6 (Ingest + QC Pipeline)
-Plan: 2 of 5 in current phase
-Status: Executing — Wave 1 (01-02 complete; 01-03/01-04 in parallel)
-Last activity: 2026-09-04 — Executed 01-02-PLAN.md (10x loader + raw-counts immutability contract)
+Plan: 3 of 5 in current phase
+Status: Executing — Wave 1 (01-02, 01-03 complete; 01-04 in parallel, may still be executing)
+Last activity: 2026-09-04 — Executed 01-03-PLAN.md (QC module: QCConfig, metrics, filtering, audit log)
 
 Progress: [████░░░░░░] 40%
 
@@ -52,6 +52,7 @@ Progress: [████░░░░░░] 40%
 *Updated after each plan completion*
 | Phase 01-ingest-qc-pipeline P01 | 13 | 2 tasks | 4 files |
 | Phase 01 P02 | 25min | 2 tasks | 6 files |
+| Phase 01-ingest-qc-pipeline P03 | 4min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -63,6 +64,8 @@ Recent decisions affecting current work:
 - Roadmap: 6 phases, dependency-driven bottom-up order (ingest/QC → analysis → agent wiring → bio-FM annotation → perturbation+VCC → NL Q&A capstone), following research/SUMMARY.md's suggested structure directly.
 - 2026-09-03: Elliot Roth confirmed — single-cell wedge matches Biopunk Labs' real pain point; bio-FM hosting is self-hosted by default with a hosted-inference option kept in the architecture; first dataset is public (`cellxgene-census`/VCC); VCC benchmark scope is the public task format/metrics, not the live leaderboard. All four now reflected in PROJECT.md Validated requirements and Key Decisions.
 - [Phase 01-ingest-qc-pipeline]: 01-02: Added pythonpath=["."] to pytest config so ingest.* modules are importable by tests (blocking issue found while writing loader tests)
+- [Phase 01-ingest-qc-pipeline]: 01-03: Filled NaN QC values (mito%, doublet score/flag) for all-zero cells with 0/0.0/False rather than propagating nulls, since QC-01 requires all five columns non-null for every cell
+- [Phase 01-ingest-qc-pipeline]: 01-03: Scrublet n_prin_comps default (30) crashes on small AnnData inputs (PCA bound depends on Scrublet's internal HVG selection, not adata.n_vars) — added a shrink-and-retry loop instead of a fixed smaller constant
 
 ### Pending Todos
 
@@ -77,6 +80,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-09-04T14:40:58.250Z
-Stopped at: Completed 01-02-PLAN.md (10x loader + raw-counts immutability contract)
+Last session: 2026-09-04T14:54:08.596Z
+Stopped at: Completed 01-03-PLAN.md (QC module: QCConfig, metrics, filtering, audit log)
 Resume file: None

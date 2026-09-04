@@ -15,8 +15,8 @@ Requirements for initial internal-tool release. Each maps to a roadmap phase.
 
 ### QC
 
-- [ ] **QC-01**: System computes standard QC metrics on ingested data (mitochondrial %, doublet score, low-count/gene filtering)
-- [ ] **QC-02**: QC thresholds are explicit and logged per run, not silently hard-coded, so a researcher can see what was filtered and why
+- [x] **QC-01**: System computes standard QC metrics on ingested data (mitochondrial %, doublet score, low-count/gene filtering)
+- [x] **QC-02**: QC thresholds are explicit and logged per run, not silently hard-coded, so a researcher can see what was filtered and why
 
 ### Analysis
 
@@ -95,8 +95,8 @@ Populated during roadmap creation (2026-09-03).
 | INGEST-01 | Phase 1 | Complete |
 | INGEST-02 | Phase 1 | Complete |
 | INGEST-03 | Phase 1 | Pending |
-| QC-01 | Phase 1 | Pending |
-| QC-02 | Phase 1 | Pending |
+| QC-01 | Phase 1 | Complete |
+| QC-02 | Phase 1 | Complete |
 | ANLYS-01 | Phase 2 | Pending |
 | ANLYS-02 | Phase 2 | Pending |
 | ANLYS-03 | Phase 2 | Pending |
