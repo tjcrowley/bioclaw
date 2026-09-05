@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 03-01-PLAN.md (agent infra bootstrap: claude-agent-sdk, live_llm marker, agent/ package)"
-last_updated: "2026-09-05T12:35:28.203Z"
-last_activity: 2026-09-05 — Executed 03-01-PLAN.md (agent infra bootstrap).
+stopped_at: Completed 03-04-PLAN.md (agent/memory.py SessionMemory record/recall store, AGENT-03)
+last_updated: "2026-09-05T12:42:17.234Z"
+last_activity: 2026-09-05 — Executed 03-04-PLAN.md (agent/memory.py SessionMemory record/recall store, AGENT-03).
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 15
-  completed_plans: 11
-  percent: 73
+  completed_plans: 13
+  percent: 87
 ---
 
 # Project State
@@ -25,19 +25,19 @@ See: .planning/PROJECT.md (updated 2026-09-03)
 
 ## Current Position
 
-Phase: 3 of 6 (Agent Orchestration Wiring) — EXECUTING (1/5 plans complete)
-Plan: 5 plans across 3 waves — 03-01 (Wave 0, infra: `uv add claude-agent-sdk`, `live_llm` pytest marker, `agent/` package skeleton) COMPLETE, 03-02/03-03/03-04 (Wave 1, independent: AGENT-01 tool wrappers, AGENT-02 execution logging, AGENT-03 SessionMemory) NEXT, 03-05 (Wave 2: wires Wave 1's three modules into one `ClaudeSDKClient`-driven `run_session()`) PENDING.
-Status: Executing Phase 3. 03-01-PLAN.md executed cleanly, no deviations. `claude-agent-sdk` installed and importable, `live_llm` pytest marker registered (confirmed present via `uv run pytest --markers`), `agent/` package created and importable, `.gitignore` updated for `agent/logs/` and `agent/memory.sqlite`. Full existing test suite (58 tests) still green under `-m "not live_llm"`. Next up: Wave 1 (03-02, 03-03, 03-04) in parallel.
-Last activity: 2026-09-05 — Executed 03-01-PLAN.md (agent infra bootstrap).
+Phase: 3 of 6 (Agent Orchestration Wiring) — EXECUTING (3/5 plans complete)
+Plan: 5 plans across 3 waves — 03-01 (Wave 0, infra) COMPLETE; Wave 1 (independent): 03-03 (AGENT-02 execution logging, `agent/logging.py`) COMPLETE, 03-04 (AGENT-03 SessionMemory) COMPLETE, 03-02 (AGENT-01 tool wrappers) IN PROGRESS; 03-05 (Wave 2: wires Wave 1's three modules into one `ClaudeSDKClient`-driven `run_session()`) PENDING (blocked on 03-02).
+Status: Executing Phase 3. 03-01 and Wave 1's 03-03/03-04 executed cleanly, no deviations. `agent/logging.py` (log_tool_call JSON-lines audit writer, AGENT-02) implemented and tested in isolation from the SDK/LLM per Pitfall 4's two-tier strategy; full suite green excluding 03-02's still-in-progress `tests/test_agent_tools.py` (untracked, imports a module that doesn't exist yet -- out of scope for 03-03, will self-resolve when 03-02 completes). Next up: 03-02 completion, then Wave 2 (03-05).
+Last activity: 2026-09-05 — Executed 03-03-PLAN.md (agent/logging.py verifiable execution log, AGENT-02).
 
-Progress: [███████░░░] 73% (11/15 plans complete)
+Progress: [█████████░] 87% (13/15 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 10
-- Average duration: ~9 min
-- Total execution time: ~81 min
+- Total plans completed: 13
+- Average duration: ~7 min
+- Total execution time: ~90 min
 
 **By Phase:**
 
@@ -62,6 +62,8 @@ Progress: [███████░░░] 73% (11/15 plans complete)
 | Phase 02-analysis-tool-layer P04 | ~10min (interrupted/resumed) | 2 tasks | 2 files |
 | Phase 02 P05 | 5min | 2 tasks | 2 files |
 | Phase 03-agent-orchestration-wiring P01 | 2min | 2 tasks | 4 files |
+| Phase 03 P04 | 2min | 1 tasks | 2 files |
+| Phase 03-agent-orchestration-wiring P03 | 5min | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -85,6 +87,7 @@ Recent decisions affecting current work:
 - [Phase 02]: 02-05: Task-split analyze() implementation -- Task 1 hardcodes de_summary=None (core load-verify-preprocess-cluster-verify-save flow), Task 2 adds config.run_de branch as a pure additive diff, matching the plan's explicit task boundary
 - [Phase 02]: 02-05: verify_counts_integrity() enforced both immediately after store.load() and immediately before store.save() in analyze() -- closes Pitfall 6 (write-lock does not survive an h5ad round-trip) at the pipeline entrypoint, raising RuntimeError naming the dataset on failure
 - [Phase 03-agent-orchestration-wiring]: 03-01: No deviations - claude-agent-sdk installed and live_llm marker registered exactly per plan; agent/ package skeleton mirrors analysis/__init__.py precedent
+- [Phase 03-agent-orchestration-wiring]: 03-03: log_tool_call implemented exactly per plan's provided code (sha256(json.dumps(..., sort_keys=True, default=str)) hashing, async signature for future PostToolUse hook shape) -- no deviation needed
 
 ### Pending Todos
 
@@ -99,6 +102,6 @@ Phase 3 (Agent Orchestration Wiring) execution in progress: 03-01 (Wave 0 infra)
 
 ## Session Continuity
 
-Last session: 2026-09-05T12:34:32.234Z
-Stopped at: Completed 03-01-PLAN.md (agent infra bootstrap: claude-agent-sdk, live_llm marker, agent/ package)
+Last session: 2026-09-05T12:42:17.230Z
+Stopped at: Completed 03-03-PLAN.md (agent/logging.py verifiable execution log, AGENT-02)
 Resume file: None

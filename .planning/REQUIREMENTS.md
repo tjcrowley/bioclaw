@@ -39,7 +39,7 @@ Requirements for initial internal-tool release. Each maps to a roadmap phase.
 ### Agent Orchestration
 
 - [ ] **AGENT-01**: An OpenClaw-style agentic loop (plan → tool call → observe → continue) orchestrates the ingest/QC/analysis/FM tools via Claude Agent SDK + MCP
-- [ ] **AGENT-02**: Every tool call is logged with request/response detail sufficient to verify it was actually invoked (not simulated by the LLM)
+- [x] **AGENT-02**: Every tool call is logged with request/response detail sufficient to verify it was actually invoked (not simulated by the LLM)
 - [ ] **AGENT-03**: Session/memory persists dataset references and prior findings across a multi-turn research conversation
 
 ### Natural-Language Q&A (Capstone)
@@ -107,7 +107,7 @@ Populated during roadmap creation (2026-09-03).
 | PERT-01 | Phase 5 | Pending |
 | PERT-02 | Phase 5 | Pending |
 | AGENT-01 | Phase 3 | Pending |
-| AGENT-02 | Phase 3 | Pending |
+| AGENT-02 | Phase 3 | Complete |
 | AGENT-03 | Phase 3 | Pending |
 | QA-01 | Phase 6 | Pending |
 | QA-02 | Phase 6 | Pending |
