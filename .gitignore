@@ -5,3 +5,5 @@ __pycache__/
 node_modules/
 *.h5ad
 data/
+agent/logs/
+agent/memory.sqlite
