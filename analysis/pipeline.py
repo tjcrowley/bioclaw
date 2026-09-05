@@ -27,6 +27,7 @@ from ingest import contract
 from ingest.store import DatasetStore
 
 from analysis.cluster import cluster
+from analysis.diffexp import differential_expression
 from analysis.preprocess import preprocess
 
 
@@ -98,8 +99,29 @@ def analyze(
         random_state=config.random_state,
     )
 
-    # DE composition (config.run_de/de_*) is added in Task 2.
     de_summary = None
+    if config.run_de:
+        missing = [
+            field_name
+            for field_name, value in (
+                ("de_groupby", config.de_groupby),
+                ("de_group1", config.de_group1),
+            )
+            if value is None
+        ]
+        if missing:
+            raise ValueError(
+                f"config.run_de is True but required field(s) "
+                f"{missing} are unset -- analyze() never guesses an "
+                f"implicit DE comparison."
+            )
+        adata, de_summary = differential_expression(
+            adata,
+            groupby=config.de_groupby,
+            group1=config.de_group1,
+            group2=config.de_group2,
+            n_genes=config.de_n_genes,
+        )
 
     adata.uns["analysis"] = asdict(config)
 
