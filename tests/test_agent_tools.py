@@ -126,3 +126,7 @@ def test_analyze_dataset_tool_unknown_name_raises_keyerror(tmp_path, monkeypatch
 
     with pytest.raises(KeyError):
         asyncio.run(analyze_dataset_tool.handler({"name": "does-not-exist"}))
+
+
+def test_bioclaw_server_imports_and_wraps_both_tools():
+    from agent.server import bioclaw_server  # noqa: F401 -- import must not raise
