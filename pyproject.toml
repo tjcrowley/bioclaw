@@ -7,6 +7,7 @@ dependencies = [
     "anndata>=0.13",
     "igraph>=0.10.8",
     "claude-agent-sdk>=0.2.152",
+    "decoupler>=2.2.0",
 ]
 
 [dependency-groups]
@@ -19,4 +20,5 @@ testpaths = ["tests"]
 pythonpath = ["."]
 markers = [
     "live_llm: requires a live Anthropic API key (ANTHROPIC_API_KEY), excluded from fast/CI runs",
+    "bio_fm_smoke: requires a real pretrained scGPT checkpoint in the isolated bio_fm_worker/ environment, excluded from fast/CI runs",
 ]
