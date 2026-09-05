@@ -83,10 +83,10 @@ Plans:
   1. The agent can invoke a bio-FM-backed cell-type annotation tool on normalized expression and receive a cell-type call.
   2. Every FM-backed annotation call automatically returns a marker-gene/`decoupler`-based statistical baseline result alongside it, for comparison.
   3. Annotation output includes reference dataset, confidence score, and ontology metadata — not a bare label string.
-**Plans**: 5 plans
+**Plans**: 1/5 plans executed
 
 Plans:
-- [ ] 04-01-PLAN.md — Wave 0: annotation/ package skeleton + AnnotationCall/AnnotationSummary contracts, decoupler install, bio_fm_smoke marker
+- [x] 04-01-PLAN.md — Wave 0: annotation/ package skeleton + AnnotationCall/AnnotationSummary contracts, decoupler install, bio_fm_smoke marker
 - [ ] 04-02-PLAN.md — decoupler ORA marker-gene statistical baseline (ANNOT-02)
 - [ ] 04-03-PLAN.md — Isolated scGPT environment (bio_fm_worker/) + subprocess fm_client, mocked-FM unit tests (ANNOT-01)
 - [ ] 04-04-PLAN.md — annotate() pipeline composition + annotate_cell_type_tool agent wiring (ANNOT-01, ANNOT-03)
@@ -130,6 +130,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. Ingest + QC Pipeline | 5/5 | Complete   | 2026-09-04 |
 | 2. Analysis Tool Layer | 5/5 | Complete   | 2026-09-05 |
 | 3. Agent Orchestration Wiring | 5/5 | Complete    | 2026-09-05 |
-| 4. Bio-FM Tool Layer — Cell-Type Annotation | 0/5 | Planned    |  |
+| 4. Bio-FM Tool Layer — Cell-Type Annotation | 1/5 | In Progress|  |
 | 5. Perturbation-Response Tool + VCC Benchmark | 0/TBD | Not started | - |
 | 6. Natural-Language Q&A Capstone | 0/TBD | Not started | - |
