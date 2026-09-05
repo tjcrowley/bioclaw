@@ -28,7 +28,7 @@ Requirements for initial internal-tool release. Each maps to a roadmap phase.
 ### Bio-FM Annotation
 
 - [ ] **ANNOT-01**: System calls a bio foundation model (scGPT or Geneformer) as a tool to annotate cell type from normalized expression
-- [ ] **ANNOT-02**: Every FM-backed annotation call is accompanied by a statistical baseline (marker-gene/`decoupler`-based) result for comparison, so an FM result is never presented as ground truth on its own
+- [x] **ANNOT-02**: Every FM-backed annotation call is accompanied by a statistical baseline (marker-gene/`decoupler`-based) result for comparison, so an FM result is never presented as ground truth on its own
 - [ ] **ANNOT-03**: Annotation output includes reference/confidence/ontology metadata, not a bare label string
 
 ### Perturbation Prediction
@@ -102,7 +102,7 @@ Populated during roadmap creation (2026-09-03).
 | ANLYS-03 | Phase 2 | Complete |
 | ANLYS-04 | Phase 2 | Complete |
 | ANNOT-01 | Phase 4 | Pending |
-| ANNOT-02 | Phase 4 | Pending |
+| ANNOT-02 | Phase 4 | Complete |
 | ANNOT-03 | Phase 4 | Pending |
 | PERT-01 | Phase 5 | Pending |
 | PERT-02 | Phase 5 | Pending |

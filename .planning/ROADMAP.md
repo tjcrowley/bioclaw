@@ -87,7 +87,7 @@ Plans:
 
 Plans:
 - [x] 04-01-PLAN.md — Wave 0: annotation/ package skeleton + AnnotationCall/AnnotationSummary contracts, decoupler install, bio_fm_smoke marker
-- [ ] 04-02-PLAN.md — decoupler ORA marker-gene statistical baseline (ANNOT-02)
+- [x] 04-02-PLAN.md — decoupler ORA marker-gene statistical baseline (ANNOT-02)
 - [ ] 04-03-PLAN.md — Isolated scGPT environment (bio_fm_worker/) + subprocess fm_client, mocked-FM unit tests (ANNOT-01)
 - [ ] 04-04-PLAN.md — annotate() pipeline composition + annotate_cell_type_tool agent wiring (ANNOT-01, ANNOT-03)
 - [ ] 04-05-PLAN.md — cellxgene-census reference index + real scGPT checkpoint acquisition + bio_fm_smoke phase-gate verification
@@ -130,6 +130,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. Ingest + QC Pipeline | 5/5 | Complete   | 2026-09-04 |
 | 2. Analysis Tool Layer | 5/5 | Complete   | 2026-09-05 |
 | 3. Agent Orchestration Wiring | 5/5 | Complete    | 2026-09-05 |
-| 4. Bio-FM Tool Layer — Cell-Type Annotation | 1/5 | In Progress|  |
+| 4. Bio-FM Tool Layer — Cell-Type Annotation | 2/5 | In Progress|  |
 | 5. Perturbation-Response Tool + VCC Benchmark | 0/TBD | Not started | - |
 | 6. Natural-Language Q&A Capstone | 0/TBD | Not started | - |

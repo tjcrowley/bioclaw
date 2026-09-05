@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 04-01-PLAN.md (annotation/ skeleton, decoupler, bio_fm_smoke marker); next: 04-02/04-03 (Wave 1, parallel)"
-last_updated: "2026-09-05T22:41:36.420Z"
-last_activity: 2026-09-05 — Executed Phase 4 Plan 01 (annotation/ skeleton, decoupler, bio_fm_smoke marker).
+stopped_at: "Completed 04-02-PLAN.md (decoupler ORA baseline, ANNOT-02); waiting on 04-03 (Wave 1, parallel) before Wave 2 (04-04)"
+last_updated: "2026-09-05T22:52:37.237Z"
+last_activity: 2026-09-05 — Executed Phase 4 Plan 02 (baseline_annotate() decoupler ORA marker-gene baseline).
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 20
-  completed_plans: 16
-  percent: 80
+  completed_plans: 17
+  percent: 85
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-03)
 
 **Core value:** A Biopunk Labs researcher can ask a plain-language question about a single-cell dataset and get back a QC'd, annotated, interpreted answer without writing a scanpy script by hand.
-**Current focus:** Phase 4 (Bio-FM Tool Layer — Cell-Type Annotation) is executing. Plan 04-01 (Wave 0 infrastructure) is complete — `decoupler` installed torch-free, `bio_fm_smoke` marker registered, `annotation/` package skeleton with `AnnotationCall`/`AnnotationSummary` contracts fixed. Wave 1 (04-02 decoupler baseline, 04-03 scGPT fm_client, parallel) is next.
+**Current focus:** Phase 4 (Bio-FM Tool Layer — Cell-Type Annotation) is executing. Plan 04-01 (Wave 0 infrastructure) and Plan 04-02 (decoupler ORA baseline, ANNOT-02) are complete. Plan 04-03 (Wave 1, isolated scGPT fm_client) is still outstanding — runs in parallel with 04-02, touches disjoint files.
 
 ## Current Position
 
-Phase: 4 of 6 (Bio-FM Tool Layer — Cell-Type Annotation) — EXECUTING (Wave 0 complete, Wave 1 next)
-Plan: 5 plans across 4 waves — 04-01 (Wave 0: `annotation/` package skeleton, `AnnotationCall`/`AnnotationSummary` dataclasses, `decoupler` install, `bio_fm_smoke` marker) COMPLETE; 04-02 (Wave 1: `decoupler` ORA marker-gene baseline, ANNOT-02) NEXT; 04-03 (Wave 1: isolated `bio_fm_worker/` scGPT venv + subprocess `fm_client.py`, ANNOT-01, mocked-FM unit tests) NEXT (parallel with 04-02); 04-04 (Wave 2: `annotate()` pipeline composition + `annotate_cell_type_tool` agent wiring, ANNOT-01/03); 04-05 (Wave 3: real `cellxgene-census` reference index + scGPT checkpoint acquisition + `bio_fm_smoke` phase-gate checkpoint, blocking human-verify).
-Status: Executing Phase 4. Plan 04-01 executed and committed (`b314989` decoupler+marker, `b57ee85` annotation/ skeleton). `decoupler` 2.2.0 installed with zero resolver conflicts, no torch/scgpt in root pyproject.toml. `AnnotationCall`/`AnnotationSummary` fixed verbatim per 04-RESEARCH.md Pattern 3. Full fast test suite green (82 passed, 1 deselected). Next up: 04-02 and 04-03 (Wave 1, can run in parallel, both depend only on 04-01).
-Last activity: 2026-09-05 — Executed Phase 4 Plan 01 (annotation/ skeleton, decoupler, bio_fm_smoke marker).
+Phase: 4 of 6 (Bio-FM Tool Layer — Cell-Type Annotation) — EXECUTING (Wave 0 + 04-02 of Wave 1 complete, 04-03 outstanding)
+Plan: 5 plans across 4 waves — 04-01 (Wave 0: `annotation/` package skeleton, `AnnotationCall`/`AnnotationSummary` dataclasses, `decoupler` install, `bio_fm_smoke` marker) COMPLETE; 04-02 (Wave 1: `decoupler` ORA marker-gene baseline, ANNOT-02) COMPLETE; 04-03 (Wave 1: isolated `bio_fm_worker/` scGPT venv + subprocess `fm_client.py`, ANNOT-01, mocked-FM unit tests) OUTSTANDING (parallel with 04-02, disjoint files); 04-04 (Wave 2: `annotate()` pipeline composition + `annotate_cell_type_tool` agent wiring, ANNOT-01/03); 04-05 (Wave 3: real `cellxgene-census` reference index + scGPT checkpoint acquisition + `bio_fm_smoke` phase-gate checkpoint, blocking human-verify).
+Status: Executing Phase 4. Plan 04-01 executed and committed (`b314989` decoupler+marker, `b57ee85` annotation/ skeleton). Plan 04-02 executed and committed (`d38511e` failing tests, `8b8255b` baseline_annotate() implementation): `baseline_annotate()` pseudobulks per-group counts and runs decoupler's `dc.mt.ora` with a documented `n_up=10%`-of-genes override to discriminate cleanly on small marker panels, returning one `AnnotationCall` per group. Full fast test suite green (87 passed, 1 deselected). Next up: wait for 04-03 (Wave 1, parallel), then 04-04 (Wave 2).
+Last activity: 2026-09-05 — Executed Phase 4 Plan 02 (baseline_annotate() decoupler ORA marker-gene baseline).
 
-Progress: [████████░░] 80% (16/20 plans complete; Phase 4 Plan 01 of 5 executed)
+Progress: [█████████░] 85% (17/20 plans complete; Phase 4 Plans 01-02 of 5 executed)
 
 ## Performance Metrics
 
@@ -67,6 +67,7 @@ Progress: [████████░░] 80% (16/20 plans complete; Phase 4 Pl
 | Phase 03 P02 | 12min | 2 tasks | 3 files |
 | Phase 03-agent-orchestration-wiring P05 | 5min | 2 tasks | 3 files |
 | Phase 04-bio-fm-cell-type-annotation P01 | 6min | 2 tasks | 8 files |
+| Phase 04-bio-fm-cell-type-annotation P02 | ~15min | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -98,6 +99,7 @@ Recent decisions affecting current work:
 - [Phase 03-agent-orchestration-wiring]: 03-05 (post-hoc, found during live_llm debugging 2026-09-05): uncaught tool handler exceptions dispatch as a distinct `PostToolUseFailure` SDK event (not `PostToolUse`), invisible to hooks that only subscribe to `PostToolUse` -- `agent/tools.py` now catches all exceptions and returns a controlled `is_error: True` result instead. Also: in-process MCP `tool_response` seen by a `PostToolUse` hook is the handler's bare `content` array, not the `{"content":[...], "is_error":...}` dict the handler returns -- the CLI strips the wrapper and `is_error` is not passed through separately.
 - [Phase 04-bio-fm-cell-type-annotation]: Planning (2026-09-05): scGPT chosen over Geneformer for ANNOT-01 (PyPI-installable, CPU-capable, zero-shot reference-mapping) — see 04-RESEARCH.md. scGPT/torch isolated into a plain-venv `bio_fm_worker/` environment reached via subprocess shim (`annotation/fm_client.py`), never added to the root `pyproject.toml`. `decoupler` (lightweight, no torch) installed directly into the main venv for ANNOT-02's baseline. ANNOT-03's ontology metadata sourced from `cellxgene-census`'s schema-required `cell_type_ontology_term_id` field on the reference index, not a separate ontology-mapping pipeline. The decoupler baseline call is unconditional in `annotate()`'s code order (executes before/independent of the FM call's try/except), so ANNOT-02 holds even when the FM call fails.
 - [Phase 04-bio-fm-cell-type-annotation]: 04-01: decoupler installed torch-free with zero resolver conflicts, confirming 04-RESEARCH.md's Isolation Boundary; AnnotationCall/AnnotationSummary dataclasses fixed verbatim from the plan spec for all downstream Wave 1/2 plans to implement against.
+- [Phase 04-bio-fm-cell-type-annotation]: 04-02: decoupler==2.2.0's real API introspected directly (dc.op.resource / dc.mt.ora), superseding 04-RESEARCH.md's LOW-MEDIUM-confidence v1.x sketch. baseline_annotate() pseudobulks per-group counts before calling dc.mt.ora (which operates per-observation, not per-group) and overrides n_up to 10% of gene count (vs decoupler's own 5% default) since 5% produced tied/non-discriminating scores on small marker panels -- verified empirically, documented in annotation/baseline.py's module docstring.
 
 ### Pending Todos
 
@@ -112,6 +114,6 @@ Phase 4 (Bio-FM Tool Layer — Cell-Type Annotation) is planned (5 plans, 04-01.
 
 ## Session Continuity
 
-Last session: 2026-09-05T22:40:13.297Z
-Stopped at: Completed 04-01-PLAN.md (annotation/ skeleton, decoupler, bio_fm_smoke marker); next: 04-02/04-03 (Wave 1, parallel)
+Last session: 2026-09-05T22:52:37.237Z
+Stopped at: Completed 04-02-PLAN.md (decoupler ORA baseline, ANNOT-02); waiting on 04-03 (Wave 1, parallel) before Wave 2 (04-04)
 Resume file: None
