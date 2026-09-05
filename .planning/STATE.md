@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: "Completed 02-03-PLAN.md (Wave 1: analysis/cluster.py, ANLYS-02)"
-last_updated: "2026-09-04T20:32:04.784Z"
-last_activity: "2026-09-04 — Executed 02-03-PLAN.md (Wave 1: analysis/cluster.py, ANLYS-02)"
+stopped_at: "Completed 02-04-PLAN.md (Wave 1: analysis/diffexp.py, ANLYS-03) -- Wave 1 fully complete"
+last_updated: "2026-09-04T21:10:00.000Z"
+last_activity: "2026-09-04 — Executed 02-04-PLAN.md (Wave 1: analysis/diffexp.py, ANLYS-03)"
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 10
-  completed_plans: 8
-  percent: 70
+  completed_plans: 9
+  percent: 90
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-03)
 
 **Core value:** A Biopunk Labs researcher can ask a plain-language question about a single-cell dataset and get back a QC'd, annotated, interpreted answer without writing a scanpy script by hand.
-**Current focus:** Phase 2 — Analysis Tool Layer (Wave 0 complete; Wave 1 in progress — 02-02/02-03 done, 02-04 running in parallel)
+**Current focus:** Phase 2 — Analysis Tool Layer (Wave 0 and Wave 1 complete; Wave 2 — 02-05 pipeline.py — next)
 
 ## Current Position
 
 Phase: 2 of 6 (Analysis Tool Layer) — IN PROGRESS
-Plan: 3 of 5 in current phase — Wave 1 (02-02, 02-03) complete; 02-04 (diffexp.py) still running in parallel; Wave 2 (02-05 pipeline.py) next after Wave 1 finishes
-Status: 02-03-PLAN.md complete: analysis/cluster.py implements neighbors -> Leiden (flavor="igraph", directed=False, n_iterations=2) -> UMAP (ANLYS-02), never mutates caller's AnnData, Leiden labels deterministic given random_state (UMAP coordinate exactness deliberately not asserted per Pitfall 5), size-guarded (clamps n_neighbors against n_obs-1), returns bounded ClusterSummary. Full test suite green (43 tests).
-Last activity: 2026-09-04 — Executed 02-03-PLAN.md (Wave 1: analysis/cluster.py, ANLYS-02)
+Plan: 4 of 5 in current phase — Wave 1 (02-02, 02-03, 02-04) all complete; Wave 2 (02-05 pipeline.py) next, final plan of the phase
+Status: 02-04-PLAN.md complete: analysis/diffexp.py implements differential_expression() -- generic Wilcoxon rank-sum DE (method="wilcoxon", tie_correct=True, pts=True, corr_method="benjamini-hochberg") over any categorical .obs column, recovers structured_adata's known marker genes, returns bounded DESummary (top_genes capped at n_genes). Task 2 was interrupted mid-execution by a subagent session-limit cutoff and completed directly in the orchestrating session. Full test suite green (51 tests).
+Last activity: 2026-09-04 — Executed 02-04-PLAN.md (Wave 1: analysis/diffexp.py, ANLYS-03)
 
-Progress: [████████░░] 80% (8/10 plans complete)
+Progress: [█████████░] 90% (9/10 plans complete)
 
 ## Performance Metrics
 
@@ -59,6 +59,7 @@ Progress: [████████░░] 80% (8/10 plans complete)
 | Phase 02-analysis-tool-layer P01 | 8min | 2 tasks | 6 files |
 | Phase 02 P02 | 8 | 2 tasks | 2 files |
 | Phase 02-analysis-tool-layer P03 | 5min | 2 tasks | 2 files |
+| Phase 02-analysis-tool-layer P04 | ~10min (interrupted/resumed) | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -78,10 +79,11 @@ Recent decisions affecting current work:
 - [Phase 02-analysis-tool-layer]: 02-01: analysis/summary.py's four dataclasses transcribed verbatim from the plan's `<interfaces>` contract, no additions — three Wave 1 plans (02-02/03/04) depend on this exact shape being stable
 - [Phase 02]: 02-02: Clamped PCA n_comps against the actual post-HVG-selection gene count (n_hvg), not adata.n_vars -- sklearn's arpack solver requires n_components strictly less than min(n_samples, n_features), and HVG selection can silently return fewer genes than requested on small fixtures
 - [Phase 02-analysis-tool-layer]: 02-03: flavor='igraph' always paired with explicit directed=False and n_iterations=2; Leiden determinism asserted, UMAP coordinate exactness deliberately not asserted (Pitfall 5)
+- [Phase 02-analysis-tool-layer]: 02-04: DESummary.top_genes sorted/capped by pvals_adj ascending via .head(n_genes); n_significant/n_genes_tested computed over the full unsliced rank_genes_groups_df result before truncation, mirroring PreprocessSummary/ClusterSummary's O(1)/O(top_n) bounding invariant
 
 ### Pending Todos
 
-02-02 (preprocess.py) and 02-03 (cluster.py) complete. 02-04 (diffexp.py) still in progress in parallel. Once all three Wave 1 plans are done, Wave 2 (02-05 pipeline.py) composes them into the coarse-grained `analyze()` orchestration entrypoint mirroring `ingest/pipeline.py::ingest_10x()`.
+All three Wave 1 plans (02-02 preprocess.py, 02-03 cluster.py, 02-04 diffexp.py) complete. Wave 2 (02-05 pipeline.py) is next and final for the phase — composes preprocess/cluster/diffexp into the coarse-grained `analyze()` orchestration entrypoint mirroring `ingest/pipeline.py::ingest_10x()`, including `verify_counts_integrity()` pre+post to close the counts-layer round-trip vulnerability (Pitfall 6). After 02-05, run gsd-verifier for phase goal-backward verification, then mark Phase 2 complete.
 
 ### Blockers/Concerns
 
