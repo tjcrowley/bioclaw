@@ -13,11 +13,18 @@ parameter is intentionally omitted from the tool's dict schema (every key
 in a dict schema is treated as required) and read via `args.get("version")`
 in the handler body.
 
-Per 03-RESEARCH.md Pitfall 3, neither handler catches exceptions raised by
-`ingest_10x`/`analyze` (e.g. `KeyError` from an unknown dataset name,
-`RuntimeError` from a counts-integrity failure) -- the SDK's in-process MCP
-server converts an uncaught handler exception into an error tool result at
-dispatch time, so letting it propagate is the correct default.
+Both handlers catch exceptions raised by `ingest_10x`/`analyze` (e.g.
+`KeyError` from an unknown dataset name, `RuntimeError` from a
+counts-integrity failure) and return a normal `is_error: True` result
+instead of letting them propagate. Contrary to 03-RESEARCH.md Pitfall 3's
+original assumption, an uncaught handler exception does NOT surface as a
+`PostToolUse` hook event with `tool_response.is_error` set -- the installed
+`claude_agent_sdk` dispatches it as a distinct `PostToolUseFailure` event
+(`PostToolUseFailureHookInput`, carrying `error: str`, no `tool_response`)
+that `agent/session.py`'s hooks never subscribed to. Left uncaught, a failed
+tool call is invisible to AGENT-02's audit log and to
+`record_dataset_reference`. Catching here keeps every call -- success or
+failure -- on the `PostToolUse` path those hooks are wired to.
 """
 
 import json
@@ -44,7 +51,10 @@ STORE_ROOT = os.environ.get("BIOCLAW_STORE_ROOT", "data")
     {"path": str, "name": str},
 )
 async def ingest_10x_tool(args: dict[str, Any]) -> dict[str, Any]:
-    dataset_id = ingest_10x(args["path"], args["name"], store_root=STORE_ROOT)
+    try:
+        dataset_id = ingest_10x(args["path"], args["name"], store_root=STORE_ROOT)
+    except Exception as exc:
+        return {"content": [{"type": "text", "text": str(exc)}], "is_error": True}
     return {
         "content": [{"type": "text", "text": json.dumps({"dataset_id": dataset_id})}],
         "is_error": False,
@@ -61,7 +71,10 @@ async def ingest_10x_tool(args: dict[str, Any]) -> dict[str, Any]:
 )
 async def analyze_dataset_tool(args: dict[str, Any]) -> dict[str, Any]:
     version = args.get("version")
-    new_id, summary = analyze(args["name"], version=version, store_root=STORE_ROOT)
+    try:
+        new_id, summary = analyze(args["name"], version=version, store_root=STORE_ROOT)
+    except Exception as exc:
+        return {"content": [{"type": "text", "text": str(exc)}], "is_error": True}
     return {
         "content": [
             {"type": "text", "text": json.dumps({"dataset_id": new_id, **summary})}

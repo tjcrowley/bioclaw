@@ -121,11 +121,12 @@ def test_analyze_dataset_tool_schema_omits_version():
     assert "name" in schema
 
 
-def test_analyze_dataset_tool_unknown_name_raises_keyerror(tmp_path, monkeypatch):
+def test_analyze_dataset_tool_unknown_name_returns_error_result(tmp_path, monkeypatch):
     monkeypatch.setattr(agent_tools, "STORE_ROOT", str(tmp_path))
 
-    with pytest.raises(KeyError):
-        asyncio.run(analyze_dataset_tool.handler({"name": "does-not-exist"}))
+    result = asyncio.run(analyze_dataset_tool.handler({"name": "does-not-exist"}))
+
+    assert result["is_error"] is True
 
 
 def test_bioclaw_server_imports_and_wraps_both_tools():

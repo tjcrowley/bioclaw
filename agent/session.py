@@ -81,16 +81,23 @@ def record_dataset_reference(session_memory: SessionMemory, session_id: str):
     of a real tool result's JSON text content and records it in
     `session_memory` -- the write half of AGENT-03. A tool call that
     produced no dataset reference (or failed) is simply not memory-worthy;
-    this must never raise or otherwise crash the hook chain."""
+    this must never raise or otherwise crash the hook chain.
+
+    Verified against a live run (2026-09-05): for an in-process MCP tool,
+    `input_data["tool_response"]` is the handler's `content` array itself
+    (e.g. `[{"type": "text", "text": "..."}]`) -- the CLI strips the
+    `{"content": [...], "is_error": ...}` wrapper `agent/tools.py`'s
+    handlers actually return before it reaches this hook, and `is_error`
+    is not passed through separately. So there is no reliable is_error
+    signal to check here; a failed/malformed result is instead filtered
+    out naturally below when it fails to parse as `{"dataset_id": ...}`
+    JSON."""
 
     async def _hook(input_data, tool_use_id, context):
         tool_name = input_data.get("tool_name", "")
         tool_response = input_data.get("tool_response")
-        if _tool_response_is_error(tool_response):
-            return {}
         try:
-            # tool_response's text content block is JSON per agent/tools.py's contract
-            text = tool_response["content"][0]["text"]
+            text = tool_response[0]["text"]
             payload = json.loads(text)
             dataset_id = payload.get("dataset_id")
         except (KeyError, IndexError, TypeError, ValueError):

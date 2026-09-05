@@ -60,15 +60,15 @@ def test_record_dataset_reference_records_dataset_id_from_valid_result(tmp_path)
     mem = SessionMemory(root=tmp_path / "memory.sqlite")
     hook = record_dataset_reference(mem, "sess-1")
 
-    tool_response = {
-        "content": [
-            {
-                "type": "text",
-                "text": json.dumps({"dataset_id": "pilot@1", "preprocess": {}}),
-            }
-        ],
-        "is_error": False,
-    }
+    # Real tool_response shape (verified live 2026-09-05): the handler's
+    # `content` array itself, not the {"content": [...], "is_error": ...}
+    # dict agent/tools.py's handlers return -- the CLI unwraps it.
+    tool_response = [
+        {
+            "type": "text",
+            "text": json.dumps({"dataset_id": "pilot@1", "preprocess": {}}),
+        }
+    ]
     input_data = _post_tool_use_input("ingest_10x", tool_response)
 
     asyncio.run(hook(input_data, "tool-use-1", CONTEXT))
@@ -80,10 +80,7 @@ def test_record_dataset_reference_ignores_non_json_text(tmp_path):
     mem = SessionMemory(root=tmp_path / "memory.sqlite")
     hook = record_dataset_reference(mem, "sess-1")
 
-    tool_response = {
-        "content": [{"type": "text", "text": "RuntimeError: dataset not found"}],
-        "is_error": True,
-    }
+    tool_response = [{"type": "text", "text": "RuntimeError: dataset not found"}]
     input_data = _post_tool_use_input("ingest_10x", tool_response)
 
     asyncio.run(hook(input_data, "tool-use-1", CONTEXT))
@@ -95,10 +92,7 @@ def test_record_dataset_reference_ignores_json_without_dataset_id(tmp_path):
     mem = SessionMemory(root=tmp_path / "memory.sqlite")
     hook = record_dataset_reference(mem, "sess-1")
 
-    tool_response = {
-        "content": [{"type": "text", "text": json.dumps({"n_cells": 100})}],
-        "is_error": False,
-    }
+    tool_response = [{"type": "text", "text": json.dumps({"n_cells": 100})}]
     input_data = _post_tool_use_input("ingest_10x", tool_response)
 
     asyncio.run(hook(input_data, "tool-use-1", CONTEXT))
@@ -110,8 +104,19 @@ def test_record_dataset_reference_does_not_raise_on_malformed_response(tmp_path)
     mem = SessionMemory(root=tmp_path / "memory.sqlite")
     hook = record_dataset_reference(mem, "sess-1")
 
-    # No "content" key at all -- must not crash the hook chain.
+    # Not a content array at all -- must not crash the hook chain.
     input_data = _post_tool_use_input("ingest_10x", {"is_error": False})
+
+    asyncio.run(hook(input_data, "tool-use-1", CONTEXT))
+
+    assert mem.recent_datasets("sess-1") == []
+
+
+def test_record_dataset_reference_does_not_raise_on_empty_content_list(tmp_path):
+    mem = SessionMemory(root=tmp_path / "memory.sqlite")
+    hook = record_dataset_reference(mem, "sess-1")
+
+    input_data = _post_tool_use_input("ingest_10x", [])
 
     asyncio.run(hook(input_data, "tool-use-1", CONTEXT))
 

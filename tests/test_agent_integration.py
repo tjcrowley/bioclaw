@@ -45,9 +45,11 @@ def test_run_session_two_turns_ingest_then_recall(tmp_path, tiny_mtx_dir, monkey
     )
 
     # AGENT-02: a real tool call occurred and was logged, not simulated text.
+    # Real MCP-routed tool calls log under the fully-qualified name the SDK
+    # assigns them (mcp__<server>__<tool>), not the bare tool name.
     assert log_path.exists()
     records = [json.loads(line) for line in log_path.read_text().splitlines()]
-    assert any(r["tool_name"] == "ingest_10x" for r in records)
+    assert any(r["tool_name"] == "mcp__bioclaw__ingest_10x" for r in records)
 
     # AGENT-03 (write half): the dataset reference was recorded.
     recent = mem.recent_datasets(sid)
