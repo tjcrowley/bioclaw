@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Ingest + QC Pipeline** - Raw 10x output becomes canonical, versioned, trustworthy `.h5ad` with an immutable raw-counts contract (completed 2026-09-04)
 - [x] **Phase 2: Analysis Tool Layer** - Deterministic clustering and differential-expression tools work standalone on canonical data, agent-ready (completed 2026-09-05)
-- [ ] **Phase 3: Agent Orchestration Wiring** - A Claude-based agent plans, calls, and logs tool invocations against the Phase 1-2 tools with persistent session memory
+- [x] **Phase 3: Agent Orchestration Wiring** - A Claude-based agent plans, calls, and logs tool invocations against the Phase 1-2 tools with persistent session memory (completed 2026-09-05)
 - [ ] **Phase 4: Bio-FM Tool Layer — Cell-Type Annotation** - The agent calls a bio foundation model as a tool for cell-type annotation, always paired with a statistical baseline
 - [ ] **Phase 5: Perturbation-Response Tool + VCC Benchmark** - The agent predicts perturbation response as a tool call, independently validated against Arc Institute's public benchmark
 - [ ] **Phase 6: Natural-Language Q&A Capstone** - A researcher asks a plain-language question and gets a traceable, uncertainty-aware, interpreted answer
@@ -66,14 +66,14 @@ Plans:
   1. A researcher can issue a request that drives a plan → tool call → observe → continue loop, invoking ingest/QC/analysis tools through the Claude Agent SDK + MCP.
   2. Every tool call is logged with request/response detail sufficient to verify it was actually invoked, not simulated by the LLM.
   3. The agent recalls dataset references and prior findings across multiple turns within the same session.
-**Plans**: 5 plans
+**Plans**: 5/5 plans complete
 
 Plans:
-- [ ] 03-01-PLAN.md — Wave 0: uv add claude-agent-sdk, live_llm pytest marker, agent/ package skeleton
-- [ ] 03-02-PLAN.md — agent/tools.py + agent/server.py: ingest_10x_tool/analyze_dataset_tool + in-process MCP server (AGENT-01)
-- [ ] 03-03-PLAN.md — agent/logging.py: PostToolUse JSON-lines execution log (AGENT-02)
-- [ ] 03-04-PLAN.md — agent/memory.py: SQLite-backed SessionMemory dataset-reference store (AGENT-03)
-- [ ] 03-05-PLAN.md — agent/session.py: ClaudeSDKClient wiring + live_llm integration smoke test (AGENT-01/02/03)
+- [x] 03-01-PLAN.md — Wave 0: uv add claude-agent-sdk, live_llm pytest marker, agent/ package skeleton
+- [x] 03-02-PLAN.md — agent/tools.py + agent/server.py: ingest_10x_tool/analyze_dataset_tool + in-process MCP server (AGENT-01)
+- [x] 03-03-PLAN.md — agent/logging.py: PostToolUse JSON-lines execution log (AGENT-02)
+- [x] 03-04-PLAN.md — agent/memory.py: SQLite-backed SessionMemory dataset-reference store (AGENT-03)
+- [x] 03-05-PLAN.md — agent/session.py: ClaudeSDKClient wiring + live_llm integration smoke test (AGENT-01/02/03)
 
 ### Phase 4: Bio-FM Tool Layer — Cell-Type Annotation
 **Goal**: The agent can call a bio foundation model (scGPT or Geneformer) as a tool to annotate cell type, with every FM result accompanied by a statistical baseline and full confidence/reference metadata — never presented as ground truth alone.
@@ -125,7 +125,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Ingest + QC Pipeline | 5/5 | Complete   | 2026-09-04 |
 | 2. Analysis Tool Layer | 5/5 | Complete   | 2026-09-05 |
-| 3. Agent Orchestration Wiring | 1/5 | In Progress|  |
+| 3. Agent Orchestration Wiring | 5/5 | Complete    | 2026-09-05 |
 | 4. Bio-FM Tool Layer — Cell-Type Annotation | 0/TBD | Not started | - |
 | 5. Perturbation-Response Tool + VCC Benchmark | 0/TBD | Not started | - |
 | 6. Natural-Language Q&A Capstone | 0/TBD | Not started | - |

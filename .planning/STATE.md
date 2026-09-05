@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 03-02-PLAN.md (agent/tools.py + agent/server.py, AGENT-01 tool-calling surface)
-last_updated: "2026-09-05T12:45:06.921Z"
-last_activity: 2026-09-05 — Executed 03-02-PLAN.md (agent/tools.py + agent/server.py, AGENT-01 tool-calling surface).
+status: verifying
+stopped_at: Completed 03-05-PLAN.md (agent/session.py run_session(), Phase 3 Wave 2 complete)
+last_updated: "2026-09-05T12:53:55.859Z"
+last_activity: 2026-09-05 — Executed 03-05-PLAN.md (agent/session.py run_session(), Phase 3 Wave 2 wiring complete).
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 15
-  completed_plans: 14
-  percent: 93
+  completed_plans: 15
+  percent: 100
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-03)
 
 **Core value:** A Biopunk Labs researcher can ask a plain-language question about a single-cell dataset and get back a QC'd, annotated, interpreted answer without writing a scanpy script by hand.
-**Current focus:** Phase 3 (Agent Orchestration Wiring) EXECUTING — 03-01 (Wave 0 infra), 03-02 (AGENT-01 tool wrappers), 03-03 (AGENT-02 logging), 03-04 (AGENT-03 SessionMemory) all complete (Wave 1 done); 03-05 (Wave 2) next.
+**Current focus:** Phase 3 (Agent Orchestration Wiring) — all 5 plans complete (03-01 Wave 0 infra; 03-02/03-03/03-04 Wave 1; 03-05 Wave 2 session wiring). Pending: gsd-verifier goal-backward check against AGENT-01/02/03, then mark Phase 3 complete and advance to Phase 4.
 
 ## Current Position
 
-Phase: 3 of 6 (Agent Orchestration Wiring) — EXECUTING (4/5 plans complete)
-Plan: 5 plans across 3 waves — 03-01 (Wave 0, infra) COMPLETE; Wave 1 (independent, all COMPLETE): 03-02 (AGENT-01 tool wrappers, `agent/tools.py`+`agent/server.py`), 03-03 (AGENT-02 execution logging, `agent/logging.py`), 03-04 (AGENT-03 SessionMemory, `agent/memory.py`); 03-05 (Wave 2: wires Wave 1's three modules into one `ClaudeSDKClient`-driven `run_session()`) NEXT, no longer blocked.
-Status: Executing Phase 3. 03-01 and all of Wave 1 (03-02/03-03/03-04) executed cleanly. `agent/tools.py`/`agent/server.py` (AGENT-01 tool-calling surface), `agent/logging.py` (AGENT-02), and `agent/memory.py` (AGENT-03) all implemented and tested in isolation from the SDK/LLM per Pitfall 4's two-tier strategy. Full fast-tier suite green (`uv run pytest tests/ -q -m "not live_llm"` -> 74 passed). Next up: Wave 2 (03-05), then gsd-verifier goal-backward check against AGENT-01/02/03, then mark Phase 3 complete.
-Last activity: 2026-09-05 — Executed 03-02-PLAN.md (agent/tools.py + agent/server.py, AGENT-01 tool-calling surface).
+Phase: 3 of 6 (Agent Orchestration Wiring) — ALL PLANS EXECUTED (5/5 plans complete), pending verifier check before phase close-out
+Plan: 5 plans across 3 waves — 03-01 (Wave 0, infra) COMPLETE; Wave 1 (independent, all COMPLETE): 03-02 (AGENT-01 tool wrappers, `agent/tools.py`+`agent/server.py`), 03-03 (AGENT-02 execution logging, `agent/logging.py`), 03-04 (AGENT-03 SessionMemory, `agent/memory.py`); 03-05 (Wave 2: wires Wave 1's three modules into one `ClaudeSDKClient`-driven `run_session()`) COMPLETE.
+Status: Phase 3 execution complete. `agent/tools.py`/`agent/server.py` (AGENT-01), `agent/logging.py` (AGENT-02), `agent/memory.py` (AGENT-03), and `agent/session.py` (Wave 2 wiring: `build_options()`, `record_dataset_reference()`, `_recall_preamble()`, `run_session()`) all implemented and tested. Full fast-tier suite green (`uv run pytest tests/ -q -m "not live_llm"` -> 81 passed, 1 deselected). The `tests/test_agent_integration.py` live_llm smoke test is written and cleanly skips without `ANTHROPIC_API_KEY`; running it for real (AGENT-01/02 acceptance evidence) requires the key. Next up: gsd-verifier goal-backward check against AGENT-01/02/03, then mark Phase 3 complete.
+Last activity: 2026-09-05 — Executed 03-05-PLAN.md (agent/session.py run_session(), Phase 3 Wave 2 wiring complete).
 
-Progress: [█████████░] 93% (14/15 plans complete)
+Progress: [██████████] 100% (15/15 plans complete)
 
 ## Performance Metrics
 
@@ -65,6 +65,7 @@ Progress: [█████████░] 93% (14/15 plans complete)
 | Phase 03 P04 | 2min | 1 tasks | 2 files |
 | Phase 03-agent-orchestration-wiring P03 | 5min | 1 tasks | 2 files |
 | Phase 03 P02 | 12min | 2 tasks | 3 files |
+| Phase 03-agent-orchestration-wiring P05 | 5min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -92,10 +93,11 @@ Recent decisions affecting current work:
 - [Phase 03-agent-orchestration-wiring]: 03-04: SessionMemory implemented exactly per plan's provided code, mirroring ingest/store.py::DatasetStore's connection/table pattern; ORDER BY created_at DESC, rowid DESC tiebreaker used for deterministic most-recent-first ordering when ISO timestamps collide -- no deviation needed
 - [Phase 03-agent-orchestration-wiring]: 03-02: `@tool`-decorated functions are `SdkMcpTool` instances, not directly callable -- tests invoke `<tool>.handler(args)`, not `<tool>(args)` (verified via `vars()` against the installed `claude_agent_sdk` package)
 - [Phase 03-agent-orchestration-wiring]: 03-02: `tiny_mtx_dir`'s 18 genes can never pass `QCConfig`'s default `min_genes_per_cell=200` threshold (no cell can have >=200 detected genes when only 18 exist) -- added a local, larger `analyzable_mtx_dir` fixture (300 genes x 60 cells, two marker populations) in `tests/test_agent_tools.py` for the `analyze_dataset_tool` round-trip test; `tiny_mtx_dir` still used for the plain ingest-only test, matching Phase 1's own `tests/test_pipeline.py` precedent of overriding `qc_config` for this exact fixture/threshold interaction
+- [Phase 03-agent-orchestration-wiring]: 03-05: PostToolUse hook callback signature/registration verified against the installed claude_agent_sdk package (single input_data dict + tool_use_id + context; hooks[event] is list[HookMatcher]) rather than the plan sketch's positional kwargs shape
 
 ### Pending Todos
 
-Phase 3 (Agent Orchestration Wiring) execution in progress: 03-01 (Wave 0 infra) and all of Wave 1 (03-02/03-03/03-04) complete. Next: 03-05 (Wave 2), then gsd-verifier goal-backward check against AGENT-01/02/03, then mark Phase 3 complete. Note: 03-05's live_llm integration test requires `ANTHROPIC_API_KEY` to actually run (fast-tier suite does not depend on it and will pass/skip without the key).
+Phase 3 (Agent Orchestration Wiring) execution complete: 03-01 (Wave 0 infra), Wave 1 (03-02/03-03/03-04), and 03-05 (Wave 2 session wiring) all done. Next: gsd-verifier goal-backward check against AGENT-01/02/03, then mark Phase 3 complete and advance to Phase 4. Note: `tests/test_agent_integration.py`'s live_llm test requires `ANTHROPIC_API_KEY` to actually run (fast-tier suite does not depend on it and cleanly skips without the key) -- running it for real is the actual AGENT-01/02 acceptance evidence per 03-VALIDATION.md's Phase Gate.
 
 ### Blockers/Concerns
 
@@ -106,6 +108,6 @@ Phase 3 (Agent Orchestration Wiring) execution in progress: 03-01 (Wave 0 infra)
 
 ## Session Continuity
 
-Last session: 2026-09-05T12:45:06.919Z
-Stopped at: Completed 03-02-PLAN.md (agent/tools.py + agent/server.py, AGENT-01 tool-calling surface)
+Last session: 2026-09-05T12:52:36.878Z
+Stopped at: Completed 03-05-PLAN.md (agent/session.py run_session(), Phase 3 Wave 2 complete)
 Resume file: None
