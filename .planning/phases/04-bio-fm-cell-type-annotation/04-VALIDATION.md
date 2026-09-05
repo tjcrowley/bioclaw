@@ -1,8 +1,8 @@
 ---
 phase: 4
 slug: bio-fm-cell-type-annotation
-status: draft
-nyquist_compliant: false
+status: approved
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-09-05
 ---
@@ -38,14 +38,19 @@ created: 2026-09-05
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 04-01-xx | 01 | 0 | Wave 0 infra | n/a | package skeleton + isolation env spike | ❌ W0 | ⬜ pending |
-| 04-02-xx | 02 | 1 | ANNOT-02 | unit | `uv run pytest tests/test_annotation_baseline.py -x` | ❌ W0 | ⬜ pending |
-| 04-03-xx | 03 | 1 | ANNOT-01 (tool wiring, mocked FM) | unit | `uv run pytest tests/test_agent_tools.py -k annotate -x` | ❌ W0 | ⬜ pending |
-| 04-04-xx | 04 | 1/2 | ANNOT-01 (real inference smoke) | integration/smoke | `uv run pytest tests/test_bio_fm_integration.py -m bio_fm_smoke -x` | ❌ W0 | ⬜ pending |
-| 04-05-xx | 05 | 2 | ANNOT-03 | unit | `uv run pytest tests/test_annotation_pipeline.py -x` | ❌ W0 | ⬜ pending |
+| 04-01 T1: install decoupler + register bio_fm_smoke marker | 01 | 0 | infra | n/a | `uv run python -c "import decoupler"` | ❌ W0 | ⬜ pending |
+| 04-01 T2: annotation/ skeleton + AnnotationCall/AnnotationSummary | 01 | 0 | infra (ANNOT-03 contracts) | unit | package import check | ❌ W0 | ⬜ pending |
+| 04-02 T1: baseline_annotate() decoupler ORA baseline | 02 | 1 | ANNOT-02 | unit | `uv run pytest tests/test_annotation_baseline.py -x` | ❌ W0 | ⬜ pending |
+| 04-03 T1: bio_fm_worker/ isolated env + run_scgpt_embed.py | 03 | 1 | ANNOT-01 | n/a (isolated venv, no fast-tier test) | `bio_fm_worker/.venv/bin/python -c "..."` | ❌ W0 | ⬜ pending |
+| 04-03 T2: annotation/fm_client.py subprocess shim | 03 | 1 | ANNOT-01 (tool wiring, mocked FM) | unit | `uv run pytest tests/test_annotation_fm_client.py -x` | ❌ W0 | ⬜ pending |
+| 04-04 T1: annotation/pipeline.py annotate() composition | 04 | 2 | ANNOT-01, ANNOT-02, ANNOT-03 | unit | `uv run pytest tests/test_annotation_pipeline.py -x` | ❌ W0 | ⬜ pending |
+| 04-04 T2: annotate_cell_type_tool + agent/server.py registration | 04 | 2 | ANNOT-01 | unit | `uv run pytest tests/test_agent_tools.py -k annotate -x` | ❌ W0 | ⬜ pending |
+| 04-05 T1: build_reference_index() cellxgene-census subsample | 05 | 3 | ANNOT-03 | script/manual | run + inspect reference.h5ad | ❌ W0 | ⬜ pending |
+| 04-05 T2: acquire scGPT checkpoint + write bio_fm_smoke test | 05 | 3 | ANNOT-01 | integration/smoke (written, not required green) | `uv run pytest tests/test_bio_fm_integration.py -m bio_fm_smoke -x` | ❌ W0 | ⬜ pending |
+| 04-05 T3: real end-to-end smoke verification (checkpoint:human-verify, blocking) | 05 | 3 | ANNOT-01, ANNOT-03 | manual | same command, human-reported outcome | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
-*(Exact plan/task numbering to be finalized by gsd-planner; this table reflects the requirement→test mapping from 04-RESEARCH.md's Validation Architecture section.)*
+*(Table finalized against the 5 real PLAN.md files after gsd-planner + gsd-plan-checker; verdict PASS 2026-09-05.)*
 
 ---
 
@@ -70,11 +75,11 @@ created: 2026-09-05
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 30s (fast tier)
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 30s (fast tier)
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved 2026-09-05 (gsd-plan-checker verdict: PASS, independent Dimension 8 check confirmed)
