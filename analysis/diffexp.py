@@ -14,6 +14,8 @@ from __future__ import annotations
 import scanpy as sc
 from anndata import AnnData
 
+from analysis.summary import DEGeneResult, DESummary
+
 
 def differential_expression(
     adata: AnnData,
@@ -23,15 +25,16 @@ def differential_expression(
     *,
     n_genes: int = 25,
     tie_correct: bool = True,
-) -> AnnData:
+) -> tuple[AnnData, DESummary]:
     """Runs Wilcoxon rank-sum DE for `group1` vs. `group2` (or vs. "rest"
     of `groupby` when `group2` is None) on a copy of `adata` (never mutates
     the caller's input, matching `preprocess()`'s tool-call boundary
     convention).
 
-    Returns the mutated copy with `adata.uns["rank_genes_groups"]`
-    populated; callers extract a bounded result via
-    `sc.get.rank_genes_groups_df(result, group=group1)`.
+    Returns `(adata, DESummary)`: the mutated copy with
+    `adata.uns["rank_genes_groups"]` populated, plus a bounded summary
+    whose `top_genes` is capped at `n_genes` regardless of how many genes
+    were tested.
     """
     adata = adata.copy()  # tool-call boundary: never mutate caller's object
 
@@ -47,4 +50,33 @@ def differential_expression(
         corr_method="benjamini-hochberg",
     )
 
-    return adata
+    result_df = sc.get.rank_genes_groups_df(adata, group=group1)
+    n_genes_tested = len(result_df)
+    n_significant = int((result_df["pvals_adj"] < 0.05).sum())
+
+    top_df = result_df.sort_values("pvals_adj", ascending=True).head(n_genes)
+    top_genes = [
+        DEGeneResult(
+            gene=row["names"],
+            score=row["scores"],
+            pval=row["pvals"],
+            pval_adj=row["pvals_adj"],
+            logfoldchange=row["logfoldchanges"],
+            pct_group=row.get("pct_nz_group"),
+            pct_rest=row.get("pct_nz_reference"),
+        )
+        for _, row in top_df.iterrows()
+    ]
+
+    summary = DESummary(
+        dataset_id=None,
+        groupby=groupby,
+        group1=group1,
+        group2=group2,
+        method="wilcoxon",
+        n_genes_tested=n_genes_tested,
+        n_significant=n_significant,
+        top_genes=top_genes,
+    )
+
+    return adata, summary
