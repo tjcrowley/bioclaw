@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 03-05-PLAN.md (agent/session.py run_session(), Phase 3 Wave 2 complete)
-last_updated: "2026-09-05T12:53:55.859Z"
-last_activity: 2026-09-05 — Executed 03-05-PLAN.md (agent/session.py run_session(), Phase 3 Wave 2 wiring complete).
+status: planned
+stopped_at: Completed Phase 4 planning (5 plans, 04-01 through 04-05, gsd-plan-checker verdict PASS)
+last_updated: "2026-09-05T21:55:00.000Z"
+last_activity: 2026-09-05 — Planned Phase 4 (Bio-FM Tool Layer — Cell-Type Annotation): 5 plans across 4 waves, verified by gsd-plan-checker (PASS), warnings addressed in 04-03/04-05/04-VALIDATION.
 progress:
   total_phases: 6
   completed_phases: 3
-  total_plans: 15
+  total_plans: 20
   completed_plans: 15
-  percent: 100
+  percent: 75
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-03)
 
 **Core value:** A Biopunk Labs researcher can ask a plain-language question about a single-cell dataset and get back a QC'd, annotated, interpreted answer without writing a scanpy script by hand.
-**Current focus:** Phase 3 (Agent Orchestration Wiring) — all 5 plans complete (03-01 Wave 0 infra; 03-02/03-03/03-04 Wave 1; 03-05 Wave 2 session wiring). Pending: gsd-verifier goal-backward check against AGENT-01/02/03, then mark Phase 3 complete and advance to Phase 4.
+**Current focus:** Phase 3 (Agent Orchestration Wiring) is complete — the live_llm integration test (`test_run_session_two_turns_ingest_then_recall`) passed end-to-end against a real API key, confirming AGENT-01/02/03. Phase 4 (Bio-FM Tool Layer — Cell-Type Annotation) is now planned: 5 plans (04-01 through 04-05) across 4 waves, ready for `/gsd:execute-phase`.
 
 ## Current Position
 
-Phase: 3 of 6 (Agent Orchestration Wiring) — ALL PLANS EXECUTED (5/5 plans complete), pending verifier check before phase close-out
-Plan: 5 plans across 3 waves — 03-01 (Wave 0, infra) COMPLETE; Wave 1 (independent, all COMPLETE): 03-02 (AGENT-01 tool wrappers, `agent/tools.py`+`agent/server.py`), 03-03 (AGENT-02 execution logging, `agent/logging.py`), 03-04 (AGENT-03 SessionMemory, `agent/memory.py`); 03-05 (Wave 2: wires Wave 1's three modules into one `ClaudeSDKClient`-driven `run_session()`) COMPLETE.
-Status: Phase 3 execution complete. `agent/tools.py`/`agent/server.py` (AGENT-01), `agent/logging.py` (AGENT-02), `agent/memory.py` (AGENT-03), and `agent/session.py` (Wave 2 wiring: `build_options()`, `record_dataset_reference()`, `_recall_preamble()`, `run_session()`) all implemented and tested. Full fast-tier suite green (`uv run pytest tests/ -q -m "not live_llm"` -> 81 passed, 1 deselected). The `tests/test_agent_integration.py` live_llm smoke test is written and cleanly skips without `ANTHROPIC_API_KEY`; running it for real (AGENT-01/02 acceptance evidence) requires the key. Next up: gsd-verifier goal-backward check against AGENT-01/02/03, then mark Phase 3 complete.
-Last activity: 2026-09-05 — Executed 03-05-PLAN.md (agent/session.py run_session(), Phase 3 Wave 2 wiring complete).
+Phase: 4 of 6 (Bio-FM Tool Layer — Cell-Type Annotation) — PLANNED, not yet executed
+Plan: 5 plans across 4 waves — 04-01 (Wave 0: `annotation/` package skeleton, `AnnotationCall`/`AnnotationSummary` dataclasses, `decoupler` install, `bio_fm_smoke` marker); 04-02 (Wave 1: `decoupler` ORA marker-gene baseline, ANNOT-02); 04-03 (Wave 1: isolated `bio_fm_worker/` scGPT venv + subprocess `fm_client.py`, ANNOT-01, mocked-FM unit tests); 04-04 (Wave 2: `annotate()` pipeline composition + `annotate_cell_type_tool` agent wiring, ANNOT-01/03); 04-05 (Wave 3: real `cellxgene-census` reference index + scGPT checkpoint acquisition + `bio_fm_smoke` phase-gate checkpoint, blocking human-verify).
+Status: Phase 4 planning complete. 04-RESEARCH.md and 04-VALIDATION.md written; gsd-planner produced 5 plans (committed `40cd947`); gsd-plan-checker returned verdict PASS with 5 non-blocking warnings, all addressed (committed `55a22eb`): scGPT input-layer/gene-column ambiguity pinned down in 04-03, stale `requirements: []` fixed in 04-05, broken-install troubleshooting step added to 04-05, 04-VALIDATION.md sign-off finalized. Next up: `/gsd:execute-phase 04-bio-fm-cell-type-annotation`. Note Wave 3 (04-05) ends in a blocking `checkpoint:human-verify` task requiring a real, potentially multi-GB scGPT checkpoint download — not something a fully unattended run can complete.
+Last activity: 2026-09-05 — Planned Phase 4 (5 plans, gsd-plan-checker PASS, warnings addressed).
 
-Progress: [██████████] 100% (15/15 plans complete)
+Progress: [████████░░] 75% (15/20 plans complete; Phase 4's 5 plans are planned but not yet executed)
 
 ## Performance Metrics
 
@@ -94,20 +94,22 @@ Recent decisions affecting current work:
 - [Phase 03-agent-orchestration-wiring]: 03-02: `@tool`-decorated functions are `SdkMcpTool` instances, not directly callable -- tests invoke `<tool>.handler(args)`, not `<tool>(args)` (verified via `vars()` against the installed `claude_agent_sdk` package)
 - [Phase 03-agent-orchestration-wiring]: 03-02: `tiny_mtx_dir`'s 18 genes can never pass `QCConfig`'s default `min_genes_per_cell=200` threshold (no cell can have >=200 detected genes when only 18 exist) -- added a local, larger `analyzable_mtx_dir` fixture (300 genes x 60 cells, two marker populations) in `tests/test_agent_tools.py` for the `analyze_dataset_tool` round-trip test; `tiny_mtx_dir` still used for the plain ingest-only test, matching Phase 1's own `tests/test_pipeline.py` precedent of overriding `qc_config` for this exact fixture/threshold interaction
 - [Phase 03-agent-orchestration-wiring]: 03-05: PostToolUse hook callback signature/registration verified against the installed claude_agent_sdk package (single input_data dict + tool_use_id + context; hooks[event] is list[HookMatcher]) rather than the plan sketch's positional kwargs shape
+- [Phase 03-agent-orchestration-wiring]: 03-05 (post-hoc, found during live_llm debugging 2026-09-05): uncaught tool handler exceptions dispatch as a distinct `PostToolUseFailure` SDK event (not `PostToolUse`), invisible to hooks that only subscribe to `PostToolUse` -- `agent/tools.py` now catches all exceptions and returns a controlled `is_error: True` result instead. Also: in-process MCP `tool_response` seen by a `PostToolUse` hook is the handler's bare `content` array, not the `{"content":[...], "is_error":...}` dict the handler returns -- the CLI strips the wrapper and `is_error` is not passed through separately.
+- [Phase 04-bio-fm-cell-type-annotation]: Planning (2026-09-05): scGPT chosen over Geneformer for ANNOT-01 (PyPI-installable, CPU-capable, zero-shot reference-mapping) — see 04-RESEARCH.md. scGPT/torch isolated into a plain-venv `bio_fm_worker/` environment reached via subprocess shim (`annotation/fm_client.py`), never added to the root `pyproject.toml`. `decoupler` (lightweight, no torch) installed directly into the main venv for ANNOT-02's baseline. ANNOT-03's ontology metadata sourced from `cellxgene-census`'s schema-required `cell_type_ontology_term_id` field on the reference index, not a separate ontology-mapping pipeline. The decoupler baseline call is unconditional in `annotate()`'s code order (executes before/independent of the FM call's try/except), so ANNOT-02 holds even when the FM call fails.
 
 ### Pending Todos
 
-Phase 3 (Agent Orchestration Wiring) execution complete: 03-01 (Wave 0 infra), Wave 1 (03-02/03-03/03-04), and 03-05 (Wave 2 session wiring) all done. Next: gsd-verifier goal-backward check against AGENT-01/02/03, then mark Phase 3 complete and advance to Phase 4. Note: `tests/test_agent_integration.py`'s live_llm test requires `ANTHROPIC_API_KEY` to actually run (fast-tier suite does not depend on it and cleanly skips without the key) -- running it for real is the actual AGENT-01/02 acceptance evidence per 03-VALIDATION.md's Phase Gate.
+Phase 4 (Bio-FM Tool Layer — Cell-Type Annotation) is planned (5 plans, 04-01..04-05) and ready to execute via `/gsd:execute-phase 04-bio-fm-cell-type-annotation`. Wave 3's 04-05 ends in a blocking `checkpoint:human-verify` task (real scGPT checkpoint download + measured latency) that requires Darren's manual involvement — cannot be fully automated.
 
 ### Blockers/Concerns
 
-- Phase 4 (Bio-FM annotation): scGPT/Geneformer VRAM requirements are LOW confidence per research — verify against current model cards before implementation. Self-hosted-by-default decision (confirmed 2026-09-03) makes this sizing question load-bearing for Phase 4 planning, not just a nice-to-know.
+- Phase 4 (Bio-FM annotation): RESOLVED at planning time (2026-09-05) — scGPT chosen over Geneformer (PyPI-installable, confirmed CPU-capable via `load_pretrained`, zero-shot reference-mapping needs no fine-tuning; Geneformer's own model card requires GPU and isn't on PyPI). Remaining open item is not VRAM sizing but dependency isolation: scGPT's live PyPI pins (`scvi-tools<1.0`, unpinned `torchtext`, `orbax<0.1.8`) must stay out of the main venv — plans isolate it into `bio_fm_worker/.venv`. Real CPU-inference latency is still unmeasured (one unverified third-party benchmark only) — closed by 04-05's `bio_fm_smoke` checkpoint, not before.
 - Phase 5 (Perturbation + VCC): GEARS/cell-gears environment isolation is MEDIUM confidence and version-sensitive (pinned older PyTorch Geometric stack). VCC scope question is now resolved (task format/metrics only, confirmed 2026-09-03) — no longer a blocker.
 - Phase 6 (NL Q&A): no established reference pattern for hallucination-mitigation (claim traceability, confidence surfacing) at this agent+scientific-tool combination — flagged as highest-risk phase in research.
 - Project-wide validation with Elliot Roth: resolved 2026-09-03 (see Decisions above). Remaining open item (non-blocking): check overlap with Cardiac Base Editor / FDT-BioTech on cardiomyocyte single-cell data as an early test dataset (CONCEPT.md).
 
 ## Session Continuity
 
-Last session: 2026-09-05T12:52:36.878Z
-Stopped at: Completed 03-05-PLAN.md (agent/session.py run_session(), Phase 3 Wave 2 complete)
+Last session: 2026-09-05T21:55:00.000Z
+Stopped at: Completed Phase 4 planning (04-01 through 04-05, gsd-plan-checker PASS, warnings addressed)
 Resume file: None
