@@ -66,10 +66,14 @@ Plans:
   1. A researcher can issue a request that drives a plan → tool call → observe → continue loop, invoking ingest/QC/analysis tools through the Claude Agent SDK + MCP.
   2. Every tool call is logged with request/response detail sufficient to verify it was actually invoked, not simulated by the LLM.
   3. The agent recalls dataset references and prior findings across multiple turns within the same session.
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] 03-01: TBD
+- [ ] 03-01-PLAN.md — Wave 0: uv add claude-agent-sdk, live_llm pytest marker, agent/ package skeleton
+- [ ] 03-02-PLAN.md — agent/tools.py + agent/server.py: ingest_10x_tool/analyze_dataset_tool + in-process MCP server (AGENT-01)
+- [ ] 03-03-PLAN.md — agent/logging.py: PostToolUse JSON-lines execution log (AGENT-02)
+- [ ] 03-04-PLAN.md — agent/memory.py: SQLite-backed SessionMemory dataset-reference store (AGENT-03)
+- [ ] 03-05-PLAN.md — agent/session.py: ClaudeSDKClient wiring + live_llm integration smoke test (AGENT-01/02/03)
 
 ### Phase 4: Bio-FM Tool Layer — Cell-Type Annotation
 **Goal**: The agent can call a bio foundation model (scGPT or Geneformer) as a tool to annotate cell type, with every FM result accompanied by a statistical baseline and full confidence/reference metadata — never presented as ground truth alone.
