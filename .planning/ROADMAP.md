@@ -13,7 +13,7 @@ BioClaw goes from raw 10x Genomics files to a Claude-based agent that answers pl
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Ingest + QC Pipeline** - Raw 10x output becomes canonical, versioned, trustworthy `.h5ad` with an immutable raw-counts contract (completed 2026-09-04)
-- [ ] **Phase 2: Analysis Tool Layer** - Deterministic clustering and differential-expression tools work standalone on canonical data, agent-ready
+- [x] **Phase 2: Analysis Tool Layer** - Deterministic clustering and differential-expression tools work standalone on canonical data, agent-ready (completed 2026-09-05)
 - [ ] **Phase 3: Agent Orchestration Wiring** - A Claude-based agent plans, calls, and logs tool invocations against the Phase 1-2 tools with persistent session memory
 - [ ] **Phase 4: Bio-FM Tool Layer — Cell-Type Annotation** - The agent calls a bio foundation model as a tool for cell-type annotation, always paired with a statistical baseline
 - [ ] **Phase 5: Perturbation-Response Tool + VCC Benchmark** - The agent predicts perturbation response as a tool call, independently validated against Arc Institute's public benchmark
@@ -49,14 +49,14 @@ Plans:
   2. Cells cluster via Leiden (`flavor="igraph"`) and a 2D UMAP embedding is produced for any clustered dataset.
   3. Differential expression (Wilcoxon rank-sum) between two clusters or conditions returns a ranked gene result.
   4. Each analysis tool call returns a bounded, structured summary — not a raw matrix dump — sized for later agent context.
-**Plans**: 1/5 plans executed
+**Plans**: 5/5 plans executed
 
 Plans:
 - [x] 02-01-PLAN.md — Wave 0: igraph dependency, structured_adata fixture, bounded-summary dataclass contracts
-- [ ] 02-02-PLAN.md — preprocess() normalize/HVG/PCA (ANLYS-01)
-- [ ] 02-03-PLAN.md — cluster() Leiden (igraph) + UMAP (ANLYS-02)
-- [ ] 02-04-PLAN.md — differential_expression() Wilcoxon rank-sum DE (ANLYS-03)
-- [ ] 02-05-PLAN.md — analyze() pipeline integration: store load/save + counts-integrity checks (ANLYS-01..04)
+- [x] 02-02-PLAN.md — preprocess() normalize/HVG/PCA (ANLYS-01)
+- [x] 02-03-PLAN.md — cluster() Leiden (igraph) + UMAP (ANLYS-02)
+- [x] 02-04-PLAN.md — differential_expression() Wilcoxon rank-sum DE (ANLYS-03)
+- [x] 02-05-PLAN.md — analyze() pipeline integration: store load/save + counts-integrity checks (ANLYS-01..04)
 
 ### Phase 3: Agent Orchestration Wiring
 **Goal**: A Claude-based agent, running an OpenClaw-style agentic loop via Claude Agent SDK + MCP, plans and calls the Phase 1-2 tools with verifiable execution logging and persistent multi-turn memory — proving the tool-calling contract on cheap, deterministic tools before GPU/bio-FM complexity is introduced.
@@ -120,7 +120,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Ingest + QC Pipeline | 5/5 | Complete   | 2026-09-04 |
-| 2. Analysis Tool Layer | 4/5 | In Progress|  |
+| 2. Analysis Tool Layer | 5/5 | Complete   | 2026-09-05 |
 | 3. Agent Orchestration Wiring | 0/TBD | Not started | - |
 | 4. Bio-FM Tool Layer — Cell-Type Annotation | 0/TBD | Not started | - |
 | 5. Perturbation-Response Tool + VCC Benchmark | 0/TBD | Not started | - |

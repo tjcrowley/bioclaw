@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: "Completed 02-04-PLAN.md (Wave 1: analysis/diffexp.py, ANLYS-03) -- Wave 1 fully complete"
-last_updated: "2026-09-04T21:10:00.000Z"
-last_activity: "2026-09-04 — Executed 02-04-PLAN.md (Wave 1: analysis/diffexp.py, ANLYS-03)"
+stopped_at: "Completed 02-05-PLAN.md (Wave 2: analysis/pipeline.py, ANLYS-01..04) -- Phase 2 (Analysis Tool Layer) complete"
+last_updated: "2026-09-05T03:31:52.845Z"
+last_activity: "2026-09-04 — Executed 02-05-PLAN.md (Wave 2: analysis/pipeline.py, ANLYS-01..04) -- Phase 2 complete"
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 10
-  completed_plans: 9
-  percent: 90
+  completed_plans: 10
+  percent: 100
 ---
 
 # Project State
@@ -21,33 +21,33 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-03)
 
 **Core value:** A Biopunk Labs researcher can ask a plain-language question about a single-cell dataset and get back a QC'd, annotated, interpreted answer without writing a scanpy script by hand.
-**Current focus:** Phase 2 — Analysis Tool Layer (Wave 0 and Wave 1 complete; Wave 2 — 02-05 pipeline.py — next)
+**Current focus:** Phase 2 — Analysis Tool Layer COMPLETE (5/5 plans). Phase 3 (Agent Orchestration Wiring) next.
 
 ## Current Position
 
-Phase: 2 of 6 (Analysis Tool Layer) — IN PROGRESS
-Plan: 4 of 5 in current phase — Wave 1 (02-02, 02-03, 02-04) all complete; Wave 2 (02-05 pipeline.py) next, final plan of the phase
-Status: 02-04-PLAN.md complete: analysis/diffexp.py implements differential_expression() -- generic Wilcoxon rank-sum DE (method="wilcoxon", tie_correct=True, pts=True, corr_method="benjamini-hochberg") over any categorical .obs column, recovers structured_adata's known marker genes, returns bounded DESummary (top_genes capped at n_genes). Task 2 was interrupted mid-execution by a subagent session-limit cutoff and completed directly in the orchestrating session. Full test suite green (51 tests).
-Last activity: 2026-09-04 — Executed 02-04-PLAN.md (Wave 1: analysis/diffexp.py, ANLYS-03)
+Phase: 2 of 6 (Analysis Tool Layer) — COMPLETE
+Plan: 5 of 5 in current phase — Wave 0 (02-01), Wave 1 (02-02, 02-03, 02-04), and Wave 2 (02-05) all complete. Phase 2 fully done.
+Status: 02-05-PLAN.md complete: analysis/pipeline.py implements analyze(name, version=None, config=None, store_root="data") -- the coarse-grained Wave 2 entrypoint mirroring ingest/pipeline.py::ingest_10x(). Composes preprocess() -> cluster() -> optional differential_expression() on top of Phase 1's DatasetStore, with verify_counts_integrity() enforced both immediately after store.load() and immediately before store.save() (closes Pitfall 6, the counts-layer write-lock's h5ad round-trip gap). AnalysisConfig logged verbatim to adata.uns["analysis"], mirroring QCConfig/adata.uns["qc"]. All four Phase 2 requirements (ANLYS-01..04) demonstrated end to end. Full test suite green (58 tests). Phase 2 (Analysis Tool Layer) is now complete; Phase 3 (Agent Orchestration Wiring) is next.
+Last activity: 2026-09-04 — Executed 02-05-PLAN.md (Wave 2: analysis/pipeline.py, ANLYS-01..04) -- Phase 2 complete
 
-Progress: [█████████░] 90% (9/10 plans complete)
+Progress: [██████████] 100% (10/10 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
-- Average duration: ~9.5 min
-- Total execution time: ~76 min
+- Total plans completed: 10
+- Average duration: ~9 min
+- Total execution time: ~81 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-ingest-qc-pipeline | 5 | ~55min | ~11min |
-| 02-analysis-tool-layer | 3 | ~21min | ~7min |
+| 02-analysis-tool-layer | 5 | ~26min | ~5min |
 
 **Recent Trend:**
-- Last 5 plans: 2min, 9min, 8min, 8min, 5min
+- Last 5 plans: 8min, 8min, 5min, ~10min, 5min
 - Trend: stable/fast (Phase 2 plans coming in under Phase 1 average)
 
 *Updated after each plan completion*
@@ -60,6 +60,7 @@ Progress: [█████████░] 90% (9/10 plans complete)
 | Phase 02 P02 | 8 | 2 tasks | 2 files |
 | Phase 02-analysis-tool-layer P03 | 5min | 2 tasks | 2 files |
 | Phase 02-analysis-tool-layer P04 | ~10min (interrupted/resumed) | 2 tasks | 2 files |
+| Phase 02 P05 | 5min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -80,10 +81,12 @@ Recent decisions affecting current work:
 - [Phase 02]: 02-02: Clamped PCA n_comps against the actual post-HVG-selection gene count (n_hvg), not adata.n_vars -- sklearn's arpack solver requires n_components strictly less than min(n_samples, n_features), and HVG selection can silently return fewer genes than requested on small fixtures
 - [Phase 02-analysis-tool-layer]: 02-03: flavor='igraph' always paired with explicit directed=False and n_iterations=2; Leiden determinism asserted, UMAP coordinate exactness deliberately not asserted (Pitfall 5)
 - [Phase 02-analysis-tool-layer]: 02-04: DESummary.top_genes sorted/capped by pvals_adj ascending via .head(n_genes); n_significant/n_genes_tested computed over the full unsliced rank_genes_groups_df result before truncation, mirroring PreprocessSummary/ClusterSummary's O(1)/O(top_n) bounding invariant
+- [Phase 02]: 02-05: Task-split analyze() implementation -- Task 1 hardcodes de_summary=None (core load-verify-preprocess-cluster-verify-save flow), Task 2 adds config.run_de branch as a pure additive diff, matching the plan's explicit task boundary
+- [Phase 02]: 02-05: verify_counts_integrity() enforced both immediately after store.load() and immediately before store.save() in analyze() -- closes Pitfall 6 (write-lock does not survive an h5ad round-trip) at the pipeline entrypoint, raising RuntimeError naming the dataset on failure
 
 ### Pending Todos
 
-All three Wave 1 plans (02-02 preprocess.py, 02-03 cluster.py, 02-04 diffexp.py) complete. Wave 2 (02-05 pipeline.py) is next and final for the phase — composes preprocess/cluster/diffexp into the coarse-grained `analyze()` orchestration entrypoint mirroring `ingest/pipeline.py::ingest_10x()`, including `verify_counts_integrity()` pre+post to close the counts-layer round-trip vulnerability (Pitfall 6). After 02-05, run gsd-verifier for phase goal-backward verification, then mark Phase 2 complete.
+Phase 2 (Analysis Tool Layer) is fully complete -- all 5 plans (02-01 through 02-05) executed, full test suite green (58 tests), ANLYS-01 through ANLYS-04 marked complete in REQUIREMENTS.md. Next: run gsd-verifier for Phase 2 goal-backward verification, then plan Phase 3 (Agent Orchestration Wiring).
 
 ### Blockers/Concerns
 
@@ -94,6 +97,6 @@ All three Wave 1 plans (02-02 preprocess.py, 02-03 cluster.py, 02-04 diffexp.py)
 
 ## Session Continuity
 
-Last session: 2026-09-04T20:32:04.781Z
-Stopped at: Completed 02-03-PLAN.md (Wave 1: analysis/cluster.py, ANLYS-02)
+Last session: 2026-09-05T03:31:52.841Z
+Stopped at: Completed 02-05-PLAN.md (Wave 2: analysis/pipeline.py, ANLYS-01..04) -- Phase 2 (Analysis Tool Layer) complete
 Resume file: None
