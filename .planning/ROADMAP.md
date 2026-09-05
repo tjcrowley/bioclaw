@@ -125,7 +125,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Ingest + QC Pipeline | 5/5 | Complete   | 2026-09-04 |
 | 2. Analysis Tool Layer | 5/5 | Complete   | 2026-09-05 |
-| 3. Agent Orchestration Wiring | 0/TBD | Not started | - |
+| 3. Agent Orchestration Wiring | 1/5 | In Progress|  |
 | 4. Bio-FM Tool Layer — Cell-Type Annotation | 0/TBD | Not started | - |
 | 5. Perturbation-Response Tool + VCC Benchmark | 0/TBD | Not started | - |
 | 6. Natural-Language Q&A Capstone | 0/TBD | Not started | - |
