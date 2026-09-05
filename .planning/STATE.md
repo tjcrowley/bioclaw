@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-03)
 
 **Core value:** A Biopunk Labs researcher can ask a plain-language question about a single-cell dataset and get back a QC'd, annotated, interpreted answer without writing a scanpy script by hand.
-**Current focus:** Phase 3 (Agent Orchestration Wiring) EXECUTING — 03-01 (Wave 0 infra) complete, 03-02/03-03/03-04 (Wave 1) next.
+**Current focus:** Phase 3 (Agent Orchestration Wiring) EXECUTING — 03-01 (Wave 0 infra), 03-03 (AGENT-02 logging), 03-04 (AGENT-03 SessionMemory) complete; 03-02 (AGENT-01 tool wrappers) still in flight; 03-05 (Wave 2) pending.
 
 ## Current Position
 
 Phase: 3 of 6 (Agent Orchestration Wiring) — EXECUTING (3/5 plans complete)
 Plan: 5 plans across 3 waves — 03-01 (Wave 0, infra) COMPLETE; Wave 1 (independent): 03-03 (AGENT-02 execution logging, `agent/logging.py`) COMPLETE, 03-04 (AGENT-03 SessionMemory) COMPLETE, 03-02 (AGENT-01 tool wrappers) IN PROGRESS; 03-05 (Wave 2: wires Wave 1's three modules into one `ClaudeSDKClient`-driven `run_session()`) PENDING (blocked on 03-02).
-Status: Executing Phase 3. 03-01 and Wave 1's 03-03/03-04 executed cleanly, no deviations. `agent/logging.py` (log_tool_call JSON-lines audit writer, AGENT-02) implemented and tested in isolation from the SDK/LLM per Pitfall 4's two-tier strategy; full suite green excluding 03-02's still-in-progress `tests/test_agent_tools.py` (untracked, imports a module that doesn't exist yet -- out of scope for 03-03, will self-resolve when 03-02 completes). Next up: 03-02 completion, then Wave 2 (03-05).
-Last activity: 2026-09-05 — Executed 03-03-PLAN.md (agent/logging.py verifiable execution log, AGENT-02).
+Status: Executing Phase 3. 03-01 and Wave 1's 03-03/03-04 executed cleanly, no deviations. `agent/logging.py` (log_tool_call JSON-lines audit writer, AGENT-02) and `agent/memory.py` (SessionMemory record/recall store, AGENT-03) both implemented and tested in isolation from the SDK/LLM per Pitfall 4's two-tier strategy; full suite green excluding 03-02's still-in-progress `tests/test_agent_tools.py` (untracked, imports a module that doesn't exist yet -- out of scope for 03-03/03-04, will self-resolve when 03-02 completes). Next up: 03-02 completion, then Wave 2 (03-05).
+Last activity: 2026-09-05 — Executed 03-04-PLAN.md (agent/memory.py SessionMemory record/recall store, AGENT-03).
 
 Progress: [█████████░] 87% (13/15 plans complete)
 
@@ -88,6 +88,7 @@ Recent decisions affecting current work:
 - [Phase 02]: 02-05: verify_counts_integrity() enforced both immediately after store.load() and immediately before store.save() in analyze() -- closes Pitfall 6 (write-lock does not survive an h5ad round-trip) at the pipeline entrypoint, raising RuntimeError naming the dataset on failure
 - [Phase 03-agent-orchestration-wiring]: 03-01: No deviations - claude-agent-sdk installed and live_llm marker registered exactly per plan; agent/ package skeleton mirrors analysis/__init__.py precedent
 - [Phase 03-agent-orchestration-wiring]: 03-03: log_tool_call implemented exactly per plan's provided code (sha256(json.dumps(..., sort_keys=True, default=str)) hashing, async signature for future PostToolUse hook shape) -- no deviation needed
+- [Phase 03-agent-orchestration-wiring]: 03-04: SessionMemory implemented exactly per plan's provided code, mirroring ingest/store.py::DatasetStore's connection/table pattern; ORDER BY created_at DESC, rowid DESC tiebreaker used for deterministic most-recent-first ordering when ISO timestamps collide -- no deviation needed
 
 ### Pending Todos
 
@@ -103,5 +104,5 @@ Phase 3 (Agent Orchestration Wiring) execution in progress: 03-01 (Wave 0 infra)
 ## Session Continuity
 
 Last session: 2026-09-05T12:42:17.230Z
-Stopped at: Completed 03-03-PLAN.md (agent/logging.py verifiable execution log, AGENT-02)
+Stopped at: Completed 03-04-PLAN.md (agent/memory.py SessionMemory record/recall store, AGENT-03)
 Resume file: None
