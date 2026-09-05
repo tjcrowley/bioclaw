@@ -6,6 +6,7 @@ dependencies = [
     "scanpy[scrublet]>=1.12",
     "anndata>=0.13",
     "igraph>=0.10.8",
+    "claude-agent-sdk>=0.2.152",
 ]
 
 [dependency-groups]
@@ -16,3 +17,6 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+markers = [
+    "live_llm: requires a live Anthropic API key (ANTHROPIC_API_KEY), excluded from fast/CI runs",
+]
