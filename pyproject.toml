@@ -8,6 +8,7 @@ dependencies = [
     "igraph>=0.10.8",
     "claude-agent-sdk>=0.2.152",
     "decoupler>=2.2.0",
+    "cellxgene-census>=1.18.0",
 ]
 
 [dependency-groups]
