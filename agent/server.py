@@ -5,10 +5,10 @@ handlers -- the single object Wave 2's `agent/session.py` wires into
 
 from claude_agent_sdk import create_sdk_mcp_server
 
-from agent.tools import analyze_dataset_tool, ingest_10x_tool
+from agent.tools import analyze_dataset_tool, annotate_cell_type_tool, ingest_10x_tool
 
 bioclaw_server = create_sdk_mcp_server(
     name="bioclaw",
     version="1.0.0",
-    tools=[ingest_10x_tool, analyze_dataset_tool],
+    tools=[ingest_10x_tool, analyze_dataset_tool, annotate_cell_type_tool],
 )

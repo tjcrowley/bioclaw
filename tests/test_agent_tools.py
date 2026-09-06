@@ -33,7 +33,7 @@ from scipy import sparse
 from scipy.io import mmwrite
 
 import agent.tools as agent_tools
-from agent.tools import analyze_dataset_tool, ingest_10x_tool
+from agent.tools import analyze_dataset_tool, annotate_cell_type_tool, ingest_10x_tool
 
 FEATURE_TYPE = "Gene Expression"
 
@@ -129,5 +129,78 @@ def test_analyze_dataset_tool_unknown_name_returns_error_result(tmp_path, monkey
     assert result["is_error"] is True
 
 
-def test_bioclaw_server_imports_and_wraps_both_tools():
-    from agent.server import bioclaw_server  # noqa: F401 -- import must not raise
+def test_annotate_cell_type_tool_round_trip(tmp_path, analyzable_mtx_dir, monkeypatch):
+    monkeypatch.setattr(agent_tools, "STORE_ROOT", str(tmp_path))
+
+    asyncio.run(
+        ingest_10x_tool.handler({"path": str(analyzable_mtx_dir), "name": "pilot"})
+    )
+    asyncio.run(analyze_dataset_tool.handler({"name": "pilot"}))
+
+    import annotation.pipeline as annotation_pipeline
+    from annotation.summary import AnnotationCall
+
+    canned_fm_calls = [
+        AnnotationCall(
+            cluster="0",
+            label="T cell",
+            confidence=0.91,
+            reference_dataset="cellxgene-census: tissue=blood, n=3000",
+            ontology_term_id="CL:0000084",
+        )
+    ]
+    canned_baseline_calls = [
+        AnnotationCall(
+            cluster="0",
+            label="PopA",
+            confidence=0.9,
+            reference_dataset="decoupler ORA vs PanglaoDB (human, canonical markers)",
+            ontology_term_id=None,
+        ),
+        AnnotationCall(
+            cluster="1",
+            label="PopB",
+            confidence=0.85,
+            reference_dataset="decoupler ORA vs PanglaoDB (human, canonical markers)",
+            ontology_term_id=None,
+        ),
+    ]
+    monkeypatch.setattr(
+        annotation_pipeline, "call_scgpt_annotate", lambda *a, **k: canned_fm_calls
+    )
+    monkeypatch.setattr(
+        annotation_pipeline,
+        "baseline_annotate",
+        lambda *a, **k: canned_baseline_calls,
+    )
+
+    result = asyncio.run(annotate_cell_type_tool.handler({"name": "pilot"}))
+
+    assert result["is_error"] is False
+    payload = json.loads(result["content"][0]["text"])
+    assert set(["dataset_id", "fm_calls", "baseline_calls", "fm_model", "baseline_method"]) <= set(
+        payload.keys()
+    )
+
+
+def test_annotate_cell_type_tool_schema_omits_version():
+    schema = annotate_cell_type_tool.input_schema
+    assert "version" not in schema
+    assert "name" in schema
+
+
+def test_annotate_cell_type_tool_unknown_name_returns_error_result(tmp_path, monkeypatch):
+    monkeypatch.setattr(agent_tools, "STORE_ROOT", str(tmp_path))
+
+    result = asyncio.run(annotate_cell_type_tool.handler({"name": "does-not-exist"}))
+
+    assert result["is_error"] is True
+
+
+def test_bioclaw_server_wraps_all_three_tools():
+    import agent.server as agent_server
+
+    assert agent_server.ingest_10x_tool is ingest_10x_tool
+    assert agent_server.analyze_dataset_tool is analyze_dataset_tool
+    assert agent_server.annotate_cell_type_tool is annotate_cell_type_tool
+    assert agent_server.bioclaw_server["name"] == "bioclaw"

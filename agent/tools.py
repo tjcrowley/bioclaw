@@ -34,6 +34,7 @@ from typing import Any
 from claude_agent_sdk import tool
 
 from analysis.pipeline import analyze
+from annotation.pipeline import annotate
 from ingest.pipeline import ingest_10x
 
 # Module-level constant, set once at import time (overridable via the
@@ -78,6 +79,29 @@ async def analyze_dataset_tool(args: dict[str, Any]) -> dict[str, Any]:
     return {
         "content": [
             {"type": "text", "text": json.dumps({"dataset_id": new_id, **summary})}
+        ],
+        "is_error": False,
+    }
+
+
+@tool(
+    "annotate_cell_type",
+    "Run bio-FM-backed (scGPT) cell-type annotation on a named/versioned, "
+    "already-clustered dataset from the store, always paired with a "
+    "decoupler marker-gene statistical baseline. Returns per-cluster calls "
+    "from both methods, each with confidence, reference dataset, and Cell "
+    "Ontology (CL) metadata -- never a bare label.",
+    {"name": str},  # 'version' intentionally omitted -- optional, see Pitfall 2
+)
+async def annotate_cell_type_tool(args: dict[str, Any]) -> dict[str, Any]:
+    version = args.get("version")
+    try:
+        dataset_id, summary = annotate(args["name"], version=version, store_root=STORE_ROOT)
+    except Exception as exc:
+        return {"content": [{"type": "text", "text": str(exc)}], "is_error": True}
+    return {
+        "content": [
+            {"type": "text", "text": json.dumps({"dataset_id": dataset_id, **summary})}
         ],
         "is_error": False,
     }
