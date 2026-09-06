@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 04-03-PLAN.md (isolated scGPT venv + fm_client subprocess shim, ANNOT-01); Wave 1 done, next is Wave 2 (04-04)"
-last_updated: "2026-09-05T23:20:00.000Z"
-last_activity: 2026-09-05 — Executed Phase 4 Plan 03 (isolated bio_fm_worker/ venv + run_scgpt_embed.py + fm_client.py subprocess shim); also committed the previously-uncommitted Phase 3 live-test fix (PostToolUse exception routing + tool_response shape correction).
+stopped_at: "Completed 04-04-PLAN.md (annotate() pipeline composition + annotate_cell_type_tool agent wiring, ANNOT-01/03); Wave 2 done, next is Wave 3 (04-05, blocking human-verify checkpoint)"
+last_updated: "2026-09-06T00:15:00.000Z"
+last_activity: 2026-09-06 — Executed Phase 4 Plan 04 (annotation/pipeline.py::annotate() composing baseline+FM calls; annotate_cell_type_tool wired into agent/tools.py and agent/server.py). Adopted a pre-existing untracked test file (tests/test_annotation_pipeline.py) left over from a prior interrupted session that already matched this plan's Task 1 spec exactly.
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 20
-  completed_plans: 18
-  percent: 90
+  completed_plans: 19
+  percent: 95
 ---
 
 # Project State
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-03)
 
 **Core value:** A Biopunk Labs researcher can ask a plain-language question about a single-cell dataset and get back a QC'd, annotated, interpreted answer without writing a scanpy script by hand.
-**Current focus:** Phase 4 (Bio-FM Tool Layer — Cell-Type Annotation) is executing. Wave 0 (04-01) and all of Wave 1 (04-02 decoupler baseline, 04-03 isolated scGPT fm_client) are complete. Next: Wave 2 (04-04, pipeline composition + agent wiring), then Wave 3 (04-05, blocking human-verify checkpoint).
+**Current focus:** Phase 4 (Bio-FM Tool Layer — Cell-Type Annotation) is executing. Waves 0-2 (04-01 through 04-04) are complete. Only Wave 3 (04-05, blocking human-verify checkpoint for the real scGPT checkpoint + cellxgene-census reference index) remains before Phase 4 is done.
 
 ## Current Position
 
-Phase: 4 of 6 (Bio-FM Tool Layer — Cell-Type Annotation) — EXECUTING (Waves 0-1 complete, Wave 2 next)
-Plan: 5 plans across 4 waves — 04-01 (Wave 0: `annotation/` package skeleton, `AnnotationCall`/`AnnotationSummary` dataclasses, `decoupler` install, `bio_fm_smoke` marker) COMPLETE; 04-02 (Wave 1: `decoupler` ORA marker-gene baseline, ANNOT-02) COMPLETE; 04-03 (Wave 1: isolated `bio_fm_worker/` scGPT venv + subprocess `fm_client.py`, ANNOT-01, mocked-FM unit tests) COMPLETE; 04-04 (Wave 2: `annotate()` pipeline composition + `annotate_cell_type_tool` agent wiring, ANNOT-01/03) NEXT; 04-05 (Wave 3: real `cellxgene-census` reference index + scGPT checkpoint acquisition + `bio_fm_smoke` phase-gate checkpoint, blocking human-verify).
-Status: Executing Phase 4. Plan 04-03 executed and committed (`1d18cd6`/`061d600` fm_client TDD, `ee32ba7` isolated venv + run_scgpt_embed.py + README). `pip install scgpt` succeeded in the isolated `bio_fm_worker/.venv` but `import scgpt` currently fails on a torch/torchtext ABI mismatch (dlopen symbol error) — documented in `bio_fm_worker/README.md` with repair candidates, explicitly deferred to Plan 04-05 per this plan's own contingency; fast-tier tests mock the subprocess boundary and don't depend on it. `run_scgpt_embed.py`'s embedding calls are written against the research sketch, unverified against the real API pending that repair. Full fast test suite green (91 passed, 1 deselected). Also discovered and committed previously-uncommitted Phase 3 fixes (from the earlier live_llm debugging session) that had never been git-committed: `agent/tools.py` now catches handler exceptions and returns `is_error` results (uncaught exceptions were invisible to the audit log via an unsubscribed `PostToolUseFailure` event), and `agent/session.py`'s `record_dataset_reference` now indexes the real bare-`content`-array `tool_response` shape instead of the wrapped dict the handler returns. Next up: Wave 2 (04-04).
+Phase: 4 of 6 (Bio-FM Tool Layer — Cell-Type Annotation) — EXECUTING (Waves 0-2 complete, Wave 3 next)
+Plan: 5 plans across 4 waves — 04-01 (Wave 0: `annotation/` package skeleton, `AnnotationCall`/`AnnotationSummary` dataclasses, `decoupler` install, `bio_fm_smoke` marker) COMPLETE; 04-02 (Wave 1: `decoupler` ORA marker-gene baseline, ANNOT-02) COMPLETE; 04-03 (Wave 1: isolated `bio_fm_worker/` scGPT venv + subprocess `fm_client.py`, ANNOT-01, mocked-FM unit tests) COMPLETE; 04-04 (Wave 2: `annotate()` pipeline composition + `annotate_cell_type_tool` agent wiring, ANNOT-01/03) COMPLETE; 04-05 (Wave 3: real `cellxgene-census` reference index + scGPT checkpoint acquisition + `bio_fm_smoke` phase-gate checkpoint, blocking human-verify) NEXT.
+Status: Executing Phase 4. Plan 04-04 executed and committed: `annotation/pipeline.py::annotate()` implemented against a pre-existing untracked test file (`tests/test_annotation_pipeline.py`, found already written from a prior interrupted session, matching this plan's spec exactly) — loads via `DatasetStore.load()`, calls `baseline_annotate()` unconditionally, wraps `call_scgpt_annotate()` in try/except (falls back to `fm_calls=[]` on any failure, never crashes), never persists a new store version. `annotate_cell_type_tool` added to `agent/tools.py` mirroring `analyze_dataset_tool`'s exact shape, registered in `agent/server.py`. One wrinkle found during Task 2's round-trip test: `baseline_annotate()`'s default `markers=None` path calls decoupler's `dc.op.resource()` (a real PanglaoDB network fetch) which failed in this sandbox — mocked both `call_scgpt_annotate` and `baseline_annotate` in the new agent-tool test to stay network-free, matching Task 1's own pipeline-test pattern. Full fast test suite green (98 passed, 1 deselected). Next up: Wave 3 (04-05) — this is the phase's blocking human-verify checkpoint (real multi-GB scGPT checkpoint download + torchtext ABI repair + cellxgene-census reference index build), so it will stop and require your manual confirmation partway through.
 Last activity: 2026-09-05 — Executed Phase 4 Plan 03 (isolated scGPT venv + fm_client subprocess shim) and committed outstanding Phase 3 live-test fixes.
 
 Progress: [█████████░] 90% (18/20 plans complete; Phase 4 Plans 01-03 of 5 executed)
