@@ -26,6 +26,8 @@ import cellxgene_census
 import numpy as np
 import tiledbsoma
 
+from annotation.fm_client import ensure_worker_compatible_h5ad
+
 ORGANISM = "Homo sapiens"
 CENSUS_VERSION = "2025-11-08"  # pinned for reproducibility; see release.json
 
@@ -95,6 +97,7 @@ def build_reference_index(
         adata.obs["cell_type_ontology_term_id"].notna().all()
     ), "every cell must have cell_type_ontology_term_id"
 
+    ensure_worker_compatible_h5ad(adata)
     adata.write_h5ad(out_path)
     return out_path
 

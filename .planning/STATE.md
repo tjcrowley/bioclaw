@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 04-04-PLAN.md (annotate() pipeline composition + annotate_cell_type_tool agent wiring, ANNOT-01/03); Wave 2 done, next is Wave 3 (04-05, blocking human-verify checkpoint)"
-last_updated: "2026-09-06T00:15:00.000Z"
-last_activity: 2026-09-06 — Executed Phase 4 Plan 04 (annotation/pipeline.py::annotate() composing baseline+FM calls; annotate_cell_type_tool wired into agent/tools.py and agent/server.py). Adopted a pre-existing untracked test file (tests/test_annotation_pipeline.py) left over from a prior interrupted session that already matched this plan's Task 1 spec exactly.
+stopped_at: "Completed 04-05-PLAN.md (real scGPT checkpoint + cellxgene-census reference index + bio_fm_smoke gate, ANNOT-01/02/03); Phase 4 COMPLETE. Next: Phase 5 (Perturbation + VCC)."
+last_updated: "2026-09-08T00:00:00.000Z"
+last_activity: 2026-09-08 — Executed Phase 4 Plan 05 (bio_fm_smoke checkpoint). Fixed 7 bugs discovered during real end-to-end verification (StringDtype/uns cross-venv compat, os.sched_getaffinity macOS shim, feature_name reference gene-col fix, reference embed cache, stdout JSON extraction). Smoke test passed: 31.2s latency, 1/1 green.
 progress:
   total_phases: 6
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 20
-  completed_plans: 19
-  percent: 95
+  completed_plans: 20
+  percent: 100
 ---
 
 # Project State
@@ -25,9 +25,10 @@ See: .planning/PROJECT.md (updated 2026-09-03)
 
 ## Current Position
 
-Phase: 4 of 6 (Bio-FM Tool Layer — Cell-Type Annotation) — EXECUTING (Waves 0-2 complete, Wave 3 next)
-Plan: 5 plans across 4 waves — 04-01 (Wave 0: `annotation/` package skeleton, `AnnotationCall`/`AnnotationSummary` dataclasses, `decoupler` install, `bio_fm_smoke` marker) COMPLETE; 04-02 (Wave 1: `decoupler` ORA marker-gene baseline, ANNOT-02) COMPLETE; 04-03 (Wave 1: isolated `bio_fm_worker/` scGPT venv + subprocess `fm_client.py`, ANNOT-01, mocked-FM unit tests) COMPLETE; 04-04 (Wave 2: `annotate()` pipeline composition + `annotate_cell_type_tool` agent wiring, ANNOT-01/03) COMPLETE; 04-05 (Wave 3: real `cellxgene-census` reference index + scGPT checkpoint acquisition + `bio_fm_smoke` phase-gate checkpoint, blocking human-verify) NEXT.
-Status: Executing Phase 4. Plan 04-04 executed and committed: `annotation/pipeline.py::annotate()` implemented against a pre-existing untracked test file (`tests/test_annotation_pipeline.py`, found already written from a prior interrupted session, matching this plan's spec exactly) — loads via `DatasetStore.load()`, calls `baseline_annotate()` unconditionally, wraps `call_scgpt_annotate()` in try/except (falls back to `fm_calls=[]` on any failure, never crashes), never persists a new store version. `annotate_cell_type_tool` added to `agent/tools.py` mirroring `analyze_dataset_tool`'s exact shape, registered in `agent/server.py`. One wrinkle found during Task 2's round-trip test: `baseline_annotate()`'s default `markers=None` path calls decoupler's `dc.op.resource()` (a real PanglaoDB network fetch) which failed in this sandbox — mocked both `call_scgpt_annotate` and `baseline_annotate` in the new agent-tool test to stay network-free, matching Task 1's own pipeline-test pattern. Full fast test suite green (98 passed, 1 deselected). Next up: Wave 3 (04-05) — this is the phase's blocking human-verify checkpoint (real multi-GB scGPT checkpoint download + torchtext ABI repair + cellxgene-census reference index build), so it will stop and require your manual confirmation partway through.
+Phase: 4 of 6 (Bio-FM Tool Layer — Cell-Type Annotation) — COMPLETE
+Plan: All 5 plans complete — 04-01 (annotation/ skeleton) ✓; 04-02 (decoupler baseline, ANNOT-02) ✓; 04-03 (bio_fm_worker venv, ANNOT-01) ✓; 04-04 (annotate() pipeline + annotate_cell_type_tool wiring, ANNOT-03) ✓; 04-05 (real scGPT checkpoint + cellxgene-census reference + bio_fm_smoke gate) ✓.
+Next: Phase 5 (Perturbation + VCC benchmark).
+Status: Phase 4 COMPLETE. Smoke test passed 2026-09-08 at 31.2s end-to-end latency (cache-hit path). Phase 4 executed and committed: `annotation/pipeline.py::annotate()` implemented against a pre-existing untracked test file (`tests/test_annotation_pipeline.py`, found already written from a prior interrupted session, matching this plan's spec exactly) — loads via `DatasetStore.load()`, calls `baseline_annotate()` unconditionally, wraps `call_scgpt_annotate()` in try/except (falls back to `fm_calls=[]` on any failure, never crashes), never persists a new store version. `annotate_cell_type_tool` added to `agent/tools.py` mirroring `analyze_dataset_tool`'s exact shape, registered in `agent/server.py`. One wrinkle found during Task 2's round-trip test: `baseline_annotate()`'s default `markers=None` path calls decoupler's `dc.op.resource()` (a real PanglaoDB network fetch) which failed in this sandbox — mocked both `call_scgpt_annotate` and `baseline_annotate` in the new agent-tool test to stay network-free, matching Task 1's own pipeline-test pattern. Full fast test suite green (98 passed, 1 deselected). Next up: Wave 3 (04-05) — this is the phase's blocking human-verify checkpoint (real multi-GB scGPT checkpoint download + torchtext ABI repair + cellxgene-census reference index build), so it will stop and require your manual confirmation partway through.
 Last activity: 2026-09-05 — Executed Phase 4 Plan 03 (isolated scGPT venv + fm_client subprocess shim) and committed outstanding Phase 3 live-test fixes.
 
 Progress: [█████████░] 90% (18/20 plans complete; Phase 4 Plans 01-03 of 5 executed)

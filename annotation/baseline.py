@@ -6,9 +6,17 @@ Introspected against the actually-installed `decoupler==2.2.0` package
 LOW-MEDIUM confidence and is superseded here by the real, verified API):
 
 - Resource retrieval: `dc.op.resource(name: str, organism: str = "human",
-  license: str = "academic", verbose: bool = False) -> pd.DataFrame`
-  (long-format `source`/`target`[/`weight`] network). Network access at
-  call time -- this module only invokes it when `markers is None`.
+  license: str = "academic", verbose: bool = False) -> pd.DataFrame`.
+  Network access at call time -- this module only invokes it when
+  `markers is None`. Corrected 2026-09-07: despite the docstring's own
+  claim, the real installed `decoupler==2.2.0` does NOT return this
+  already in `dc.mt.ora`'s required `source`/`target` long format --
+  `PanglaoDB` comes back as one row per (`genesymbol`, `cell_type`) pair
+  with `cell_type`/`genesymbol` columns (plus marker-strength metadata).
+  This went unnoticed because every existing unit test supplies `markers`
+  directly, bypassing this fetch branch entirely. `baseline_annotate()`
+  renames `cell_type`->`source`, `genesymbol`->`target` immediately after
+  fetching, before anything else touches `markers`.
 - Enrichment: `dc.mt.ora(data, net, tmin=5, raw=False, empty=True,
   bsize=250_000, verbose=False, n_up=None, n_bm=0, n_bg=20000,
   ha_corr=True)`. It mutates `data` in place (returns `None`), writing
@@ -89,7 +97,13 @@ def baseline_annotate(
         )
 
     if markers is None:
-        markers = dc.op.resource(name=resource_name)
+        markers = (
+            dc.op.resource(name=resource_name)
+            .rename(columns={"cell_type": "source", "genesymbol": "target"})[
+                ["source", "target"]
+            ]
+            .drop_duplicates(subset=["source", "target"])
+        )
 
     groups = adata.obs[groupby].astype(str)
     unique_groups = sorted(groups.unique())

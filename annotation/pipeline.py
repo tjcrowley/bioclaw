@@ -25,7 +25,7 @@ from pathlib import Path
 from ingest.store import DatasetStore
 
 from annotation.baseline import baseline_annotate
-from annotation.fm_client import call_scgpt_annotate
+from annotation.fm_client import call_scgpt_annotate, ensure_worker_compatible_h5ad
 from annotation.summary import AnnotationSummary
 
 
@@ -54,6 +54,7 @@ def annotate(
 
     try:
         with tempfile.NamedTemporaryFile(suffix=".h5ad", delete=False) as tmp:
+            ensure_worker_compatible_h5ad(adata)
             adata.write_h5ad(tmp.name)
             fm_calls = call_scgpt_annotate(
                 tmp.name,

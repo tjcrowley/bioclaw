@@ -4,6 +4,8 @@ __pycache__/
 .venv/
 node_modules/
 *.h5ad
+*.scgpt_emb.npy
 data/
+bio_fm_worker/checkpoints/
 agent/logs/
 agent/memory.sqlite
