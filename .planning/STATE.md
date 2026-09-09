@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 05-04-PLAN.md (compute_vcc_metrics, run_vcc_eval, VCC-02 closed)
-last_updated: "2026-09-09T22:27:49.241Z"
+stopped_at: Completed 05-05-PLAN.md (build_benchmark_report, run_full_benchmark, VCC-03 closed)
+last_updated: "2026-09-09T22:33:18.478Z"
 last_activity: 2026-09-08 — Planned Phase 5 (see stopped_at above).
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 26
-  completed_plans: 24
+  completed_plans: 25
   percent: 77
 ---
 
@@ -73,6 +73,7 @@ Progress: [████████░░] 77% (20/26 plans complete; Phase 5 fu
 | Phase 05-perturbation-response-tool-vcc-benchmark-harness P02 | 2min | 2 tasks | 2 files |
 | Phase 05-perturbation-response-tool-vcc-benchmark-harness P03 | 6min | 2 tasks | 6 files |
 | Phase 05-perturbation-response-tool-vcc-benchmark-harness P04 | 18min | 2 tasks | 2 files |
+| Phase 05-perturbation-response-tool-vcc-benchmark-harness P05 | 3min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -110,6 +111,8 @@ Recent decisions affecting current work:
 - [Phase 05-perturbation-response-tool-vcc-benchmark-harness]: 05-02: Ridge fallback feature is target gene's own control-expression scalar (single-feature Ridge per 05-RESEARCH.md Pattern 1); predict() routes exact lookup -> fallback -> KeyError by distinct failure modes; fit_from_adata returns (model, control_mean) tuple for Plan 05-03
 - [Phase 05-perturbation-response-tool-vcc-benchmark-harness]: 05-03: build_base_mean_adata returns GLOBAL mean of all pert group means (not per-gene); tests assert against actual output; allow_discrete=True required for raw counts; pandas Series must use .values for scipy sparse indexing
 - [Phase 05-perturbation-response-tool-vcc-benchmark-harness]: 05-04: cell_eval.MetricsEvaluator.compute(profile='vcc') returns Polars DataFrames (not dict); VCC_METRICS=[mae,discrimination_score_l1,overlap_at_N] mapped to {mae,pds,des}; both adata_pred/real must include control row; allow_discrete=True for raw integer count fixtures
+- [Phase 05-perturbation-response-tool-vcc-benchmark-harness]: 05-05: Plain dict (not dataclass) for benchmark report shape -- trivially JSON-serializable for checkpoint display and agent tool output
+- [Phase 05-perturbation-response-tool-vcc-benchmark-harness]: 05-05: ValueError raised for BOTH predictor_metrics AND baseline_metrics None/empty/incomplete -- symmetric validation enforces completeness structurally (VCC-03 closed)
 
 ### Pending Todos
 
@@ -124,6 +127,6 @@ Phase 4 (Bio-FM Tool Layer — Cell-Type Annotation) is planned (5 plans, 04-01.
 
 ## Session Continuity
 
-Last session: 2026-09-09T22:27:49.238Z
-Stopped at: Completed 05-04-PLAN.md (compute_vcc_metrics, run_vcc_eval, VCC-02 closed)
+Last session: 2026-09-09T22:33:18.475Z
+Stopped at: Completed 05-05-PLAN.md (build_benchmark_report, run_full_benchmark, VCC-03 closed)
 Resume file: None

@@ -52,7 +52,7 @@ Requirements for initial internal-tool release. Each maps to a roadmap phase.
 
 - [x] **VCC-01**: System can ingest the Virtual Cell Challenge's public dataset (10x Flex chemistry, control + perturbed profiles) through the same ingest pipeline
 - [x] **VCC-02**: An eval harness calls the perturbation-prediction tool directly (bypassing the agent loop) against the VCC public dataset and computes PDS, DES, and MAE exactly as Arc Institute defines them
-- [ ] **VCC-03**: Benchmark results report performance against the naive perturbation-mean baseline, not a single cherry-picked metric in isolation
+- [x] **VCC-03**: Benchmark results report performance against the naive perturbation-mean baseline, not a single cherry-picked metric in isolation
 
 ## v2 Requirements
 
@@ -114,7 +114,7 @@ Populated during roadmap creation (2026-09-03).
 | QA-03 | Phase 6 | Pending |
 | VCC-01 | Phase 5 | Complete |
 | VCC-02 | Phase 5 | Complete |
-| VCC-03 | Phase 5 | Pending |
+| VCC-03 | Phase 5 | Complete |
 
 **Coverage:**
 - v1 requirements: 23 total
