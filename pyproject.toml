@@ -10,6 +10,7 @@ dependencies = [
     "decoupler>=2.2.0",
     "cellxgene-census>=1.18.0",
     "cell-eval>=0.8.2",
+    "gcsfs>=2026.8.0",
 ]
 
 [dependency-groups]
