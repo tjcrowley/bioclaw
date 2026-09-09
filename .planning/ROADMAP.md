@@ -102,10 +102,15 @@ Plans:
   3. The VCC public dataset ingests through the same Phase 1 pipeline, with no bespoke ingest path required.
   4. An eval harness calls the perturbation tool directly, bypassing the agent loop, and computes PDS, DES, and MAE exactly as Arc Institute defines them.
   5. Benchmark results report all three official metrics plus the naive-baseline comparison — never a single cherry-picked metric in isolation.
-**Plans**: TBD
+**Plans**: 6 plans
 
 Plans:
-- [ ] 05-01: TBD
+- [ ] 05-01-PLAN.md — Wave 0: cell-eval dependency, vcc_data marker, perturbation/+benchmark/ skeletons + PerturbationCall/PerturbationSummary contracts, perturbation_adata fixture, .h5ad ingest branch (VCC-01)
+- [ ] 05-02-PLAN.md — LinearAdditivePerturbationModel fit/predict + fit_from_adata (PERT-01 core)
+- [ ] 05-03-PLAN.md — naive_baseline_predict (cell-eval baseline) + pipeline.predict() composition + predict_perturbation_tool agent wiring (PERT-02, PERT-01)
+- [ ] 05-04-PLAN.md — compute_vcc_metrics/run_vcc_eval: cell-eval MetricsEvaluator harness, direct-call bypassing agent loop (VCC-02)
+- [ ] 05-05-PLAN.md — build_benchmark_report/run_full_benchmark: baseline-enforced VCC report generator (VCC-03)
+- [ ] 05-06-PLAN.md — Phase gate: real VCC dataset download + vcc_data smoke test (blocking human-verify checkpoint)
 
 ### Phase 6: Natural-Language Q&A Capstone
 **Goal**: A Biopunk Labs researcher asks a plain-language question about an ingested dataset and receives an interpreted answer that composes the tools from every prior phase automatically, with every claim traceable to a logged tool-call result and every quantitative claim carrying surfaced confidence/uncertainty — proving the project's Core Value end to end.
@@ -131,5 +136,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Analysis Tool Layer | 5/5 | Complete   | 2026-09-05 |
 | 3. Agent Orchestration Wiring | 5/5 | Complete    | 2026-09-05 |
 | 4. Bio-FM Tool Layer — Cell-Type Annotation | 2/5 | In Progress|  |
-| 5. Perturbation-Response Tool + VCC Benchmark | 0/TBD | Not started | - |
+| 5. Perturbation-Response Tool + VCC Benchmark | 0/6 | Not started | - |
 | 6. Natural-Language Q&A Capstone | 0/TBD | Not started | - |
