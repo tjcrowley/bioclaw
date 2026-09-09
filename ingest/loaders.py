@@ -46,15 +46,17 @@ def _log_feature_type_drop(feature_types) -> None:
 
 
 def load(path: str | Path) -> AnnData:
-    """Format-detects a directory (MEX/.mtx) vs a .h5 file.
+    """Format-detects a directory (MEX/.mtx), a .h5 file, or a .h5ad file.
 
     Directories are read via `sc.read_10x_mtx` (var_names deduplicated via
     `make_unique=True`); `.h5` files are read via `sc.read_10x_h5` followed by
     an explicit `var_names_make_unique()` call, since `read_10x_h5` does not
-    dedupe automatically.
+    dedupe automatically; `.h5ad` files are read via `sc.read_h5ad` directly
+    (no var_names_make_unique() call -- a well-formed .h5ad is assumed to
+    already have valid var_names, per 05-RESEARCH.md Pattern 2, VCC-01).
 
     Raises `ValueError` on any other input (nonexistent path, or a file that
-    isn't a `.h5`).
+    isn't a `.h5` or `.h5ad`).
     """
     p = Path(path)
 
@@ -80,8 +82,14 @@ def load(path: str | Path) -> AnnData:
         adata.var_names_make_unique()  # read_10x_h5 does NOT auto-dedupe (Pitfall 5)
         return adata
 
+    if p.suffix == ".h5ad":
+        # VCC-01: AnnData's own serialization format (used by the VCC public dataset).
+        # No var_names_make_unique() needed -- a well-formed .h5ad already has valid
+        # var_names, unlike the raw 10x .h5/.mtx formats above.
+        return sc.read_h5ad(p)
+
     raise ValueError(
-        f"Unrecognized 10x input: {path} (expected a .mtx directory or .h5 file)"
+        f"Unrecognized 10x input: {path} (expected a .mtx directory, .h5, or .h5ad file)"
     )
 
 
