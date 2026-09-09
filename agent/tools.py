@@ -36,6 +36,7 @@ from claude_agent_sdk import tool
 from analysis.pipeline import analyze
 from annotation.pipeline import annotate
 from ingest.pipeline import ingest_10x
+from perturbation.pipeline import predict as predict_perturbation
 
 # Module-level constant, set once at import time (overridable via the
 # BIOCLAW_STORE_ROOT env var, or directly in tests via
@@ -97,6 +98,34 @@ async def annotate_cell_type_tool(args: dict[str, Any]) -> dict[str, Any]:
     version = args.get("version")
     try:
         dataset_id, summary = annotate(args["name"], version=version, store_root=STORE_ROOT)
+    except Exception as exc:
+        return {"content": [{"type": "text", "text": str(exc)}], "is_error": True}
+    return {
+        "content": [
+            {"type": "text", "text": json.dumps({"dataset_id": dataset_id, **summary})}
+        ],
+        "is_error": False,
+    }
+
+
+@tool(
+    "predict_perturbation",
+    "Predict post-perturbation gene expression for a named dataset and target gene, "
+    "always returning BOTH a linear-additive model prediction and Arc Institute's "
+    "naive perturbation-mean baseline -- the two calls are never separated. "
+    "Optionally pass 'version' (int) to operate on a specific dataset version "
+    "instead of the latest.",
+    {"name": str, "target_gene": str},  # 'version' intentionally omitted -- optional
+)
+async def predict_perturbation_tool(args: dict[str, Any]) -> dict[str, Any]:
+    version = args.get("version")
+    try:
+        dataset_id, summary = predict_perturbation(
+            args["name"],
+            args["target_gene"],
+            version=version,
+            store_root=STORE_ROOT,
+        )
     except Exception as exc:
         return {"content": [{"type": "text", "text": str(exc)}], "is_error": True}
     return {

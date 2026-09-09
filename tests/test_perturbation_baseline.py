@@ -87,3 +87,45 @@ def test_naive_baseline_predict_unknown_gene_raises_value_error(perturbation_ada
     """
     with pytest.raises(ValueError, match="GENE99"):
         naive_baseline_predict(perturbation_adata, "GENE99")
+
+
+# ---------------------------------------------------------------------------
+# pipeline.predict() composition test (PERT-02 enforcement)
+# ---------------------------------------------------------------------------
+
+
+def test_predict_pipeline_returns_both_calls(tmp_path, perturbation_adata):
+    """pipeline.predict() returns a PerturbationSummary dict with both model_call
+    and baseline_call populated -- PERT-02's actual enforcement point.
+
+    Design: persists perturbation_adata directly into a DatasetStore at tmp_path
+    via DatasetStore.save() rather than going through the full ingest_10x/QC
+    pipeline.  This is intentional -- perturbation_adata already has correct
+    target_gene labels and does not need QC filtering or the 10x ingest path.
+    Documented here per the plan's instruction to record this choice.
+    """
+    from ingest.store import DatasetStore
+    from perturbation.pipeline import predict
+
+    store = DatasetStore(root=tmp_path)
+    store.save("pert-pilot", perturbation_adata)
+
+    dataset_id, summary = predict("pert-pilot", "GENE00", store_root=tmp_path)
+
+    assert dataset_id == "pert-pilot@(latest)"
+    # PERT-02 enforcement: both model_call and baseline_call must be present and non-null.
+    assert "model_call" in summary, "model_call must be present in summary"
+    assert "baseline_call" in summary, "baseline_call must be present in summary"
+    assert summary["model_call"] is not None
+    assert summary["baseline_call"] is not None
+
+    # Shape checks: predicted_expression vectors must match gene_names length.
+    n_genes = len(summary["gene_names"])
+    assert len(summary["model_call"]["predicted_expression"]) == n_genes
+    assert len(summary["baseline_call"]["predicted_expression"]) == n_genes
+
+    # Method labels must be correct.
+    assert summary["model_call"]["method"] == "linear_additive"
+    assert summary["baseline_call"]["method"] == "naive_baseline"
+    assert summary["model_call"]["target_gene"] == "GENE00"
+    assert summary["baseline_call"]["target_gene"] == "GENE00"

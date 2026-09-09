@@ -33,7 +33,12 @@ from scipy import sparse
 from scipy.io import mmwrite
 
 import agent.tools as agent_tools
-from agent.tools import analyze_dataset_tool, annotate_cell_type_tool, ingest_10x_tool
+from agent.tools import (
+    analyze_dataset_tool,
+    annotate_cell_type_tool,
+    ingest_10x_tool,
+    predict_perturbation_tool,
+)
 
 FEATURE_TYPE = "Gene Expression"
 
@@ -197,10 +202,60 @@ def test_annotate_cell_type_tool_unknown_name_returns_error_result(tmp_path, mon
     assert result["is_error"] is True
 
 
-def test_bioclaw_server_wraps_all_three_tools():
+def test_predict_perturbation_tool_round_trip(tmp_path, perturbation_adata, monkeypatch):
+    """predict_perturbation_tool round-trip test, mirroring test_annotate_cell_type_tool_round_trip.
+
+    Design: persist perturbation_adata directly into the store via DatasetStore.save()
+    rather than going through ingest_10x/QC -- perturbation_adata already has correct
+    target_gene labels and does not need the full ingest pipeline.  This is documented
+    here as an intentional choice matching the pipeline test above.
+
+    Asserts: is_error is False and JSON payload contains both model_call and baseline_call.
+    """
+    from ingest.store import DatasetStore
+
+    monkeypatch.setattr(agent_tools, "STORE_ROOT", str(tmp_path))
+    store = DatasetStore(root=tmp_path)
+    store.save("pert-pilot", perturbation_adata)
+
+    result = asyncio.run(
+        predict_perturbation_tool.handler({"name": "pert-pilot", "target_gene": "GENE00"})
+    )
+
+    assert result["is_error"] is False
+    payload = json.loads(result["content"][0]["text"])
+    assert "model_call" in payload, "predict_perturbation_tool must return model_call"
+    assert "baseline_call" in payload, "predict_perturbation_tool must return baseline_call"
+    assert payload["model_call"] is not None
+    assert payload["baseline_call"] is not None
+
+
+def test_predict_perturbation_tool_unknown_name_returns_error_result(tmp_path, monkeypatch):
+    """predict_perturbation_tool returns is_error=True for unknown dataset names."""
+    monkeypatch.setattr(agent_tools, "STORE_ROOT", str(tmp_path))
+
+    result = asyncio.run(
+        predict_perturbation_tool.handler(
+            {"name": "does-not-exist", "target_gene": "GENE00"}
+        )
+    )
+
+    assert result["is_error"] is True
+
+
+def test_predict_perturbation_tool_schema_omits_version():
+    """predict_perturbation_tool's schema lists name and target_gene but not version."""
+    schema = predict_perturbation_tool.input_schema
+    assert "name" in schema
+    assert "target_gene" in schema
+    assert "version" not in schema
+
+
+def test_bioclaw_server_wraps_all_four_tools():
     import agent.server as agent_server
 
     assert agent_server.ingest_10x_tool is ingest_10x_tool
     assert agent_server.analyze_dataset_tool is analyze_dataset_tool
     assert agent_server.annotate_cell_type_tool is annotate_cell_type_tool
+    assert agent_server.predict_perturbation_tool is predict_perturbation_tool
     assert agent_server.bioclaw_server["name"] == "bioclaw"
