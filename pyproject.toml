@@ -9,6 +9,7 @@ dependencies = [
     "claude-agent-sdk>=0.2.152",
     "decoupler>=2.2.0",
     "cellxgene-census>=1.18.0",
+    "cell-eval>=0.8.2",
 ]
 
 [dependency-groups]
@@ -22,4 +23,5 @@ pythonpath = ["."]
 markers = [
     "live_llm: requires a live Anthropic API key (ANTHROPIC_API_KEY), excluded from fast/CI runs",
     "bio_fm_smoke: requires a real pretrained scGPT checkpoint in the isolated bio_fm_worker/ environment, excluded from fast/CI runs",
+    "vcc_data: requires the downloaded VCC public dataset, excluded from fast/CI runs",
 ]
