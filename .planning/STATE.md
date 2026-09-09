@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 05-03-PLAN.md (naive_baseline_predict, pipeline.predict, predict_perturbation_tool, PERT-01/02 closed)
-last_updated: "2026-09-09T15:53:54.631Z"
+stopped_at: Completed 05-04-PLAN.md (compute_vcc_metrics, run_vcc_eval, VCC-02 closed)
+last_updated: "2026-09-09T22:27:49.241Z"
 last_activity: 2026-09-08 — Planned Phase 5 (see stopped_at above).
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 26
-  completed_plans: 23
+  completed_plans: 24
   percent: 77
 ---
 
@@ -72,6 +72,7 @@ Progress: [████████░░] 77% (20/26 plans complete; Phase 5 fu
 | Phase 05-perturbation-response-tool-vcc-benchmark-harness P01 | 6min | 3 tasks | 12 files |
 | Phase 05-perturbation-response-tool-vcc-benchmark-harness P02 | 2min | 2 tasks | 2 files |
 | Phase 05-perturbation-response-tool-vcc-benchmark-harness P03 | 6min | 2 tasks | 6 files |
+| Phase 05-perturbation-response-tool-vcc-benchmark-harness P04 | 18min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -108,6 +109,7 @@ Recent decisions affecting current work:
 - [Phase 05-perturbation-response-tool-vcc-benchmark-harness]: cell-eval installed torch-free (confirmed via uv.lock); PerturbationSummary uses scalar model_call/baseline_call (not lists) per PERT-01 one-target-gene-per-call design; .h5ad branch in load() omits var_names_make_unique() since well-formed h5ad already has valid var_names
 - [Phase 05-perturbation-response-tool-vcc-benchmark-harness]: 05-02: Ridge fallback feature is target gene's own control-expression scalar (single-feature Ridge per 05-RESEARCH.md Pattern 1); predict() routes exact lookup -> fallback -> KeyError by distinct failure modes; fit_from_adata returns (model, control_mean) tuple for Plan 05-03
 - [Phase 05-perturbation-response-tool-vcc-benchmark-harness]: 05-03: build_base_mean_adata returns GLOBAL mean of all pert group means (not per-gene); tests assert against actual output; allow_discrete=True required for raw counts; pandas Series must use .values for scipy sparse indexing
+- [Phase 05-perturbation-response-tool-vcc-benchmark-harness]: 05-04: cell_eval.MetricsEvaluator.compute(profile='vcc') returns Polars DataFrames (not dict); VCC_METRICS=[mae,discrimination_score_l1,overlap_at_N] mapped to {mae,pds,des}; both adata_pred/real must include control row; allow_discrete=True for raw integer count fixtures
 
 ### Pending Todos
 
@@ -122,6 +124,6 @@ Phase 4 (Bio-FM Tool Layer — Cell-Type Annotation) is planned (5 plans, 04-01.
 
 ## Session Continuity
 
-Last session: 2026-09-09T15:53:54.626Z
-Stopped at: Completed 05-03-PLAN.md (naive_baseline_predict, pipeline.predict, predict_perturbation_tool, PERT-01/02 closed)
+Last session: 2026-09-09T22:27:49.238Z
+Stopped at: Completed 05-04-PLAN.md (compute_vcc_metrics, run_vcc_eval, VCC-02 closed)
 Resume file: None
