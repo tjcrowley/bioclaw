@@ -57,3 +57,17 @@ def test_load_logs_feature_type_drop(tiny_mtx_dir, caplog):
         "Gene Expression" in record.message or "feature type" in record.message.lower()
         for record in caplog.records
     )
+
+
+def test_load_h5ad(tmp_path, synthetic_adata):
+    """load() dispatches .h5ad files to sc.read_h5ad and returns a valid AnnData
+    with matching n_obs/n_vars (VCC-01, 05-RESEARCH.md Pattern 2).
+    """
+    h5ad_path = tmp_path / "test.h5ad"
+    synthetic_adata.write_h5ad(h5ad_path)
+
+    result = load(h5ad_path)
+
+    assert isinstance(result, AnnData)
+    assert result.n_obs == synthetic_adata.n_obs
+    assert result.n_vars == synthetic_adata.n_vars
