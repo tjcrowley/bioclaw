@@ -136,5 +136,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Analysis Tool Layer | 5/5 | Complete   | 2026-09-05 |
 | 3. Agent Orchestration Wiring | 5/5 | Complete    | 2026-09-05 |
 | 4. Bio-FM Tool Layer — Cell-Type Annotation | 2/5 | In Progress|  |
-| 5. Perturbation-Response Tool + VCC Benchmark | 0/6 | Not started | - |
+| 5. Perturbation-Response Tool + VCC Benchmark | 1/6 | In Progress|  |
 | 6. Natural-Language Q&A Capstone | 0/TBD | Not started | - |

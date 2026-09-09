@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: "Phase 5 planning COMPLETE — 6 plans (05-01..05-06) across 6 waves, verified by gsd-plan-checker (PASS). Next: /gsd:execute-phase 05-perturbation-response-tool-vcc-benchmark-harness."
-last_updated: "2026-09-08T00:00:00.000Z"
-last_activity: 2026-09-08 — Planned Phase 5 (Perturbation + VCC Benchmark). Wrote 05-02 through 05-06 (05-01 already existed from a prior interrupted run). Plan-checker verified all 6 plans PASS with full requirement coverage (PERT-01/02, VCC-01/02/03). Fixed stale ROADMAP.md Phase 4 checkboxes (04-03/04-04/04-05 were already executed but unchecked) and 05-VALIDATION.md sign-off frontmatter.
+status: verifying
+stopped_at: Completed 05-01-PLAN.md (cell-eval install, perturbation/benchmark skeletons, VCC-01 h5ad ingest)
+last_updated: "2026-09-09T15:38:37.534Z"
+last_activity: 2026-09-08 — Planned Phase 5 (see stopped_at above).
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 26
-  completed_plans: 20
+  completed_plans: 21
   percent: 77
 ---
 
@@ -69,6 +69,7 @@ Progress: [████████░░] 77% (20/26 plans complete; Phase 5 fu
 | Phase 03-agent-orchestration-wiring P05 | 5min | 2 tasks | 3 files |
 | Phase 04-bio-fm-cell-type-annotation P01 | 6min | 2 tasks | 8 files |
 | Phase 04-bio-fm-cell-type-annotation P02 | ~15min | 1 tasks | 2 files |
+| Phase 05-perturbation-response-tool-vcc-benchmark-harness P01 | 6min | 3 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,7 @@ Recent decisions affecting current work:
 - [Phase 04-bio-fm-cell-type-annotation]: 04-01: decoupler installed torch-free with zero resolver conflicts, confirming 04-RESEARCH.md's Isolation Boundary; AnnotationCall/AnnotationSummary dataclasses fixed verbatim from the plan spec for all downstream Wave 1/2 plans to implement against.
 - [Phase 04-bio-fm-cell-type-annotation]: 04-02: decoupler==2.2.0's real API introspected directly (dc.op.resource / dc.mt.ora), superseding 04-RESEARCH.md's LOW-MEDIUM-confidence v1.x sketch. baseline_annotate() pseudobulks per-group counts before calling dc.mt.ora (which operates per-observation, not per-group) and overrides n_up to 10% of gene count (vs decoupler's own 5% default) since 5% produced tied/non-discriminating scores on small marker panels -- verified empirically, documented in annotation/baseline.py's module docstring.
 - [Phase 04-bio-fm-cell-type-annotation]: 04-03: `pip install scgpt` succeeded in isolated `bio_fm_worker/.venv` (Python 3.9.6) but `import scgpt` fails on a torch/torchtext ABI mismatch (dlopen symbol-not-found inside torchtext's compiled extension) -- per plan's own documented contingency, captured in bio_fm_worker/README.md with three repair candidates and left for 04-05, since fast tests mock the subprocess boundary entirely. run_scgpt_embed.py's embed_data() calls are therefore unverified against the real scgpt API -- 04-05 must re-verify once the import is repaired.
+- [Phase 05-perturbation-response-tool-vcc-benchmark-harness]: cell-eval installed torch-free (confirmed via uv.lock); PerturbationSummary uses scalar model_call/baseline_call (not lists) per PERT-01 one-target-gene-per-call design; .h5ad branch in load() omits var_names_make_unique() since well-formed h5ad already has valid var_names
 
 ### Pending Todos
 
@@ -116,6 +118,6 @@ Phase 4 (Bio-FM Tool Layer — Cell-Type Annotation) is planned (5 plans, 04-01.
 
 ## Session Continuity
 
-Last session: 2026-09-05T23:20:00.000Z
-Stopped at: Completed 04-03-PLAN.md (isolated scGPT venv + fm_client subprocess shim, ANNOT-01); Wave 1 done, next is Wave 2 (04-04)
+Last session: 2026-09-09T15:38:37.520Z
+Stopped at: Completed 05-01-PLAN.md (cell-eval install, perturbation/benchmark skeletons, VCC-01 h5ad ingest)
 Resume file: None
