@@ -1,5 +1,5 @@
 """Synthetic, in-repo, network-free fixtures shared across Phase 1 (ingest +
-QC pipeline) and Phase 2 (analysis) tests.
+QC pipeline), Phase 2 (analysis), and Phase 5 (perturbation) tests.
 
 Provides:
 - tiny_mtx_dir: a tiny 10x MEX-format directory (matrix.mtx.gz,
@@ -198,6 +198,85 @@ def structured_adata() -> AnnData:
     X = sparse.csr_matrix(counts)
     obs = pd.DataFrame(
         {"true_population": ["A"] * n_pop + ["B"] * (n_cells - n_pop)},
+        index=cell_names,
+    )
+    adata = AnnData(
+        X=X,
+        obs=obs,
+        var=pd.DataFrame(index=gene_names),
+    )
+    return adata
+
+
+@pytest.fixture
+def perturbation_adata() -> AnnData:
+    """Returns an in-memory AnnData (raw integer counts, sparse csr_matrix
+    in .X) for Phase 5 (perturbation-response) tests.
+
+    Shape: 30 genes x 350 cells.
+
+    obs["target_gene"] values:
+    - "non-targeting" (control): 100 cells, background Poisson lam=2 counts only.
+    - "GENE00" through "GENE04": 50 cells each (5 perturbations x 50 cells = 250 cells),
+      each with a fixed deterministic additive shift on top of the control background.
+
+    var_names: ["GENE00", "GENE01", ..., "GENE29"] (30 genes total).
+
+    obs["target_gene"] and the control token "non-targeting" match cell-eval's
+    DEFAULT_PERT_COL / DEFAULT_CTRL constants (05-RESEARCH.md Pitfall 4).
+    Do NOT rename these without updating every Phase 5 test that depends on
+    this fixture.
+
+    Per-gene shift vectors (added on top of Poisson lam=2 background, clipped
+    to non-negative integers):
+    - "GENE00": shift +10 on gene index 0 only
+    - "GENE01": shift +10 on gene index 1 only
+    - "GENE02": shift +10 on gene index 2 only
+    - "GENE03": shift +10 on gene index 3 only
+    - "GENE04": shift +10 on gene index 4 only
+
+    Each perturbed gene's shift is applied only to its own gene index so
+    Plans 02/03's tests can assert per-gene discrimination: the mean expression
+    of GENE00 in "GENE00"-perturbed cells is ~12, while the mean of GENE00 in
+    any other condition's cells is ~2. This makes each perturbation's expected
+    shift vector exactly recoverable.
+
+    RNG seed: 4 (next unused after Phase 1-2's seeds 0/1/2/3).
+    """
+    n_genes, n_cells_control = 30, 100
+    n_perts = 5  # GENE00..GENE04
+    n_cells_per_pert = 50
+    rng = np.random.default_rng(4)
+
+    gene_names = [f"GENE{i:02d}" for i in range(n_genes)]
+
+    # Build control cells: background Poisson lam=2 only.
+    control_counts = rng.poisson(lam=2, size=(n_cells_control, n_genes)).astype(np.int64)
+    control_labels = ["non-targeting"] * n_cells_control
+
+    # Build perturbed cells: background + fixed additive shift on the target gene index.
+    # shift[i] = +10 on gene index i only (all other genes: background only).
+    # Document shifts verbatim so Plan 02/03 tests can assert exact recovery:
+    #   GENE00 -> shift[0] = 10, GENE01 -> shift[1] = 10, ... GENE04 -> shift[4] = 10
+    pert_counts_list = []
+    pert_labels = []
+    for pert_idx in range(n_perts):
+        pert_gene = gene_names[pert_idx]  # "GENE00" through "GENE04"
+        bg = rng.poisson(lam=2, size=(n_cells_per_pert, n_genes)).astype(np.int64)
+        bg[:, pert_idx] += 10  # fixed +10 shift on the target gene only
+        pert_counts_list.append(bg)
+        pert_labels.extend([pert_gene] * n_cells_per_pert)
+
+    # Concatenate: 100 control cells + 250 perturbed cells = 350 cells total.
+    all_counts = np.concatenate([control_counts] + pert_counts_list, axis=0)
+    all_labels = control_labels + pert_labels
+    n_total = n_cells_control + n_perts * n_cells_per_pert  # 350
+
+    cell_names = [f"CELL{i:04d}" for i in range(n_total)]
+
+    X = sparse.csr_matrix(all_counts)
+    obs = pd.DataFrame(
+        {"target_gene": all_labels},
         index=cell_names,
     )
     adata = AnnData(
