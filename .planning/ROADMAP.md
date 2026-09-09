@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Ingest + QC Pipeline** - Raw 10x output becomes canonical, versioned, trustworthy `.h5ad` with an immutable raw-counts contract (completed 2026-09-04)
 - [x] **Phase 2: Analysis Tool Layer** - Deterministic clustering and differential-expression tools work standalone on canonical data, agent-ready (completed 2026-09-05)
 - [x] **Phase 3: Agent Orchestration Wiring** - A Claude-based agent plans, calls, and logs tool invocations against the Phase 1-2 tools with persistent session memory (completed 2026-09-05)
-- [ ] **Phase 4: Bio-FM Tool Layer — Cell-Type Annotation** - The agent calls a bio foundation model as a tool for cell-type annotation, always paired with a statistical baseline
+- [x] **Phase 4: Bio-FM Tool Layer — Cell-Type Annotation** - The agent calls a bio foundation model as a tool for cell-type annotation, always paired with a statistical baseline (completed 2026-09-08)
 - [ ] **Phase 5: Perturbation-Response Tool + VCC Benchmark** - The agent predicts perturbation response as a tool call, independently validated against Arc Institute's public benchmark
 - [ ] **Phase 6: Natural-Language Q&A Capstone** - A researcher asks a plain-language question and gets a traceable, uncertainty-aware, interpreted answer
 
@@ -83,14 +83,14 @@ Plans:
   1. The agent can invoke a bio-FM-backed cell-type annotation tool on normalized expression and receive a cell-type call.
   2. Every FM-backed annotation call automatically returns a marker-gene/`decoupler`-based statistical baseline result alongside it, for comparison.
   3. Annotation output includes reference dataset, confidence score, and ontology metadata — not a bare label string.
-**Plans**: 1/5 plans executed
+**Plans**: 5/5 plans executed
 
 Plans:
 - [x] 04-01-PLAN.md — Wave 0: annotation/ package skeleton + AnnotationCall/AnnotationSummary contracts, decoupler install, bio_fm_smoke marker
 - [x] 04-02-PLAN.md — decoupler ORA marker-gene statistical baseline (ANNOT-02)
-- [ ] 04-03-PLAN.md — Isolated scGPT environment (bio_fm_worker/) + subprocess fm_client, mocked-FM unit tests (ANNOT-01)
-- [ ] 04-04-PLAN.md — annotate() pipeline composition + annotate_cell_type_tool agent wiring (ANNOT-01, ANNOT-03)
-- [ ] 04-05-PLAN.md — cellxgene-census reference index + real scGPT checkpoint acquisition + bio_fm_smoke phase-gate verification
+- [x] 04-03-PLAN.md — Isolated scGPT environment (bio_fm_worker/) + subprocess fm_client, mocked-FM unit tests (ANNOT-01)
+- [x] 04-04-PLAN.md — annotate() pipeline composition + annotate_cell_type_tool agent wiring (ANNOT-01, ANNOT-03)
+- [x] 04-05-PLAN.md — cellxgene-census reference index + real scGPT checkpoint acquisition + bio_fm_smoke phase-gate verification
 
 ### Phase 5: Perturbation-Response Tool + VCC Benchmark Harness
 **Goal**: The agent predicts perturbation response as a typed tool call, benchmarked against a naive baseline by default, and independently validated against the Virtual Cell Challenge's public dataset and official metrics as an external, credible evidence source for the wedge.

@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 04-05-PLAN.md (real scGPT checkpoint + cellxgene-census reference index + bio_fm_smoke gate, ANNOT-01/02/03); Phase 4 COMPLETE. Next: Phase 5 (Perturbation + VCC)."
+stopped_at: "Phase 5 planning COMPLETE — 6 plans (05-01..05-06) across 6 waves, verified by gsd-plan-checker (PASS). Next: /gsd:execute-phase 05-perturbation-response-tool-vcc-benchmark-harness."
 last_updated: "2026-09-08T00:00:00.000Z"
-last_activity: 2026-09-08 — Executed Phase 4 Plan 05 (bio_fm_smoke checkpoint). Fixed 7 bugs discovered during real end-to-end verification (StringDtype/uns cross-venv compat, os.sched_getaffinity macOS shim, feature_name reference gene-col fix, reference embed cache, stdout JSON extraction). Smoke test passed: 31.2s latency, 1/1 green.
+last_activity: 2026-09-08 — Planned Phase 5 (Perturbation + VCC Benchmark). Wrote 05-02 through 05-06 (05-01 already existed from a prior interrupted run). Plan-checker verified all 6 plans PASS with full requirement coverage (PERT-01/02, VCC-01/02/03). Fixed stale ROADMAP.md Phase 4 checkboxes (04-03/04-04/04-05 were already executed but unchecked) and 05-VALIDATION.md sign-off frontmatter.
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 20
+  total_plans: 26
   completed_plans: 20
-  percent: 100
+  percent: 77
 ---
 
 # Project State
@@ -25,13 +25,13 @@ See: .planning/PROJECT.md (updated 2026-09-03)
 
 ## Current Position
 
-Phase: 4 of 6 (Bio-FM Tool Layer — Cell-Type Annotation) — COMPLETE
-Plan: All 5 plans complete — 04-01 (annotation/ skeleton) ✓; 04-02 (decoupler baseline, ANNOT-02) ✓; 04-03 (bio_fm_worker venv, ANNOT-01) ✓; 04-04 (annotate() pipeline + annotate_cell_type_tool wiring, ANNOT-03) ✓; 04-05 (real scGPT checkpoint + cellxgene-census reference + bio_fm_smoke gate) ✓.
-Next: Phase 5 (Perturbation + VCC benchmark).
-Status: Phase 4 COMPLETE. Smoke test passed 2026-09-08 at 31.2s end-to-end latency (cache-hit path). Phase 4 executed and committed: `annotation/pipeline.py::annotate()` implemented against a pre-existing untracked test file (`tests/test_annotation_pipeline.py`, found already written from a prior interrupted session, matching this plan's spec exactly) — loads via `DatasetStore.load()`, calls `baseline_annotate()` unconditionally, wraps `call_scgpt_annotate()` in try/except (falls back to `fm_calls=[]` on any failure, never crashes), never persists a new store version. `annotate_cell_type_tool` added to `agent/tools.py` mirroring `analyze_dataset_tool`'s exact shape, registered in `agent/server.py`. One wrinkle found during Task 2's round-trip test: `baseline_annotate()`'s default `markers=None` path calls decoupler's `dc.op.resource()` (a real PanglaoDB network fetch) which failed in this sandbox — mocked both `call_scgpt_annotate` and `baseline_annotate` in the new agent-tool test to stay network-free, matching Task 1's own pipeline-test pattern. Full fast test suite green (98 passed, 1 deselected). Next up: Wave 3 (04-05) — this is the phase's blocking human-verify checkpoint (real multi-GB scGPT checkpoint download + torchtext ABI repair + cellxgene-census reference index build), so it will stop and require your manual confirmation partway through.
-Last activity: 2026-09-05 — Executed Phase 4 Plan 03 (isolated scGPT venv + fm_client subprocess shim) and committed outstanding Phase 3 live-test fixes.
+Phase: 5 of 6 (Perturbation-Response Tool + VCC Benchmark Harness) — PLANNED, not yet executed
+Plan: 6 plans across 6 waves — 05-01 (Wave 0: cell-eval install, vcc_data marker, perturbation/+benchmark/ skeletons, .h5ad ingest branch, VCC-01) written but not yet executed; 05-02 (LinearAdditivePerturbationModel, PERT-01 core); 05-03 (naive_baseline_predict + pipeline.predict() + predict_perturbation_tool wiring, PERT-01/02); 05-04 (compute_vcc_metrics/run_vcc_eval, VCC-02); 05-05 (build_benchmark_report/run_full_benchmark, VCC-03); 05-06 (real VCC dataset smoke test, blocking human-verify checkpoint, autonomous: false).
+Next: /gsd:execute-phase 05-perturbation-response-tool-vcc-benchmark-harness
+Status: Phase 4 COMPLETE (verified 2026-09-08). Phase 5 fully planned and plan-checker verified (PASS, full PERT/VCC requirement coverage) 2026-09-08 — no execution has started yet. 05-06 will stop for manual confirmation (one-time authenticated GCS download of the VCC public dataset), mirroring Phase 4's 04-05 checkpoint pattern.
+Last activity: 2026-09-08 — Planned Phase 5 (see stopped_at above).
 
-Progress: [█████████░] 90% (18/20 plans complete; Phase 4 Plans 01-03 of 5 executed)
+Progress: [████████░░] 77% (20/26 plans complete; Phase 5 fully planned, 0 of 6 plans executed)
 
 ## Performance Metrics
 
