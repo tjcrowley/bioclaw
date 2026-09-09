@@ -33,7 +33,7 @@ Requirements for initial internal-tool release. Each maps to a roadmap phase.
 
 ### Perturbation Prediction
 
-- [ ] **PERT-01**: System calls a perturbation-response model (GEARS/cell-gears, or a hybrid statistical+neural approach) as a tool, predicting post-knockdown expression from control profiles and a target gene
+- [x] **PERT-01**: System calls a perturbation-response model (GEARS/cell-gears, or a hybrid statistical+neural approach) as a tool, predicting post-knockdown expression from control profiles and a target gene
 - [ ] **PERT-02**: Perturbation tool output is compared against a naive perturbation-mean baseline by default
 
 ### Agent Orchestration
@@ -104,7 +104,7 @@ Populated during roadmap creation (2026-09-03).
 | ANNOT-01 | Phase 4 | Pending |
 | ANNOT-02 | Phase 4 | Complete |
 | ANNOT-03 | Phase 4 | Pending |
-| PERT-01 | Phase 5 | Pending |
+| PERT-01 | Phase 5 | Complete |
 | PERT-02 | Phase 5 | Pending |
 | AGENT-01 | Phase 3 | Complete |
 | AGENT-02 | Phase 3 | Complete |

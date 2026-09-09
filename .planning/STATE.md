@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 05-01-PLAN.md (cell-eval install, perturbation/benchmark skeletons, VCC-01 h5ad ingest)
-last_updated: "2026-09-09T15:38:37.534Z"
+stopped_at: Completed 05-02-PLAN.md (LinearAdditivePerturbationModel, fit_from_adata, PERT-01 predictor core)
+last_updated: "2026-09-09T15:43:56.335Z"
 last_activity: 2026-09-08 — Planned Phase 5 (see stopped_at above).
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 26
-  completed_plans: 21
+  completed_plans: 22
   percent: 77
 ---
 
@@ -70,6 +70,7 @@ Progress: [████████░░] 77% (20/26 plans complete; Phase 5 fu
 | Phase 04-bio-fm-cell-type-annotation P01 | 6min | 2 tasks | 8 files |
 | Phase 04-bio-fm-cell-type-annotation P02 | ~15min | 1 tasks | 2 files |
 | Phase 05-perturbation-response-tool-vcc-benchmark-harness P01 | 6min | 3 tasks | 12 files |
+| Phase 05-perturbation-response-tool-vcc-benchmark-harness P02 | 2min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -104,6 +105,7 @@ Recent decisions affecting current work:
 - [Phase 04-bio-fm-cell-type-annotation]: 04-02: decoupler==2.2.0's real API introspected directly (dc.op.resource / dc.mt.ora), superseding 04-RESEARCH.md's LOW-MEDIUM-confidence v1.x sketch. baseline_annotate() pseudobulks per-group counts before calling dc.mt.ora (which operates per-observation, not per-group) and overrides n_up to 10% of gene count (vs decoupler's own 5% default) since 5% produced tied/non-discriminating scores on small marker panels -- verified empirically, documented in annotation/baseline.py's module docstring.
 - [Phase 04-bio-fm-cell-type-annotation]: 04-03: `pip install scgpt` succeeded in isolated `bio_fm_worker/.venv` (Python 3.9.6) but `import scgpt` fails on a torch/torchtext ABI mismatch (dlopen symbol-not-found inside torchtext's compiled extension) -- per plan's own documented contingency, captured in bio_fm_worker/README.md with three repair candidates and left for 04-05, since fast tests mock the subprocess boundary entirely. run_scgpt_embed.py's embed_data() calls are therefore unverified against the real scgpt API -- 04-05 must re-verify once the import is repaired.
 - [Phase 05-perturbation-response-tool-vcc-benchmark-harness]: cell-eval installed torch-free (confirmed via uv.lock); PerturbationSummary uses scalar model_call/baseline_call (not lists) per PERT-01 one-target-gene-per-call design; .h5ad branch in load() omits var_names_make_unique() since well-formed h5ad already has valid var_names
+- [Phase 05-perturbation-response-tool-vcc-benchmark-harness]: 05-02: Ridge fallback feature is target gene's own control-expression scalar (single-feature Ridge per 05-RESEARCH.md Pattern 1); predict() routes exact lookup -> fallback -> KeyError by distinct failure modes; fit_from_adata returns (model, control_mean) tuple for Plan 05-03
 
 ### Pending Todos
 
@@ -118,6 +120,6 @@ Phase 4 (Bio-FM Tool Layer — Cell-Type Annotation) is planned (5 plans, 04-01.
 
 ## Session Continuity
 
-Last session: 2026-09-09T15:38:37.520Z
-Stopped at: Completed 05-01-PLAN.md (cell-eval install, perturbation/benchmark skeletons, VCC-01 h5ad ingest)
+Last session: 2026-09-09T15:43:56.331Z
+Stopped at: Completed 05-02-PLAN.md (LinearAdditivePerturbationModel, fit_from_adata, PERT-01 predictor core)
 Resume file: None
