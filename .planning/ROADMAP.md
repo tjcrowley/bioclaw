@@ -120,10 +120,12 @@ Plans:
   1. A researcher can ask a natural-language question about an ingested dataset and receive an interpreted answer, not raw tool output, that automatically composes one or more prior tools.
   2. Every claim in a natural-language answer links back to the specific logged tool-call result(s) it summarizes.
   3. Quantitative claims in an answer are accompanied by surfaced confidence/uncertainty, never stated as bare fact.
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 06-01: TBD
+- [ ] 06-01-PLAN.md — Wave 0: agent/session.py system_prompt kwarg, qa/ skeleton (citations.py + session.py stub), test scaffolds
+- [ ] 06-02-PLAN.md — ask_question() + QA_SYSTEM_PROMPT implementation
+- [ ] 06-03-PLAN.md — live_llm integration test (QA-01/02/03) + human-verify checkpoint
 
 ## Progress
 
