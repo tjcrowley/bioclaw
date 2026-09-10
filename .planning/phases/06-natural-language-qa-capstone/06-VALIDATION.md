@@ -2,8 +2,8 @@
 phase: 06
 slug: natural-language-qa-capstone
 status: draft
-nyquist_compliant: false
-wave_0_complete: false
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-09-10
 ---
 
@@ -38,9 +38,9 @@ created: 2026-09-10
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 06-01-01 | 01 | 1 | QA-02 | unit | `uv run pytest tests/test_qa_interpreter.py -x -q` | ❌ W0 | ⬜ pending |
-| 06-01-02 | 01 | 1 | QA-02 | unit | `uv run pytest tests/test_qa_interpreter.py -x -q` | ❌ W0 | ⬜ pending |
-| 06-02-01 | 02 | 2 | QA-03 | unit | `uv run pytest tests/test_qa_interpreter.py -x -q` | ❌ W0 | ⬜ pending |
+| 06-01-01 | 01 | 1 | QA-02 | unit | `uv run pytest tests/test_qa_citations.py -x -q` | ❌ W0 | ⬜ pending |
+| 06-01-02 | 01 | 1 | QA-02 | unit | `uv run pytest tests/test_qa_citations.py -x -q` | ❌ W0 | ⬜ pending |
+| 06-02-01 | 02 | 2 | QA-03 | unit | `uv run pytest tests/test_qa_citations.py -x -q` | ❌ W0 | ⬜ pending |
 | 06-03-01 | 03 | 3 | QA-01 | integration | `uv run pytest tests/test_qa_integration.py -x -q` | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
@@ -49,7 +49,7 @@ created: 2026-09-10
 
 ## Wave 0 Requirements
 
-- [ ] `tests/test_qa_interpreter.py` — stubs for QA-02 (citation extraction/verification) and QA-03 (uncertainty surfacing)
+- [ ] `tests/test_qa_citations.py` — stubs for QA-02 (citation extraction/verification) and QA-03 (uncertainty surfacing)
 - [ ] `tests/test_qa_integration.py` — stubs for QA-01 (end-to-end NL Q&A)
 
 *Existing `tests/conftest.py` and `perturbation_adata` fixture cover phase needs.*
