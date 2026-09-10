@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: "05-06 checkpoint: Tasks 1-2 complete, awaiting human VCC data verification"
-last_updated: "2026-09-09T22:47:43.224Z"
+stopped_at: Completed 05-06-PLAN.md (Task 3 deferred — no GCS billing)
+last_updated: "2026-09-10T16:57:02.896Z"
 last_activity: 2026-09-08 — Planned Phase 5 (see stopped_at above).
 progress:
   total_phases: 6
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 26
-  completed_plans: 25
+  completed_plans: 26
   percent: 77
 ---
 
@@ -74,6 +74,7 @@ Progress: [████████░░] 77% (20/26 plans complete; Phase 5 fu
 | Phase 05-perturbation-response-tool-vcc-benchmark-harness P03 | 6min | 2 tasks | 6 files |
 | Phase 05-perturbation-response-tool-vcc-benchmark-harness P04 | 18min | 2 tasks | 2 files |
 | Phase 05-perturbation-response-tool-vcc-benchmark-harness P05 | 3min | 2 tasks | 2 files |
+| Phase 05-perturbation-response-tool-vcc-benchmark-harness P06 | 5min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -113,6 +114,7 @@ Recent decisions affecting current work:
 - [Phase 05-perturbation-response-tool-vcc-benchmark-harness]: 05-04: cell_eval.MetricsEvaluator.compute(profile='vcc') returns Polars DataFrames (not dict); VCC_METRICS=[mae,discrimination_score_l1,overlap_at_N] mapped to {mae,pds,des}; both adata_pred/real must include control row; allow_discrete=True for raw integer count fixtures
 - [Phase 05-perturbation-response-tool-vcc-benchmark-harness]: 05-05: Plain dict (not dataclass) for benchmark report shape -- trivially JSON-serializable for checkpoint display and agent tool output
 - [Phase 05-perturbation-response-tool-vcc-benchmark-harness]: 05-05: ValueError raised for BOTH predictor_metrics AND baseline_metrics None/empty/incomplete -- symmetric validation enforces completeness structurally (VCC-03 closed)
+- [Phase 05-perturbation-response-tool-vcc-benchmark-harness]: Task 3 (real VCC data download + smoke test) DEFERRED: no GCP billing account available; smoke test gated behind vcc_data marker and ready to run when billing is enabled
 
 ### Pending Todos
 
@@ -127,6 +129,6 @@ Phase 4 (Bio-FM Tool Layer — Cell-Type Annotation) is planned (5 plans, 04-01.
 
 ## Session Continuity
 
-Last session: 2026-09-09T22:47:43.217Z
-Stopped at: 05-06 checkpoint: Tasks 1-2 complete, awaiting human VCC data verification
+Last session: 2026-09-10T16:57:02.892Z
+Stopped at: Completed 05-06-PLAN.md (Task 3 deferred — no GCS billing)
 Resume file: None
