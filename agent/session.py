@@ -132,11 +132,12 @@ def build_options(
     session_memory: SessionMemory,
     session_id: str,
     log_path: Path = DEFAULT_LOG_PATH,
+    system_prompt: str = SYSTEM_PROMPT,
 ) -> ClaudeAgentOptions:
     return ClaudeAgentOptions(
         mcp_servers={"bioclaw": bioclaw_server},
         allowed_tools=["mcp__bioclaw__*"],
-        system_prompt=SYSTEM_PROMPT,
+        system_prompt=system_prompt,
         hooks={
             "PostToolUse": [
                 HookMatcher(
@@ -156,6 +157,7 @@ async def run_session(
     session_memory: SessionMemory | None = None,
     session_id: str | None = None,
     log_path: Path = DEFAULT_LOG_PATH,
+    system_prompt: str = SYSTEM_PROMPT,
 ) -> tuple[list[str], str]:
     """Runs one or more turns of a Claude Agent SDK session against the
     bioclaw tool server, within a single ClaudeSDKClient context.
@@ -180,7 +182,12 @@ async def run_session(
 
     session_memory = session_memory or SessionMemory()
     session_id = session_id or str(uuid.uuid4())
-    options = build_options(session_memory, session_id, log_path=log_path)
+    options = build_options(
+        session_memory,
+        session_id,
+        log_path=log_path,
+        system_prompt=system_prompt,
+    )
 
     final_texts: list[str] = []
     async with ClaudeSDKClient(options=options) as client:
