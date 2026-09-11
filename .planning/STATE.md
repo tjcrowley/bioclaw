@@ -3,10 +3,10 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: web-ui
 current_plan: none
-status: defining-requirements
-stopped_at: "v1.0 milestone complete (6/6 phases, 29/29 plans). PROJECT.md updated with v1.1 Web UI milestone scope (FastAPI backend wrapping ask_question(), OpenClaw-styled chat frontend, session sidebar, in-app dataset upload, shared-password gate, self-contained in bioclaw repo, local build only -- no DO deploy without explicit go-ahead). Starting new-milestone workflow: requirements + roadmap next."
+status: roadmap-ready
+stopped_at: "v1.1 Web UI milestone initialized: PROJECT.md scoped, REQUIREMENTS.md defined (14 reqs, 100% mapped), ROADMAP.md phases 7-10 created (Backend API + Streaming, Session & Dataset Endpoints, Frontend Chat UI, Packaging & Local Verification). Ready for /gsd:plan-phase 7."
 last_updated: "2026-09-11"
-last_activity: 2026-09-11 — Started v1.1 Web UI milestone via /gsd:new-milestone; PROJECT.md updated (Current Milestone section, Active/Out of Scope reconciled, v1.0 items moved to Validated).
+last_activity: 2026-09-11 — Roadmap created for v1.1 (phases 7-10) via gsd-roadmapper; committed 09a5943.
 progress:
   total_phases: 6
   completed_phases: 6
@@ -22,17 +22,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-11)
 
 **Core value:** A Biopunk Labs researcher can ask a plain-language question about a single-cell dataset and get back a QC'd, annotated, interpreted answer without writing a scanpy script by hand.
-**Current focus:** v1.0 (all 6 phases) complete and live-verified. Starting v1.1 — a self-contained, OpenClaw-styled web UI wrapping the existing Q&A agent, local build only until Darren explicitly approves a DigitalOcean deploy.
+**Current focus:** v1.0 (all 6 phases) complete and live-verified. v1.1 Web UI milestone now fully scoped and roadmapped (phases 7-10); ready to start planning/execution.
 
 ## Current Position
 
-Milestone: v1.1 Web UI — Not started (defining requirements)
-Phase: None yet — requirements and roadmap not yet created for this milestone
+Milestone: v1.1 Web UI — Roadmap ready, no phase started
+Phase: 7 of 10 (Backend API + Streaming Foundation) — not yet planned
 Plan: None yet
 Current Plan: n/a
-Next: Continue /gsd:new-milestone — define REQUIREMENTS.md, then spawn gsd-roadmapper to create the phased roadmap
-Status: v1.0 fully complete (29/29 plans, 6/6 phases, live-verified 2026-09-11). v1.1 scope confirmed with Darren (password-gate auth, full session sidebar/history, webapp-driven dataset upload, live tool-call streaming) and written into PROJECT.md. Requirements definition is the immediate next step.
-Last activity: 2026-09-11 — Started v1.1 Web UI milestone via /gsd:new-milestone.
+Next: /gsd:plan-phase 7
+Status: v1.0 fully complete (29/29 plans, 6/6 phases, live-verified 2026-09-11). v1.1 requirements (14, 100% mapped) and roadmap (phases 7-10) committed. Phase 7 (password-gated FastAPI backend + WebSocket tool-call streaming, wrapping ask_question()) is next up for planning.
+Last activity: 2026-09-11 — Roadmap created for v1.1 (phases 7-10) via gsd-roadmapper.
 
 Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) — v1.1 not yet started
 
