@@ -1,11 +1,78 @@
 # Requirements: BioClaw
 
-**Defined:** 2026-09-03
 **Core Value:** A Biopunk Labs researcher can ask a plain-language question about a single-cell dataset and get back a QC'd, annotated, interpreted answer without writing a scanpy script by hand.
 
-## v1 Requirements
+## Milestone v1.1 — Web UI (current)
 
-Requirements for initial internal-tool release. Each maps to a roadmap phase.
+**Defined:** 2026-09-11
+**Goal:** Give the v1.0 Q&A agent a self-contained web front end, styled after OpenClaw's own UX, so a researcher can use bioclaw without a terminal or a pytest invocation.
+
+### Backend API
+
+- [ ] **API-01**: FastAPI backend exposes an endpoint that accepts a natural-language question and returns the agent's answer, wrapping `qa/session.py::ask_question()`
+- [ ] **API-02**: Backend streams tool-call activity to the client as it happens during agent execution (tool name, args summary, status) over a WebSocket, not just the final answer
+- [ ] **API-03**: Backend exposes endpoints to list existing sessions and to resume a session by ID, backed by the existing `SessionMemory` (SQLite) layer
+- [ ] **API-04**: Backend exposes an upload endpoint that accepts a `.mtx`/`.h5` dataset and invokes `ingest_10x` as part of the conversation flow
+- [ ] **API-05**: All backend routes are gated behind a single shared password (one shared secret, not per-user accounts) — unauthenticated requests are rejected
+
+### Frontend Chat UI
+
+- [ ] **UI-01**: Chat-style message thread showing question/answer turns for the active session
+- [ ] **UI-02**: Live tool-call activity view rendered inline as calls happen (ingest/analyze/annotate/predict_perturbation), sourced from the API-02 stream
+- [ ] **UI-03**: Citations in agent answers (`[ref:TOOL_NAME:SHA256_PREFIX]`) render as inspectable elements resolving to the underlying JSONL audit log entry, not raw bracket tags
+- [ ] **UI-04**: Session sidebar lists past sessions (from API-03) and lets the researcher resume any of them
+- [ ] **UI-05**: Dataset upload control in the composer area (drag-and-drop or file picker) that calls API-04 and surfaces ingest progress/result in the thread
+- [ ] **UI-06**: Login screen gated by the shared password; no chat UI is reachable before authenticating
+- [ ] **UI-07**: Visual style modeled on OpenClaw's own web UI (sidebar + main panel layout, dark theme, similar information density) — replicated visually, not by importing OpenClaw code
+
+### Packaging
+
+- [ ] **PKG-01**: Webapp (backend + frontend) ships self-contained inside the `bioclaw` repo in its own directory, with its own dependencies — no runtime or code dependency on the OpenClaw codebase
+- [ ] **PKG-02**: Webapp runs locally via a single documented command, sufficient to fully verify the feature before any deployment decision
+
+### v2 (deferred beyond v1.1)
+
+- **DEPLOY-01**: Deploy to a Dead Dog Studios DigitalOcean droplet (Caddy TLS, systemd service) — only on Darren's explicit go-ahead
+- **DEPLOY-02**: Public/production hardening (rate limiting, HTTPS enforcement, log rotation) once a real deploy target exists
+- **AUTH-01**: Per-user accounts / RBAC if bioclaw ever grows beyond a single shared internal tool
+
+### Out of Scope (v1.1)
+
+| Feature | Reason |
+|---------|--------|
+| Multi-tenant accounts, billing, OAuth, RBAC | Internal tool until validated with Biopunk Labs — see PROJECT.md |
+| Public/production DigitalOcean deployment | This milestone is local build + verification only; deploy requires explicit go-ahead |
+| Chat interface directly to bio foundation models | These remain tool calls behind the agent, not conversational endpoints |
+| Importing/depending on the actual OpenClaw codebase | Replicate the UX pattern only; webapp must stay self-contained in `bioclaw` |
+
+### Traceability (v1.1)
+
+Populated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| API-01 | TBD | Pending |
+| API-02 | TBD | Pending |
+| API-03 | TBD | Pending |
+| API-04 | TBD | Pending |
+| API-05 | TBD | Pending |
+| UI-01 | TBD | Pending |
+| UI-02 | TBD | Pending |
+| UI-03 | TBD | Pending |
+| UI-04 | TBD | Pending |
+| UI-05 | TBD | Pending |
+| UI-06 | TBD | Pending |
+| UI-07 | TBD | Pending |
+| PKG-01 | TBD | Pending |
+| PKG-02 | TBD | Pending |
+
+**Coverage:** 14 total, 0 mapped, 14 unmapped ⚠️ (pending roadmap creation)
+
+---
+
+## Milestone v1.0 — Agent Core (shipped 2026-09-11)
+
+**Defined:** 2026-09-03
 
 ### Ingest
 
@@ -54,23 +121,19 @@ Requirements for initial internal-tool release. Each maps to a roadmap phase.
 - [x] **VCC-02**: An eval harness calls the perturbation-prediction tool directly (bypassing the agent loop) against the VCC public dataset and computes PDS, DES, and MAE exactly as Arc Institute defines them
 - [x] **VCC-03**: Benchmark results report performance against the naive perturbation-mean baseline, not a single cherry-picked metric in isolation
 
-## v2 Requirements
+### v2 Requirements (still deferred)
 
-Deferred to future release. Tracked but not in current roadmap.
-
-### Reliability Hardening
+#### Reliability Hardening
 
 - **RELIA-01**: Lightweight self-check/evaluator step on tool outputs (empty-result detection, sanity-range checks)
 - **RELIA-02**: Tool-call provenance/audit trail surfaced directly to the researcher (not just in logs)
 - **RELIA-03**: Support for a second annotation/embedding model for cross-validation when confidence is ambiguous
 
-### Data Scale
+#### Data Scale
 
 - **DATA-01**: Batch integration/correction (Harmony or scVI) across multiple samples — as an explicit, logged, conditional pipeline step, never unconditional (see PITFALLS.md batch-correction risk)
 
-## Out of Scope
-
-Explicitly excluded. Documented to prevent scope creep.
+### Out of Scope (v1.0)
 
 | Feature | Reason |
 |---------|--------|
@@ -78,7 +141,7 @@ Explicitly excluded. Documented to prevent scope creep.
 | Raw-sequence genomics models (Evo2, DNA LMs) | Ingest (FASTQ alignment/variant-calling) too heavy for MVP |
 | Raw FASTQ ingest / alignment pipeline | Doesn't address the actual researcher pain point, which starts post-alignment at `.mtx`/`.h5` |
 | Formal Virtual Cell Challenge competition entry/leaderboard submission | Benchmark/validation target only, not a leaderboard chase — winning requires narrow metric-tuning, a different project from the agent harness |
-| Full no-code GUI/dashboard | Competing on GUI polish abandons the actual differentiator (conversational agent); multi-year investment matching funded commercial tools |
+| Full no-code GUI/dashboard | Superseded — v1.1 adds a scoped chat webapp, not a no-code dashboard |
 | Training bio foundation models from scratch | Multi-year research program beyond an internal-tool MVP budget; wrap existing open-weight models instead |
 | Additional modalities (spatial, ATAC, CITE-seq, multi-omics) | Each has its own QC/format/FM landscape; dilutes the scRNA-seq wedge before it's proven |
 | Autonomous open-ended hypothesis generation (CellVoyager-style) | Conflicts with the scoped, question-driven MVP interaction model; expensive and hard to validate for trust |
@@ -86,9 +149,7 @@ Explicitly excluded. Documented to prevent scope creep.
 | Multi-tenant / external customer access, billing, auth | Internal tool only until validated with Biopunk Labs |
 | Chat interface to the bio foundation models directly | FMs are typed, bounded tool calls the orchestrator invokes and interprets — not conversational endpoints |
 
-## Traceability
-
-Populated during roadmap creation (2026-09-03).
+### Traceability (v1.0 — final)
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
@@ -116,11 +177,8 @@ Populated during roadmap creation (2026-09-03).
 | VCC-02 | Phase 5 | Complete |
 | VCC-03 | Phase 5 | Complete |
 
-**Coverage:**
-- v1 requirements: 23 total
-- Mapped to phases: 23 (100%) ✓
-- Unmapped: 0 ✓
+**Coverage:** 23 total, 23 mapped (100%) ✓, 0 unmapped ✓
 
 ---
-*Requirements defined: 2026-09-03*
-*Last updated: 2026-09-03 after roadmap creation*
+*Requirements defined: 2026-09-03 (v1.0), 2026-09-11 (v1.1)*
+*Last updated: 2026-09-11 after starting v1.1 Web UI milestone*
