@@ -44,9 +44,9 @@ Requirements for initial internal-tool release. Each maps to a roadmap phase.
 
 ### Natural-Language Q&A (Capstone)
 
-- [ ] **QA-01**: A researcher can ask a natural-language question about an ingested dataset and receive an interpreted answer that composes one or more of the above tools automatically
-- [ ] **QA-02**: Every natural-language answer links back to the specific logged tool-call result(s) it summarizes — no answer ships as prose only
-- [ ] **QA-03**: Quantitative claims in an answer are accompanied by surfaced confidence/uncertainty, not stated as bare fact
+- [x] **QA-01**: A researcher can ask a natural-language question about an ingested dataset and receive an interpreted answer that composes one or more of the above tools automatically
+- [x] **QA-02**: Every natural-language answer links back to the specific logged tool-call result(s) it summarizes — no answer ships as prose only
+- [x] **QA-03**: Quantitative claims in an answer are accompanied by surfaced confidence/uncertainty, not stated as bare fact
 
 ### Virtual Cell Challenge Benchmark
 
@@ -109,9 +109,9 @@ Populated during roadmap creation (2026-09-03).
 | AGENT-01 | Phase 3 | Complete |
 | AGENT-02 | Phase 3 | Complete |
 | AGENT-03 | Phase 3 | Complete |
-| QA-01 | Phase 6 | Pending |
-| QA-02 | Phase 6 | Pending |
-| QA-03 | Phase 6 | Pending |
+| QA-01 | Phase 6 | Complete |
+| QA-02 | Phase 6 | Complete |
+| QA-03 | Phase 6 | Complete |
 | VCC-01 | Phase 5 | Complete |
 | VCC-02 | Phase 5 | Complete |
 | VCC-03 | Phase 5 | Complete |

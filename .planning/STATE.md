@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 05-06-PLAN.md (Task 3 deferred — no GCS billing)
-last_updated: "2026-09-10T17:01:37.475Z"
-last_activity: 2026-09-08 — Planned Phase 5 (see stopped_at above).
+status: completed
+stopped_at: "Completed 06-01-PLAN.md (Phase 6 Wave 0: qa/ skeleton + system_prompt kwarg + citation module + test scaffolds)"
+last_updated: "2026-09-11T01:46:16.042Z"
+last_activity: 2026-09-10 — Executed 06-01-PLAN.md (Wave 0 for Phase 6).
 progress:
   total_phases: 6
   completed_phases: 5
-  total_plans: 26
-  completed_plans: 26
-  percent: 77
+  total_plans: 29
+  completed_plans: 27
+  percent: 93
 ---
 
 # Project State
@@ -25,13 +25,13 @@ See: .planning/PROJECT.md (updated 2026-09-03)
 
 ## Current Position
 
-Phase: 5 of 6 (Perturbation-Response Tool + VCC Benchmark Harness) — PLANNED, not yet executed
-Plan: 6 plans across 6 waves — 05-01 (Wave 0: cell-eval install, vcc_data marker, perturbation/+benchmark/ skeletons, .h5ad ingest branch, VCC-01) written but not yet executed; 05-02 (LinearAdditivePerturbationModel, PERT-01 core); 05-03 (naive_baseline_predict + pipeline.predict() + predict_perturbation_tool wiring, PERT-01/02); 05-04 (compute_vcc_metrics/run_vcc_eval, VCC-02); 05-05 (build_benchmark_report/run_full_benchmark, VCC-03); 05-06 (real VCC dataset smoke test, blocking human-verify checkpoint, autonomous: false).
-Next: /gsd:execute-phase 05-perturbation-response-tool-vcc-benchmark-harness
-Status: Phase 4 COMPLETE (verified 2026-09-08). Phase 5 fully planned and plan-checker verified (PASS, full PERT/VCC requirement coverage) 2026-09-08 — no execution has started yet. 05-06 will stop for manual confirmation (one-time authenticated GCS download of the VCC public dataset), mirroring Phase 4's 04-05 checkpoint pattern.
-Last activity: 2026-09-08 — Planned Phase 5 (see stopped_at above).
+Phase: 6 of 6 (Natural-Language Q&A Capstone) — executing
+Plan: 3 plans planned — 06-01 (Wave 0: qa/ skeleton + system_prompt kwarg on run_session/build_options + citation module + test scaffolds) COMPLETE; 06-02 (Wave 1: citation-tagging system prompt + first live_llm citation-verification test) NEXT; 06-03 (Wave 2: ask_question() implementation + QA_SYSTEM_PROMPT + full multi-tool integration test) FINAL.
+Next: /gsd:execute-phase 06-natural-language-qa-capstone (continue with 06-02)
+Status: Phase 5 COMPLETE (2026-09-10; 05-06 Task 3 deferred pending GCS billing). Phase 6 Wave 0 (06-01) COMPLETE 2026-09-10 — qa/ package skeleton, citations.py fully implemented, system_prompt kwarg additive on agent/session.py, 7 unit tests passing + live_llm scaffold.
+Last activity: 2026-09-10 — Executed 06-01-PLAN.md (Wave 0 for Phase 6).
 
-Progress: [████████░░] 77% (20/26 plans complete; Phase 5 fully planned, 0 of 6 plans executed)
+Progress: [█████████░] 93% (27/29 plans complete; Phase 6 Wave 0 done, 2 plans remaining)
 
 ## Performance Metrics
 
@@ -75,6 +75,7 @@ Progress: [████████░░] 77% (20/26 plans complete; Phase 5 fu
 | Phase 05-perturbation-response-tool-vcc-benchmark-harness P04 | 18min | 2 tasks | 2 files |
 | Phase 05-perturbation-response-tool-vcc-benchmark-harness P05 | 3min | 2 tasks | 2 files |
 | Phase 05-perturbation-response-tool-vcc-benchmark-harness P06 | 5min | 2 tasks | 3 files |
+| Phase 06-natural-language-qa-capstone P01 | 3min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -115,6 +116,9 @@ Recent decisions affecting current work:
 - [Phase 05-perturbation-response-tool-vcc-benchmark-harness]: 05-05: Plain dict (not dataclass) for benchmark report shape -- trivially JSON-serializable for checkpoint display and agent tool output
 - [Phase 05-perturbation-response-tool-vcc-benchmark-harness]: 05-05: ValueError raised for BOTH predictor_metrics AND baseline_metrics None/empty/incomplete -- symmetric validation enforces completeness structurally (VCC-03 closed)
 - [Phase 05-perturbation-response-tool-vcc-benchmark-harness]: Task 3 (real VCC data download + smoke test) DEFERRED: no GCP billing account available; smoke test gated behind vcc_data marker and ready to run when billing is enabled
+- [Phase 06-natural-language-qa-capstone]: 06-01: qa/citations.py fully implemented in Task 1 (not stubbed) since it is pure Python w/ no LLM dependency; Task 2 tests written against real implementation, all 7 passing on first run -- Wave 0 contract stable for Plans 06-02/03
+- [Phase 06-natural-language-qa-capstone]: 06-01: system_prompt kwarg is additive on build_options/run_session with existing SYSTEM_PROMPT constant as default -- zero behavioral change for Phase-3 callers (verified by 8 test_agent_session_wiring tests still passing)
+- [Phase 06-natural-language-qa-capstone]: 06-01: CITATION_RE requires 12 lowercase hex chars for the sha prefix; test_parse_citation_ids_ignores_malformed asserts uppercase, missing-prefix, and wrong-length forms are all rejected -- prevents future silent regex loosening
 
 ### Pending Todos
 
@@ -129,6 +133,6 @@ Phase 4 (Bio-FM Tool Layer — Cell-Type Annotation) is planned (5 plans, 04-01.
 
 ## Session Continuity
 
-Last session: 2026-09-10T16:57:02.892Z
-Stopped at: Completed 05-06-PLAN.md (Task 3 deferred — no GCS billing)
+Last session: 2026-09-11T01:46:16.038Z
+Stopped at: Completed 06-01-PLAN.md (Phase 6 Wave 0: qa/ skeleton + system_prompt kwarg + citation module + test scaffolds)
 Resume file: None
