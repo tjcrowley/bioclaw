@@ -143,7 +143,12 @@ Plans:
   3. Any request to any backend route without the correct shared-password credential is rejected (unauthenticated).
   4. A request presenting the correct shared password succeeds against the same routes.
   5. The backend runs and is verifiable entirely on localhost — no deployment to any external or production environment.
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 07-01-PLAN.md — Wave 1: additive extra_hooks on build_options/run_session/ask_question + webapp/backend schemas.py/auth.py contracts + fastapi[standard] install (API-05, API-02)
+- [ ] 07-02-PLAN.md — Wave 2: streaming.py queue registry + deps.py + main.py (POST /api/ask, WS /ws/{stream_id}) with fast-tier tests (API-01, API-02, API-05)
+- [ ] 07-03-PLAN.md — Wave 3: live_llm end-to-end integration test + human-verify checkpoint (API-01, API-02)
 
 ### Phase 8: Session & Dataset Endpoints
 **Goal**: The password-gated backend exposes session history (list/resume, backed by `SessionMemory`) and dataset upload (invoking `ingest_10x`), completing the API surface the frontend will consume.
