@@ -28,21 +28,28 @@ async def log_tool_call(
     tool_response: Any,
     is_error: bool,
     log_path: Path = DEFAULT_LOG_PATH,
-) -> None:
+) -> str:
     """Appends one JSON-lines record per tool call. `tool_response` may be
     any JSON-serializable value (a dict, or a raw string for an error
     message) -- serialized with `default=str` so non-JSON-native types
-    (e.g. a raised exception object) don't crash logging itself."""
+    (e.g. a raised exception object) don't crash logging itself.
+
+    Returns the `result_sha256` hex digest just written, so a caller (e.g.
+    `agent/session.py`'s `PostToolUse` hook) can hand the same value back to
+    the model for citation -- the model has no other way to see this hash,
+    since it's computed here, after the tool response already reached it."""
+    result_sha256 = hashlib.sha256(
+        json.dumps(tool_response, sort_keys=True, default=str).encode()
+    ).hexdigest()
     record = {
         "ts": time.time(),
         "tool_name": tool_name,
         "tool_input": tool_input,
         "is_error": is_error,
-        "result_sha256": hashlib.sha256(
-            json.dumps(tool_response, sort_keys=True, default=str).encode()
-        ).hexdigest(),
+        "result_sha256": result_sha256,
         "result_preview": str(tool_response)[:500],
     }
     log_path.parent.mkdir(parents=True, exist_ok=True)
     with log_path.open("a") as f:
         f.write(json.dumps(record) + "\n")
+    return result_sha256

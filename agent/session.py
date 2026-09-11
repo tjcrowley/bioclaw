@@ -63,15 +63,31 @@ def _tool_response_is_error(tool_response: Any) -> bool:
 
 def _make_log_hook(log_path: Path):
     async def _hook(input_data, tool_use_id, context):
+        tool_name = input_data.get("tool_name", "")
         tool_response = input_data.get("tool_response")
-        await log_tool_call(
-            input_data.get("tool_name", ""),
+        result_sha256 = await log_tool_call(
+            tool_name,
             input_data.get("tool_input", {}),
             tool_response,
             _tool_response_is_error(tool_response),
             log_path=log_path,
         )
-        return {}
+        # QA_SYSTEM_PROMPT's citation protocol asks for this call's
+        # result_sha256 prefix, but the model's context otherwise never
+        # contains it -- log_tool_call computes it after the tool response
+        # already reached the model. additionalContext is the SDK's
+        # documented mechanism for a PostToolUse hook to add exactly this
+        # kind of out-of-band info back into the conversation.
+        return {
+            "hookSpecificOutput": {
+                "hookEventName": "PostToolUse",
+                "additionalContext": (
+                    f"[ref:{tool_name}:{result_sha256[:12]}] is the citation "
+                    "tag for this tool call's result, per the citation "
+                    "protocol."
+                ),
+            }
+        }
 
     return _hook
 

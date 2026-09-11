@@ -33,7 +33,7 @@ from typing import Any
 
 from claude_agent_sdk import tool
 
-from analysis.pipeline import analyze
+from analysis.pipeline import AnalysisConfig, analyze
 from annotation.pipeline import annotate
 from ingest.pipeline import ingest_10x
 from perturbation.pipeline import predict as predict_perturbation
@@ -67,14 +67,32 @@ async def ingest_10x_tool(args: dict[str, Any]) -> dict[str, Any]:
     "analyze_dataset",
     "Run preprocess -> cluster -> (optional) differential expression on a "
     "named/versioned dataset from the store. Optionally pass 'version' "
-    "(int) to analyze a specific version instead of the latest. Returns "
-    "a bounded summary, never raw matrices.",
-    {"name": str},  # 'version' intentionally omitted -- optional, see Pitfall 2
+    "(int) to analyze a specific version instead of the latest. Clustering "
+    "always runs; differential expression only runs if 'run_de' is true, "
+    "since the specific comparison (which cluster label vs. which "
+    "reference) can never be guessed -- it requires 'de_groupby' (the "
+    "cluster column, e.g. 'leiden') and 'de_group1' (the specific cluster "
+    "label to test, e.g. '0'), both discoverable from a prior call's "
+    "'cluster' summary. 'de_group2' optionally names a specific reference "
+    "cluster (defaults to 'rest' of the clustering). To get DE results: "
+    "call this tool once to see the cluster labels, then call it again "
+    "with 'run_de' true and those labels. Returns a bounded summary, "
+    "never raw matrices.",
+    {"name": str},  # 'version'/'run_de'/'de_*' intentionally omitted -- optional, see Pitfall 2
 )
 async def analyze_dataset_tool(args: dict[str, Any]) -> dict[str, Any]:
     version = args.get("version")
+    config = AnalysisConfig(
+        run_de=args.get("run_de", False),
+        de_groupby=args.get("de_groupby"),
+        de_group1=args.get("de_group1"),
+        de_group2=args.get("de_group2"),
+        de_n_genes=args.get("de_n_genes", 25),
+    )
     try:
-        new_id, summary = analyze(args["name"], version=version, store_root=STORE_ROOT)
+        new_id, summary = analyze(
+            args["name"], version=version, config=config, store_root=STORE_ROOT
+        )
     except Exception as exc:
         return {"content": [{"type": "text", "text": str(exc)}], "is_error": True}
     return {
