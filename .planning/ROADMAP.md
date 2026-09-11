@@ -4,6 +4,8 @@
 
 BioClaw goes from raw 10x Genomics files to a Claude-based agent that answers plain-language questions about single-cell data, built bottom-up in dependency order. The deterministic, agent-independent pieces (ingest, QC, clustering, differential expression) are built and validated first as plain CPU-only Python, since every other component depends on trustworthy canonical data existing. The agentic loop is then wired to those cheap, deterministic tools before any GPU or bio foundation model complexity is introduced, proving the tool-calling and session/memory contract on the lowest-risk pieces first. Bio-FM-backed cell-type annotation and perturbation prediction — the two strongest differentiators and the two highest-infrastructure-risk items — are layered on last, each shipped with a mandatory statistical baseline so no foundation-model output is ever presented as ground truth on its own. The Virtual Cell Challenge benchmark harness rides on the perturbation tool to provide an external, Arc Institute-credible validation signal. The natural-language Q&A capstone closes the loop: composing every tool built in prior phases into an interpreted, traceable, uncertainty-aware answer — the actual Core Value this project exists to prove.
 
+**Milestone v1.1 (Phases 7-10)** takes the shipped v1.0 agent core and wraps it in a self-contained local web front end, styled after OpenClaw's own UX. The backend is built before the frontend (API-first): first the authenticated HTTP/WebSocket foundation that wraps `ask_question()` and streams tool-call activity, then the session-history and dataset-upload endpoints that depend on that foundation. Only once the full API surface exists is the frontend built against it — chat thread, live activity view, citation rendering, session sidebar, upload control, login screen, and OpenClaw-styled visuals — followed by a final packaging and local-verification pass. Deployment to any production/public environment is explicitly out of scope for this milestone; every phase's success criteria are verifiable on a local machine only.
+
 ## Phases
 
 **Phase Numbering:**
@@ -18,6 +20,10 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Bio-FM Tool Layer — Cell-Type Annotation** - The agent calls a bio foundation model as a tool for cell-type annotation, always paired with a statistical baseline (completed 2026-09-08)
 - [x] **Phase 5: Perturbation-Response Tool + VCC Benchmark** - The agent predicts perturbation response as a tool call, independently validated against Arc Institute's public benchmark (completed 2026-09-10)
 - [x] **Phase 6: Natural-Language Q&A Capstone** - A researcher asks a plain-language question and gets a traceable, uncertainty-aware, interpreted answer (completed 2026-09-11)
+- [ ] **Phase 7: Backend API + Streaming Foundation** - A password-gated FastAPI backend wraps `ask_question()` over HTTP and streams live tool-call activity over WebSocket
+- [ ] **Phase 8: Session & Dataset Endpoints** - Backend endpoints expose session list/resume and dataset upload, built on the authenticated Phase 7 foundation
+- [ ] **Phase 9: Frontend Chat UI** - An OpenClaw-styled chat frontend delivers login, message thread, live tool activity, citation rendering, session sidebar, and dataset upload
+- [ ] **Phase 10: Packaging & Local Verification** - The webapp ships self-contained, runs via one documented command, and is manually verified end-to-end locally
 
 ## Phase Details
 
@@ -123,14 +129,62 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 06-01-PLAN.md — Wave 0: agent/session.py system_prompt kwarg, qa/ skeleton (citations.py + session.py stub), test scaffolds
-- [ ] 06-02-PLAN.md — ask_question() + QA_SYSTEM_PROMPT implementation
-- [ ] 06-03-PLAN.md — live_llm integration test (QA-01/02/03) + human-verify checkpoint
+- [x] 06-01-PLAN.md — Wave 0: agent/session.py system_prompt kwarg, qa/ skeleton (citations.py + session.py stub), test scaffolds
+- [x] 06-02-PLAN.md — ask_question() + QA_SYSTEM_PROMPT implementation
+- [x] 06-03-PLAN.md — live_llm integration test (QA-01/02/03) + human-verify checkpoint
+
+### Phase 7: Backend API + Streaming Foundation
+**Goal**: A password-gated FastAPI backend wraps the existing `qa/session.py::ask_question()` agent entrypoint as an HTTP endpoint and streams live tool-call activity over WebSocket during execution — the authenticated API surface every later v1.1 phase builds on.
+**Depends on**: Phase 6
+**Requirements**: API-01, API-02, API-05
+**Success Criteria** (what must be TRUE):
+  1. A client can POST a natural-language question to a FastAPI endpoint and receive back the agent's answer, sourced from `ask_question()`.
+  2. A client connected over WebSocket during that same request receives tool-call activity events (tool name, args summary, status) as they happen, not only the final answer.
+  3. Any request to any backend route without the correct shared-password credential is rejected (unauthenticated).
+  4. A request presenting the correct shared password succeeds against the same routes.
+  5. The backend runs and is verifiable entirely on localhost — no deployment to any external or production environment.
+**Plans**: TBD
+
+### Phase 8: Session & Dataset Endpoints
+**Goal**: The password-gated backend exposes session history (list/resume, backed by `SessionMemory`) and dataset upload (invoking `ingest_10x`), completing the API surface the frontend will consume.
+**Depends on**: Phase 7
+**Requirements**: API-03, API-04
+**Success Criteria** (what must be TRUE):
+  1. A client can call an endpoint to list existing sessions and see session IDs/metadata sourced from `SessionMemory`.
+  2. A client can call an endpoint to resume a specific prior session by ID and continue that session's conversation with its prior context intact.
+  3. A client can upload a `.mtx`/`.h5` dataset file to an endpoint that invokes `ingest_10x` and returns the ingest result/status as part of the conversation flow.
+  4. The session and upload endpoints are gated behind the same shared-password check as Phase 7 — no unauthenticated access.
+**Plans**: TBD
+
+### Phase 9: Frontend Chat UI
+**Goal**: A researcher-facing, OpenClaw-styled web frontend delivers the full local chat experience — password login, message thread, live tool-call activity, resolvable citations, session sidebar, and dataset upload — consuming the Phase 7-8 API, with no import or runtime dependency on the OpenClaw codebase itself.
+**Depends on**: Phase 8
+**Requirements**: UI-01, UI-02, UI-03, UI-04, UI-05, UI-06, UI-07
+**Success Criteria** (what must be TRUE):
+  1. An unauthenticated visitor sees a password-gated login screen and cannot reach any chat UI before authenticating successfully against API-05.
+  2. After login, a researcher sees a chat-style message thread of question/answer turns for the active session.
+  3. While the agent is working on a question, tool calls appear live in an activity view as they happen, sourced from the Phase 7 WebSocket stream.
+  4. Citation tags (`[ref:TOOL_NAME:SHA256_PREFIX]`) in an answer render as inspectable elements that resolve to the underlying JSONL audit log entry, never as raw bracket text.
+  5. A sidebar lists past sessions (from API-03) and lets the researcher resume any of them, restoring that session's thread.
+  6. A dataset upload control in the composer (drag-and-drop or file picker) calls API-04 and surfaces ingest progress/result inline in the thread.
+  7. The overall visual design (sidebar + main panel layout, dark theme, information density) is modeled on OpenClaw's own web UI, achieved by visual replication in bioclaw's own frontend code only — no OpenClaw code is imported or depended on.
+**Plans**: TBD
+
+### Phase 10: Packaging & Local Verification
+**Goal**: The webapp (backend + frontend) ships self-contained in its own directory inside the `bioclaw` repo with its own dependencies, runs locally via a single documented command, and the full v1.1 feature set is manually verified end-to-end on that local run — with no deployment to any production/public environment performed or required.
+**Depends on**: Phase 9
+**Requirements**: PKG-01, PKG-02
+**Success Criteria** (what must be TRUE):
+  1. All webapp backend and frontend code and dependencies live inside their own directory in the `bioclaw` repo, with no import or runtime dependency on the OpenClaw codebase.
+  2. A single documented command starts the full webapp (backend + frontend) locally, from a clean checkout, without additional undocumented setup steps.
+  3. Running that command and exercising the app manually confirms every v1.1 capability works together end to end: login gate, chat Q&A, live tool-call activity streaming, citation resolution, session list/resume, and dataset upload triggering ingest.
+  4. No step in this phase deploys, or requires deploying, the webapp to DigitalOcean or any other production/public environment.
+**Plans**: TBD
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -140,3 +194,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 4. Bio-FM Tool Layer — Cell-Type Annotation | 2/5 | In Progress|  |
 | 5. Perturbation-Response Tool + VCC Benchmark | 6/6 | Complete   | 2026-09-10 |
 | 6. Natural-Language Q&A Capstone | 3/3 | Complete   | 2026-09-11 |
+| 7. Backend API + Streaming Foundation | 0/TBD | Not started | - |
+| 8. Session & Dataset Endpoints | 0/TBD | Not started | - |
+| 9. Frontend Chat UI | 0/TBD | Not started | - |
+| 10. Packaging & Local Verification | 0/TBD | Not started | - |

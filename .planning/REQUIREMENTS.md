@@ -47,26 +47,24 @@
 
 ### Traceability (v1.1)
 
-Populated during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| API-01 | TBD | Pending |
-| API-02 | TBD | Pending |
-| API-03 | TBD | Pending |
-| API-04 | TBD | Pending |
-| API-05 | TBD | Pending |
-| UI-01 | TBD | Pending |
-| UI-02 | TBD | Pending |
-| UI-03 | TBD | Pending |
-| UI-04 | TBD | Pending |
-| UI-05 | TBD | Pending |
-| UI-06 | TBD | Pending |
-| UI-07 | TBD | Pending |
-| PKG-01 | TBD | Pending |
-| PKG-02 | TBD | Pending |
+| API-01 | Phase 7 | Pending |
+| API-02 | Phase 7 | Pending |
+| API-03 | Phase 8 | Pending |
+| API-04 | Phase 8 | Pending |
+| API-05 | Phase 7 | Pending |
+| UI-01 | Phase 9 | Pending |
+| UI-02 | Phase 9 | Pending |
+| UI-03 | Phase 9 | Pending |
+| UI-04 | Phase 9 | Pending |
+| UI-05 | Phase 9 | Pending |
+| UI-06 | Phase 9 | Pending |
+| UI-07 | Phase 9 | Pending |
+| PKG-01 | Phase 10 | Pending |
+| PKG-02 | Phase 10 | Pending |
 
-**Coverage:** 14 total, 0 mapped, 14 unmapped ⚠️ (pending roadmap creation)
+**Coverage:** 14 total, 14 mapped (100%) ✓, 0 unmapped ✓
 
 ---
 
@@ -181,4 +179,4 @@ Populated during roadmap creation.
 
 ---
 *Requirements defined: 2026-09-03 (v1.0), 2026-09-11 (v1.1)*
-*Last updated: 2026-09-11 after starting v1.1 Web UI milestone*
+*Last updated: 2026-09-11 after creating v1.1 Web UI roadmap (Phases 7-10)*
