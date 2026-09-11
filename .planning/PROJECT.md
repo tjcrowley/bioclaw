@@ -17,6 +17,19 @@ A Biopunk Labs researcher can ask a plain-language question about a
 single-cell dataset and get back a QC'd, annotated, interpreted answer without
 writing a scanpy script by hand.
 
+## Current Milestone: v1.1 Web UI
+
+**Goal:** Give the v1.0 Q&A agent a self-contained web front end, styled after OpenClaw's own UX, so a researcher can use bioclaw without a terminal or a pytest invocation.
+
+**Target features:**
+- FastAPI backend wrapping `qa/session.py::ask_question()` (and the underlying agent session loop) as HTTP/WebSocket endpoints
+- Chat-style frontend, OpenClaw-styled: message thread, live tool-call activity stream (ingest/analyze/annotate/predict_perturbation appearing as they run), inline citation rendering resolving `[ref:TOOL_NAME:SHA256_PREFIX]` tags against the JSONL audit log
+- Session sidebar backed by the existing `SessionMemory` layer: list past Q&A sessions, resume any of them
+- Dataset upload from the chat itself (drag a `.mtx`/`.h5` file in), agent calls `ingest_10x` as part of the conversation — no CLI/pytest step required
+- Shared-password gate in front of the whole app (not full multi-tenant auth)
+- Ships self-contained inside the `bioclaw` repo (no dependency on the OpenClaw codebase itself — replicate the UX pattern, don't import it)
+- Target deploy environment: Dead Dog Studios DigitalOcean droplet (same pattern as the Iris project — Caddy TLS, systemd service) — build and verify locally first, deploy only on explicit go-ahead
+
 ## Requirements
 
 ### Validated
@@ -25,26 +38,33 @@ writing a scanpy script by hand.
 - Bio-FM hosting: self-hosted by default, with a hosted-inference option/fallback built into the architecture (confirmed 2026-09-03)
 - First dataset: public data (e.g. `cellxgene-census`, VCC's own public dataset) — not waiting on in-house wet-lab data to start the build (confirmed 2026-09-03)
 - Virtual Cell Challenge scope: benchmark against VCC's public task format and official metrics — not a competitive entry against the live 2026 leaderboard (confirmed 2026-09-03)
+- Ingest raw 10x Genomics single-cell output (`.mtx`/`.h5`) and normalize to canonical AnnData `.h5ad` (v1.0, shipped 2026-09-11)
+- Run standard QC on ingested data (mitochondrial %, doublet detection, low-count filtering) (v1.0, shipped 2026-09-11)
+- Cluster cells and compute standard analyses (differential expression) via scanpy-backed tools (v1.0, shipped 2026-09-11)
+- Call a bio foundation model (scGPT or Geneformer) as a tool for cell-type annotation (v1.0, shipped 2026-09-11)
+- Call a perturbation-response model as a tool, predicting how a cell population responds to a genetic perturbation (CRISPR knockdown) given control profiles (v1.0, shipped 2026-09-11)
+- Orchestrate the above via a Claude-based agent using an OpenClaw-style agentic loop (plan → tool call → observe → continue) (v1.0, shipped 2026-09-11)
+- Persist dataset and finding context across a multi-turn research conversation (session/memory layer) (v1.0, shipped 2026-09-11)
+- Researcher can ask a natural-language question and receive an interpreted answer (not raw model output) — the end-to-end demo (v1.0, shipped 2026-09-11)
+- Agent's perturbation predictions can be evaluated against the Virtual Cell Challenge's public dataset/task format (Arc Institute) as an external, credible benchmark (v1.0, shipped 2026-09-11)
 
 ### Active
 
-- [ ] Ingest raw 10x Genomics single-cell output (`.mtx`/`.h5`) and normalize to canonical AnnData `.h5ad`
-- [ ] Run standard QC on ingested data (mitochondrial %, doublet detection, low-count filtering)
-- [ ] Cluster cells and compute standard analyses (differential expression) via scanpy-backed tools
-- [ ] Call a bio foundation model (scGPT or Geneformer) as a tool for cell-type annotation
-- [ ] Call a perturbation-response model as a tool, predicting how a cell population responds to a genetic perturbation (CRISPR knockdown) given control profiles
-- [ ] Orchestrate the above via a Claude-based agent using an OpenClaw-style agentic loop (plan → tool call → observe → continue)
-- [ ] Persist dataset and finding context across a multi-turn research conversation (session/memory layer)
-- [ ] Researcher can ask a natural-language question and receive an interpreted answer (not raw model output) — the end-to-end demo
-- [ ] Agent's perturbation predictions can be evaluated against the Virtual Cell Challenge's public dataset/task format (Arc Institute) as an external, credible benchmark — not necessarily a competition entry, but a validation target
+- [ ] FastAPI backend wraps `qa/session.py::ask_question()` (and the underlying agent session loop) as HTTP/WebSocket endpoints
+- [ ] Chat-style frontend, OpenClaw-styled: message thread, live tool-call activity stream, inline citation rendering resolving `[ref:TOOL_NAME:SHA256_PREFIX]` tags against the JSONL audit log
+- [ ] Session sidebar backed by the existing `SessionMemory` layer: list past Q&A sessions, resume any of them
+- [ ] Dataset upload from the chat itself; agent calls `ingest_10x` as part of the conversation — no CLI/pytest step required
+- [ ] Shared-password gate in front of the whole app
+- [ ] Ships self-contained inside the `bioclaw` repo — no dependency on the OpenClaw codebase itself
 
 ### Out of Scope
 
 - Protein-structure models (ESM, AlphaFold, RFdiffusion) — deferred MVP wedge, see CONCEPT.md "Alternative angles considered"
 - Raw-sequence genomics models (Evo2, DNA LMs) — ingest (FASTQ alignment/variant-calling) too heavy for MVP
 - Formal Virtual Cell Challenge competition entry/leaderboard submission — using it as a benchmark dataset and task format, not committing to compete for the prize in v1
-- Multi-tenant / external customer access, billing, auth — internal tool only until validated with Biopunk Labs
+- Multi-tenant / external customer access, billing, full auth (OAuth, per-user accounts, RBAC) — internal tool until validated with Biopunk Labs; v1.1 adds only a shared-password gate, not multi-tenancy
 - Chat interface to the bio foundation models directly — these are tool calls, not conversational endpoints
+- Public/production DigitalOcean deployment — v1.1 builds and verifies the webapp locally only; going live requires Darren's explicit go-ahead
 
 ## Context
 
@@ -105,4 +125,4 @@ writing a scanpy script by hand.
 | VCC benchmark scope = public task format + official metrics, not the live 2026 leaderboard | Leaderboard is zero-shot/cross-cell-line — a materially harder, out-of-scope bar; task-format benchmarking is achievable and still credible | Confirmed |
 
 ---
-*Last updated: 2026-09-03 after Elliot validation round*
+*Last updated: 2026-09-11 after starting v1.1 Web UI milestone*

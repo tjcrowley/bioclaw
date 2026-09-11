@@ -1,12 +1,12 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-current_plan: 3 of 3 (final)
-status: verifying
-stopped_at: "Completed 06-03-PLAN.md (Phase 6 Wave 3: live_llm QA-01/02/03 integration test passed live; checkpoint approved; Phase 6 and v1.0 milestone complete). Next recommended step: /gsd:complete-milestone."
-last_updated: "2026-09-11T15:41:40.620Z"
-last_activity: 2026-09-11 — Executed 06-03-PLAN.md (Wave 3 for Phase 6, final plan of the milestone).
+milestone: v1.1
+milestone_name: web-ui
+current_plan: none
+status: defining-requirements
+stopped_at: "v1.0 milestone complete (6/6 phases, 29/29 plans). PROJECT.md updated with v1.1 Web UI milestone scope (FastAPI backend wrapping ask_question(), OpenClaw-styled chat frontend, session sidebar, in-app dataset upload, shared-password gate, self-contained in bioclaw repo, local build only -- no DO deploy without explicit go-ahead). Starting new-milestone workflow: requirements + roadmap next."
+last_updated: "2026-09-11"
+last_activity: 2026-09-11 — Started v1.1 Web UI milestone via /gsd:new-milestone; PROJECT.md updated (Current Milestone section, Active/Out of Scope reconciled, v1.0 items moved to Validated).
 progress:
   total_phases: 6
   completed_phases: 6
@@ -19,21 +19,22 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-09-03)
+See: .planning/PROJECT.md (updated 2026-09-11)
 
 **Core value:** A Biopunk Labs researcher can ask a plain-language question about a single-cell dataset and get back a QC'd, annotated, interpreted answer without writing a scanpy script by hand.
-**Current focus:** All 6 phases complete. v1.0 milestone done — the full ingest → analysis → agent → bio-FM annotation → perturbation/VCC → natural-language Q&A stack is built and live-verified end to end.
+**Current focus:** v1.0 (all 6 phases) complete and live-verified. Starting v1.1 — a self-contained, OpenClaw-styled web UI wrapping the existing Q&A agent, local build only until Darren explicitly approves a DigitalOcean deploy.
 
 ## Current Position
 
-Phase: 6 of 6 (Natural-Language Q&A Capstone) — COMPLETE
-Plan: 3 plans planned — 06-01 (Wave 0: qa/ skeleton + system_prompt kwarg on run_session/build_options + citation module + test scaffolds) COMPLETE; 06-02 (Wave 2: ask_question + QA_SYSTEM_PROMPT wired) COMPLETE; 06-03 (Wave 3: live multi-tool integration test asserting citation resolution + uncertainty surfacing) COMPLETE.
-Current Plan: 3 of 3 (final)
-Next: /gsd:complete-milestone (all phases and plans done)
-Status: Phase 5 COMPLETE (2026-09-10; 05-06 Task 3 deferred pending GCS billing). Phase 6 Wave 0 (06-01) COMPLETE 2026-09-10. Phase 6 Wave 2 (06-02) COMPLETE 2026-09-10. Phase 6 Wave 3 (06-03) COMPLETE 2026-09-11 — live_llm integration test passed for real (54.43s, 2 distinct tools, 10/10 citations resolved, decimal DE values paired with citations); two production bugs found and fixed during checkpoint verification (headless permission_mode hang in agent/session.py; result_sha256 citation-hash timing). Phase 6 and the v1.0 milestone are now fully complete: QA-01, QA-02, QA-03 all closed.
-Last activity: 2026-09-11 — Executed 06-03-PLAN.md (Wave 3 for Phase 6, final plan of the milestone).
+Milestone: v1.1 Web UI — Not started (defining requirements)
+Phase: None yet — requirements and roadmap not yet created for this milestone
+Plan: None yet
+Current Plan: n/a
+Next: Continue /gsd:new-milestone — define REQUIREMENTS.md, then spawn gsd-roadmapper to create the phased roadmap
+Status: v1.0 fully complete (29/29 plans, 6/6 phases, live-verified 2026-09-11). v1.1 scope confirmed with Darren (password-gate auth, full session sidebar/history, webapp-driven dataset upload, live tool-call streaming) and written into PROJECT.md. Requirements definition is the immediate next step.
+Last activity: 2026-09-11 — Started v1.1 Web UI milestone via /gsd:new-milestone.
 
-Progress: [██████████] 100% (29/29 plans complete; all 6 phases done)
+Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) — v1.1 not yet started
 
 ## Performance Metrics
 
@@ -133,7 +134,7 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-None — all 6 phases and 29 plans of the v1.0 milestone are complete. Ready for `/gsd:complete-milestone`.
+v1.0 fully complete (29/29 plans, 6/6 phases) — formal `/gsd:complete-milestone` archival was superseded by starting v1.1 directly per Darren's request. v1.1 (Web UI) requirements and roadmap not yet defined — that's the immediate next step in the `/gsd:new-milestone` workflow.
 
 ### Blockers/Concerns
 
@@ -144,6 +145,6 @@ None — all 6 phases and 29 plans of the v1.0 milestone are complete. Ready for
 
 ## Session Continuity
 
-Last session: 2026-09-11T15:33:45.319Z
-Stopped at: Completed 06-03-PLAN.md (Phase 6 Wave 3: live_llm QA-01/02/03 integration test passed live; checkpoint approved; Phase 6 and v1.0 milestone complete). Next recommended step: /gsd:complete-milestone.
+Last session: 2026-09-11
+Stopped at: v1.0 milestone complete (6/6 phases, 29/29 plans, live-verified). Started v1.1 Web UI milestone via /gsd:new-milestone; PROJECT.md updated with confirmed scope. Next recommended step: define REQUIREMENTS.md and create the phased roadmap.
 Resume file: None
