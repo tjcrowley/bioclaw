@@ -137,6 +137,12 @@ def build_options(
     return ClaudeAgentOptions(
         mcp_servers={"bioclaw": bioclaw_server},
         allowed_tools=["mcp__bioclaw__*"],
+        # Without this, the SDK's underlying CLI subprocess defaults to
+        # interactive tool-approval and blocks forever on any headless
+        # caller (pytest, a script) -- there is no TTY to approve from.
+        # Safe here: allowed_tools is scoped to our own in-process
+        # bioclaw MCP server, nothing external.
+        permission_mode="bypassPermissions",
         system_prompt=system_prompt,
         hooks={
             "PostToolUse": [
