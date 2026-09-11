@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: "Completed 06-01-PLAN.md (Phase 6 Wave 0: qa/ skeleton + system_prompt kwarg + citation module + test scaffolds)"
-last_updated: "2026-09-11T01:46:16.042Z"
-last_activity: 2026-09-10 — Executed 06-01-PLAN.md (Wave 0 for Phase 6).
+stopped_at: "Completed 06-02-PLAN.md (Phase 6 Wave 2: ask_question + QA_SYSTEM_PROMPT wired; QA-01/QA-02/QA-03 structurally closed; Plan 06-03 unblocked)"
+last_updated: "2026-09-11T01:52:30.977Z"
+last_activity: 2026-09-10 — Executed 06-02-PLAN.md (Wave 2 for Phase 6).
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 29
-  completed_plans: 27
-  percent: 93
+  completed_plans: 28
+  percent: 97
 ---
 
 # Project State
@@ -26,12 +26,13 @@ See: .planning/PROJECT.md (updated 2026-09-03)
 ## Current Position
 
 Phase: 6 of 6 (Natural-Language Q&A Capstone) — executing
-Plan: 3 plans planned — 06-01 (Wave 0: qa/ skeleton + system_prompt kwarg on run_session/build_options + citation module + test scaffolds) COMPLETE; 06-02 (Wave 1: citation-tagging system prompt + first live_llm citation-verification test) NEXT; 06-03 (Wave 2: ask_question() implementation + QA_SYSTEM_PROMPT + full multi-tool integration test) FINAL.
-Next: /gsd:execute-phase 06-natural-language-qa-capstone (continue with 06-02)
-Status: Phase 5 COMPLETE (2026-09-10; 05-06 Task 3 deferred pending GCS billing). Phase 6 Wave 0 (06-01) COMPLETE 2026-09-10 — qa/ package skeleton, citations.py fully implemented, system_prompt kwarg additive on agent/session.py, 7 unit tests passing + live_llm scaffold.
-Last activity: 2026-09-10 — Executed 06-01-PLAN.md (Wave 0 for Phase 6).
+Plan: 3 plans planned — 06-01 (Wave 0: qa/ skeleton + system_prompt kwarg on run_session/build_options + citation module + test scaffolds) COMPLETE; 06-02 (Wave 2: ask_question + QA_SYSTEM_PROMPT wired) COMPLETE; 06-03 (Wave 3: live multi-tool integration test asserting citation resolution + uncertainty surfacing) FINAL.
+Current Plan: 3 of 3
+Next: /gsd:execute-phase 06-natural-language-qa-capstone (continue with 06-03)
+Status: Phase 5 COMPLETE (2026-09-10; 05-06 Task 3 deferred pending GCS billing). Phase 6 Wave 0 (06-01) COMPLETE 2026-09-10 — qa/ package skeleton, citations.py fully implemented, system_prompt kwarg additive on agent/session.py, 7 unit tests passing + live_llm scaffold. Phase 6 Wave 2 (06-02) COMPLETE 2026-09-10 — ask_question wraps run_session with QA_SYSTEM_PROMPT (citation/uncertainty/anti-hallucination/mandatory-citation protocols) then verify_answer_citations; 13 new unit tests passing; 156/156 fast suite green.
+Last activity: 2026-09-10 — Executed 06-02-PLAN.md (Wave 2 for Phase 6).
 
-Progress: [█████████░] 93% (27/29 plans complete; Phase 6 Wave 0 done, 2 plans remaining)
+Progress: [██████████] 97% (28/29 plans complete; Phase 6 Waves 0 and 2 done, 1 plan remaining)
 
 ## Performance Metrics
 
@@ -76,6 +77,7 @@ Progress: [█████████░] 93% (27/29 plans complete; Phase 6 Wa
 | Phase 05-perturbation-response-tool-vcc-benchmark-harness P05 | 3min | 2 tasks | 2 files |
 | Phase 05-perturbation-response-tool-vcc-benchmark-harness P06 | 5min | 2 tasks | 3 files |
 | Phase 06-natural-language-qa-capstone P01 | 3min | 2 tasks | 6 files |
+| Phase 06-natural-language-qa-capstone P02 | 4min | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -119,6 +121,9 @@ Recent decisions affecting current work:
 - [Phase 06-natural-language-qa-capstone]: 06-01: qa/citations.py fully implemented in Task 1 (not stubbed) since it is pure Python w/ no LLM dependency; Task 2 tests written against real implementation, all 7 passing on first run -- Wave 0 contract stable for Plans 06-02/03
 - [Phase 06-natural-language-qa-capstone]: 06-01: system_prompt kwarg is additive on build_options/run_session with existing SYSTEM_PROMPT constant as default -- zero behavioral change for Phase-3 callers (verified by 8 test_agent_session_wiring tests still passing)
 - [Phase 06-natural-language-qa-capstone]: 06-01: CITATION_RE requires 12 lowercase hex chars for the sha prefix; test_parse_citation_ids_ignores_malformed asserts uppercase, missing-prefix, and wrong-length forms are all rejected -- prevents future silent regex loosening
+- [Phase 06-natural-language-qa-capstone]: 06-02: ask_question is a policy-free wrapper -- verify_answer_citations reports (list of tuples with record|None) but ask_question does not raise on unresolved citations; policy lives in the caller/test (Plan 06-03 asserts on citation_results shape/count)
+- [Phase 06-natural-language-qa-capstone]: 06-02: QA_SYSTEM_PROMPT extends 06-RESEARCH.md Pattern 1 with two additional protocol sections beyond citation+uncertainty -- explicit anti-hallucination ('MUST invoke the corresponding tool in this session') and mandatory-citation ('MUST include at least one [ref:...]') clauses; fast-suite unit tests assert on each keyword so prompt drift breaks loudly in CI
+- [Phase 06-natural-language-qa-capstone]: 06-02: TDD test file uses asyncio.run() inside sync tests + unittest.mock.AsyncMock (matching tests/test_agent_session_wiring.py's pattern) rather than adding pytest-asyncio -- keeps dev-dependency footprint stable, async surface fully exercised
 
 ### Pending Todos
 
@@ -133,6 +138,6 @@ Phase 4 (Bio-FM Tool Layer — Cell-Type Annotation) is planned (5 plans, 04-01.
 
 ## Session Continuity
 
-Last session: 2026-09-11T01:46:16.038Z
-Stopped at: Completed 06-01-PLAN.md (Phase 6 Wave 0: qa/ skeleton + system_prompt kwarg + citation module + test scaffolds)
+Last session: 2026-09-11T01:52:30.972Z
+Stopped at: Completed 06-02-PLAN.md (Phase 6 Wave 2: ask_question + QA_SYSTEM_PROMPT wired; QA-01/QA-02/QA-03 structurally closed; Plan 06-03 unblocked)
 Resume file: None
