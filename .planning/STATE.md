@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_plan: 3 of 3
-status: verifying
-stopped_at: Executing 06-03-PLAN.md — Task 1 complete (commit 587b673); paused at blocking human-verify checkpoint (Task 2). Awaiting live_llm test run + human confirmation of QA answer readability.
-last_updated: "2026-09-11T01:57:44.447Z"
-last_activity: 2026-09-10 — Executed 06-02-PLAN.md (Wave 2 for Phase 6).
+status: completed
+stopped_at: "Completed 06-03-PLAN.md (Phase 6 Wave 3: live_llm QA-01/02/03 integration test passed; checkpoint approved by Darren; Phase 6 and v1.0 milestone complete)"
+last_updated: "2026-09-11T15:33:45.319Z"
+last_activity: 2026-09-11 — Executed 06-03-PLAN.md (Wave 3, final plan of Phase 6 and the v1.0 milestone).
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 29
-  completed_plans: 28
-  percent: 97
+  completed_plans: 29
+  percent: 100
 ---
 
 # Project State
@@ -22,25 +22,25 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-03)
 
 **Core value:** A Biopunk Labs researcher can ask a plain-language question about a single-cell dataset and get back a QC'd, annotated, interpreted answer without writing a scanpy script by hand.
-**Current focus:** Phase 4 (Bio-FM Tool Layer — Cell-Type Annotation) is executing. Waves 0-2 (04-01 through 04-04) are complete. Only Wave 3 (04-05, blocking human-verify checkpoint for the real scGPT checkpoint + cellxgene-census reference index) remains before Phase 4 is done.
+**Current focus:** All 6 phases complete. v1.0 milestone done — the full ingest → analysis → agent → bio-FM annotation → perturbation/VCC → natural-language Q&A stack is built and live-verified end to end.
 
 ## Current Position
 
-Phase: 6 of 6 (Natural-Language Q&A Capstone) — executing
-Plan: 3 plans planned — 06-01 (Wave 0: qa/ skeleton + system_prompt kwarg on run_session/build_options + citation module + test scaffolds) COMPLETE; 06-02 (Wave 2: ask_question + QA_SYSTEM_PROMPT wired) COMPLETE; 06-03 (Wave 3: live multi-tool integration test asserting citation resolution + uncertainty surfacing) FINAL.
-Current Plan: 3 of 3
-Next: /gsd:execute-phase 06-natural-language-qa-capstone (continue with 06-03)
-Status: Phase 5 COMPLETE (2026-09-10; 05-06 Task 3 deferred pending GCS billing). Phase 6 Wave 0 (06-01) COMPLETE 2026-09-10 — qa/ package skeleton, citations.py fully implemented, system_prompt kwarg additive on agent/session.py, 7 unit tests passing + live_llm scaffold. Phase 6 Wave 2 (06-02) COMPLETE 2026-09-10 — ask_question wraps run_session with QA_SYSTEM_PROMPT (citation/uncertainty/anti-hallucination/mandatory-citation protocols) then verify_answer_citations; 13 new unit tests passing; 156/156 fast suite green.
-Last activity: 2026-09-10 — Executed 06-02-PLAN.md (Wave 2 for Phase 6).
+Phase: 6 of 6 (Natural-Language Q&A Capstone) — COMPLETE
+Plan: 3 plans planned — 06-01 (Wave 0: qa/ skeleton + system_prompt kwarg on run_session/build_options + citation module + test scaffolds) COMPLETE; 06-02 (Wave 2: ask_question + QA_SYSTEM_PROMPT wired) COMPLETE; 06-03 (Wave 3: live multi-tool integration test asserting citation resolution + uncertainty surfacing) COMPLETE.
+Current Plan: 3 of 3 (final)
+Next: /gsd:complete-milestone (all phases and plans done)
+Status: Phase 5 COMPLETE (2026-09-10; 05-06 Task 3 deferred pending GCS billing). Phase 6 Wave 0 (06-01) COMPLETE 2026-09-10. Phase 6 Wave 2 (06-02) COMPLETE 2026-09-10. Phase 6 Wave 3 (06-03) COMPLETE 2026-09-11 — live_llm integration test passed for real (54.43s, 2 distinct tools, 10/10 citations resolved, decimal DE values paired with citations); two production bugs found and fixed during checkpoint verification (headless permission_mode hang in agent/session.py; result_sha256 citation-hash timing). Phase 6 and the v1.0 milestone are now fully complete: QA-01, QA-02, QA-03 all closed.
+Last activity: 2026-09-11 — Executed 06-03-PLAN.md (Wave 3 for Phase 6, final plan of the milestone).
 
-Progress: [██████████] 97% (28/29 plans complete; Phase 6 Waves 0 and 2 done, 1 plan remaining)
+Progress: [██████████] 100% (29/29 plans complete; all 6 phases done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 13
-- Average duration: ~7 min
-- Total execution time: ~90 min
+- Total plans completed: 14
+- Average duration: ~7 min (excludes 06-03's cross-session checkpoint debugging time)
+- Total execution time: ~95 min
 
 **By Phase:**
 
@@ -50,8 +50,8 @@ Progress: [██████████] 97% (28/29 plans complete; Phase 6 Wa
 | 02-analysis-tool-layer | 5 | ~26min | ~5min |
 
 **Recent Trend:**
-- Last 5 plans: 8min, 8min, 5min, ~10min, 5min
-- Trend: stable/fast (Phase 2 plans coming in under Phase 1 average)
+- Last 5 plans: 8min, ~10min, 5min, 3min, 4min, ~95min (06-03, includes checkpoint bugfix session)
+- Trend: stable/fast; 06-03 was the outlier due to two real production bugs surfaced only by the live_llm checkpoint
 
 *Updated after each plan completion*
 | Phase 01-ingest-qc-pipeline P01 | 13min | 2 tasks | 4 files |
@@ -79,6 +79,7 @@ Progress: [██████████] 97% (28/29 plans complete; Phase 6 Wa
 | Phase 05-perturbation-response-tool-vcc-benchmark-harness P06 | 5min | 2 tasks | 3 files |
 | Phase 06-natural-language-qa-capstone P01 | 3min | 2 tasks | 6 files |
 | Phase 06-natural-language-qa-capstone P02 | 4min | 1 tasks | 2 files |
+| Phase 06-natural-language-qa-capstone P03 | ~95min (cross-session; checkpoint bugfixing) | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -125,20 +126,24 @@ Recent decisions affecting current work:
 - [Phase 06-natural-language-qa-capstone]: 06-02: ask_question is a policy-free wrapper -- verify_answer_citations reports (list of tuples with record|None) but ask_question does not raise on unresolved citations; policy lives in the caller/test (Plan 06-03 asserts on citation_results shape/count)
 - [Phase 06-natural-language-qa-capstone]: 06-02: QA_SYSTEM_PROMPT extends 06-RESEARCH.md Pattern 1 with two additional protocol sections beyond citation+uncertainty -- explicit anti-hallucination ('MUST invoke the corresponding tool in this session') and mandatory-citation ('MUST include at least one [ref:...]') clauses; fast-suite unit tests assert on each keyword so prompt drift breaks loudly in CI
 - [Phase 06-natural-language-qa-capstone]: 06-02: TDD test file uses asyncio.run() inside sync tests + unittest.mock.AsyncMock (matching tests/test_agent_session_wiring.py's pattern) rather than adding pytest-asyncio -- keeps dev-dependency footprint stable, async surface fully exercised
+- [Phase 06-natural-language-qa-capstone]: 06-03: `permission_mode="bypassPermissions"` added to `build_options()` in `agent/session.py` -- without it, any headless (pytest/script) `run_session()` caller hangs forever on interactive tool approval with no TTY to approve from; safe since `allowed_tools` is scoped to the in-process bioclaw MCP server only. This was a latent Phase 3 bug, never exercised live until 06-03's checkpoint.
+- [Phase 06-natural-language-qa-capstone]: 06-03: `analyze_dataset_tool` widened to pass through `run_de`/`de_groupby`/`de_group1`/`de_group2`/`de_n_genes` to `AnalysisConfig` -- `analyze()` already supported these from Phase 2, the tool wrapper simply never forwarded them; only surfaced once a real live question required DE.
+- [Phase 06-natural-language-qa-capstone]: 06-03: `log_tool_call()` now returns the `result_sha256` it computes, forwarded to the model via the `PostToolUse` hook's `hookSpecificOutput.additionalContext` -- the citation protocol in `QA_SYSTEM_PROMPT` asks the model to quote this hash, but it was previously computed only after the tool response had already reached the model, making correct citation structurally impossible.
+- [Phase 06-natural-language-qa-capstone]: 06-03 checkpoint verified live (real ANTHROPIC_API_KEY, run by Darren per the checkpoint's how-to-verify steps): test passed in 54.43s — 2 distinct tools logged (QA-01), 10/10 citation tags resolved with zero hallucinated citations (QA-02), 32 significant DE genes with a decimal value paired with a resolved citation (QA-03). Phase 6 and the v1.0 milestone are complete.
 
 ### Pending Todos
 
-Phase 4 (Bio-FM Tool Layer — Cell-Type Annotation) is planned (5 plans, 04-01..04-05) and ready to execute via `/gsd:execute-phase 04-bio-fm-cell-type-annotation`. Wave 3's 04-05 ends in a blocking `checkpoint:human-verify` task (real scGPT checkpoint download + measured latency) that requires Darren's manual involvement — cannot be fully automated.
+None — all 6 phases and 29 plans of the v1.0 milestone are complete. Ready for `/gsd:complete-milestone`.
 
 ### Blockers/Concerns
 
-- Phase 4 (Bio-FM annotation): RESOLVED at planning time (2026-09-05) — scGPT chosen over Geneformer (PyPI-installable, confirmed CPU-capable via `load_pretrained`, zero-shot reference-mapping needs no fine-tuning; Geneformer's own model card requires GPU and isn't on PyPI). Remaining open item is not VRAM sizing but dependency isolation: scGPT's live PyPI pins (`scvi-tools<1.0`, unpinned `torchtext`, `orbax<0.1.8`) must stay out of the main venv — plans isolate it into `bio_fm_worker/.venv`. Real CPU-inference latency is still unmeasured (one unverified third-party benchmark only) — closed by 04-05's `bio_fm_smoke` checkpoint, not before.
-- Phase 5 (Perturbation + VCC): GEARS/cell-gears environment isolation is MEDIUM confidence and version-sensitive (pinned older PyTorch Geometric stack). VCC scope question is now resolved (task format/metrics only, confirmed 2026-09-03) — no longer a blocker.
-- Phase 6 (NL Q&A): no established reference pattern for hallucination-mitigation (claim traceability, confidence surfacing) at this agent+scientific-tool combination — flagged as highest-risk phase in research.
+- Phase 4 (Bio-FM annotation): RESOLVED at planning time (2026-09-05) — scGPT chosen over Geneformer (PyPI-installable, confirmed CPU-capable via `load_pretrained`, zero-shot reference-mapping needs no fine-tuning; Geneformer's own model card requires GPU and isn't on PyPI). Dependency isolation (scGPT's live PyPI pins) confirmed working, isolated into `bio_fm_worker/.venv`, closed by 04-05.
+- Phase 5 (Perturbation + VCC): GEARS/cell-gears environment isolation was MEDIUM confidence and version-sensitive but resolved by execution. VCC scope question resolved (task format/metrics only, confirmed 2026-09-03). Task 3 (real VCC data download smoke test) remains DEFERRED — no GCP billing account available; gated behind `vcc_data` marker, ready to run when billing is enabled. Non-blocking for milestone completion (public task format/metrics scope was already validated).
+- Phase 6 (NL Q&A): RESOLVED — hallucination-mitigation (claim traceability, confidence surfacing) pattern validated live end to end via 06-03's checkpoint; no longer a research risk, it's a working, tested implementation.
 - Project-wide validation with Elliot Roth: resolved 2026-09-03 (see Decisions above). Remaining open item (non-blocking): check overlap with Cardiac Base Editor / FDT-BioTech on cardiomyocyte single-cell data as an early test dataset (CONCEPT.md).
 
 ## Session Continuity
 
-Last session: 2026-09-11T01:57:44.443Z
-Stopped at: Executing 06-03-PLAN.md — Task 1 complete (commit 587b673); paused at blocking human-verify checkpoint (Task 2). Awaiting live_llm test run + human confirmation of QA answer readability.
+Last session: 2026-09-11T15:33:45.319Z
+Stopped at: Completed 06-03-PLAN.md (Phase 6 Wave 3: live_llm QA-01/02/03 integration test passed live; checkpoint approved; Phase 6 and v1.0 milestone complete). Next recommended step: /gsd:complete-milestone.
 Resume file: None
