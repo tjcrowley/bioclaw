@@ -23,14 +23,7 @@ settings end to end.
 """
 
 import asyncio
-import gzip
 import json
-from pathlib import Path
-
-import numpy as np
-import pytest
-from scipy import sparse
-from scipy.io import mmwrite
 
 import agent.tools as agent_tools
 from agent.tools import (
@@ -39,54 +32,6 @@ from agent.tools import (
     ingest_10x_tool,
     predict_perturbation_tool,
 )
-
-FEATURE_TYPE = "Gene Expression"
-
-
-def _write_gz_lines(path: Path, lines) -> None:
-    with gzip.open(path, "wt") as fh:
-        for line in lines:
-            fh.write(f"{line}\n")
-
-
-@pytest.fixture
-def analyzable_mtx_dir(tmp_path) -> Path:
-    """A 10x MEX directory large/structured enough to survive default QC
-    (`min_genes_per_cell=200`) and produce genuine cluster structure for
-    `analyze_dataset_tool`'s round-trip test -- unlike `tiny_mtx_dir`, which
-    is deliberately too small for a default-config full pipeline run (see
-    module docstring).
-    """
-    n_genes, n_cells, n_pop = 300, 60, 30
-    rng = np.random.default_rng(42)
-
-    counts = rng.poisson(lam=3, size=(n_cells, n_genes)).astype(np.int64)
-    counts[0:n_pop, 0:15] = rng.poisson(lam=20, size=(n_pop, 15)).astype(np.int64)
-    counts[n_pop : 2 * n_pop, 15:30] = rng.poisson(lam=20, size=(n_pop, 15)).astype(
-        np.int64
-    )
-    matrix = sparse.csr_matrix(counts.T)  # genes x cells, MatrixMarket convention
-
-    mtx_dir = tmp_path / "analyzable_mtx"
-    mtx_dir.mkdir()
-
-    gene_ids = [f"ENSG{i:011d}" for i in range(n_genes)]
-    gene_symbols = ["MT-CO1", "MT-ND1"] + [f"GENE{i:03d}" for i in range(2, n_genes)]
-    barcodes = [f"BARCODE{i:04d}-1" for i in range(n_cells)]
-
-    _write_gz_lines(
-        mtx_dir / "features.tsv.gz",
-        (f"{gid}\t{sym}\t{FEATURE_TYPE}" for gid, sym in zip(gene_ids, gene_symbols)),
-    )
-    _write_gz_lines(mtx_dir / "barcodes.tsv.gz", barcodes)
-
-    tmp_mtx = mtx_dir / "matrix.mtx"
-    mmwrite(str(tmp_mtx), matrix)
-    with open(tmp_mtx, "rb") as f_in, gzip.open(mtx_dir / "matrix.mtx.gz", "wb") as f_out:
-        f_out.write(f_in.read())
-    tmp_mtx.unlink()
-
-    return mtx_dir
 
 
 def test_ingest_10x_tool_returns_dataset_id(tmp_path, tiny_mtx_dir, monkeypatch):
