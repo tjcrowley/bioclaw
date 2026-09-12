@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
-current_plan: 07-02
-status: Plan 07-01 executed and committed (extra_hooks kwarg on agent/session.py + qa/session.py; webapp/backend/ package with schemas.py + auth.py; fastapi[standard] installed as optional 'web' dependency group). All 24 pre-existing + 4 new tests pass; full fast suite (163 tests) green with the web extra installed. Ready for Plan 07-02 (streaming/deps/main FastAPI app).
-stopped_at: "Completed 07-01-PLAN.md (extra_hooks kwarg + webapp/backend schemas/auth foundation). Next: Plan 07-02 (streaming/deps/main FastAPI app)."
-last_updated: "2026-09-12T01:58:45.214Z"
-last_activity: 2026-09-11 — Plan 07-01 executed (commits 0267f65, 75fbeb2); SUMMARY created.
+current_plan: 07-03
+status: Plan 07-02 executed and committed (webapp/backend/streaming.py queue registry + hook factory; deps.py overridable ask_question; main.py FastAPI app with password-gated POST /api/ask and WS /ws/{stream_id}). All 13 tests in tests/test_webapp_backend.py pass; full fast suite (172 tests) green with the web extra installed. Ready for Plan 07-03 (live_llm e2e + human-verify checkpoint).
+stopped_at: "Completed 07-02-PLAN.md (streaming.py queue registry + hook factory, deps.py, main.py FastAPI app with POST /api/ask + WS /ws/{stream_id}). Next: Plan 07-03 (live_llm e2e + human-verify checkpoint)."
+last_updated: "2026-09-12T02:04:02.612Z"
+last_activity: 2026-09-12 — Plan 07-02 executed (commits 41909ca, f1682b4); SUMMARY created.
 progress:
   total_phases: 10
   completed_phases: 6
   total_plans: 32
-  completed_plans: 30
-  percent: 100
+  completed_plans: 31
+  percent: 97
 ---
 
 # Project State
@@ -27,14 +27,14 @@ See: .planning/PROJECT.md (updated 2026-09-11)
 ## Current Position
 
 Milestone: v1.1 Web UI — Phase 7 in progress
-Phase: 7 of 10 (Backend API + Streaming Foundation) — Wave 1 (07-01) executed
-Plan: 07-01 (Wave 1, done) → 07-02 (Wave 2, next) → 07-03 (Wave 3, has human-verify checkpoint)
-Current Plan: 07-02
-Next: /gsd:execute-phase 7 (continue with Plan 07-02)
-Status: Plan 07-01 executed and committed (extra_hooks kwarg on agent/session.py + qa/session.py; webapp/backend/ package with schemas.py + auth.py; fastapi[standard] installed as optional 'web' dependency group). All 24 pre-existing + 4 new tests pass; full fast suite (163 tests) green with the web extra installed. Ready for Plan 07-02 (streaming/deps/main FastAPI app).
-Last activity: 2026-09-11 — Plan 07-01 executed (commits 0267f65, 75fbeb2); SUMMARY created.
+Phase: 7 of 10 (Backend API + Streaming Foundation) — Wave 2 (07-02) executed
+Plan: 07-01 (Wave 1, done) → 07-02 (Wave 2, done) → 07-03 (Wave 3, next, has human-verify checkpoint)
+Current Plan: 07-03
+Next: /gsd:execute-phase 7 (continue with Plan 07-03)
+Status: Plan 07-02 executed and committed (webapp/backend/streaming.py queue registry + hook factory; deps.py overridable ask_question; main.py FastAPI app with password-gated POST /api/ask and WS /ws/{stream_id}). All 13 tests in tests/test_webapp_backend.py pass; full fast suite (172 tests) green with the web extra installed. Ready for Plan 07-03 (live_llm e2e + human-verify checkpoint).
+Last activity: 2026-09-12 — Plan 07-02 executed (commits 41909ca, f1682b4); SUMMARY created.
 
-Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) — v1.1 not yet started
+Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) — v1.1 Phase 7: 2/3 plans complete
 
 ## Performance Metrics
 
@@ -82,6 +82,7 @@ Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) �
 | Phase 06-natural-language-qa-capstone P02 | 4min | 1 tasks | 2 files |
 | Phase 06-natural-language-qa-capstone P03 | ~95min (cross-session; checkpoint bugfixing) | 2 tasks | 4 files |
 | Phase 07 P01 | 10min | 2 tasks | 11 files |
+| Phase 07-backend-api-streaming-foundation P02 | 5min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -135,10 +136,12 @@ Recent decisions affecting current work:
 - [Phase 07]: [Phase 07-backend-api-streaming-foundation]: 07-01: extra_hooks kwarg appended (not merged/deduplicated) to the existing PostToolUse hook list inside the single HookMatcher in agent/session.py::build_options() -- preserves the single-HookMatcher shape and is zero-behavior-change when omitted
 - [Phase 07]: [Phase 07-backend-api-streaming-foundation]: 07-01: webapp/backend/auth.py's _valid() reads BIOCLAW_WEB_PASSWORD lazily via os.environ.get() inside the function body (not at import time) so tests can monkeypatch.setenv per-test without import-order coupling
 - [Phase 07]: [Phase 07-backend-api-streaming-foundation]: 07-01: fastapi[standard] installed via uv add --optional web then uv sync --extra web (never a bare uv sync, which would uninstall the just-added web extra before this task's own fastapi-importing tests run)
+- [Phase 07-backend-api-streaming-foundation]: 07-02: FastAPI WS handler accepts the WebSocket only after require_password_ws's Depends() resolves, relying on FastAPI 0.141's support for raising WebSocketException from a dependency to reject unauthenticated handshakes pre-accept
+- [Phase 07-backend-api-streaming-foundation]: 07-02: streaming.drop_queue(stream_id) called in the WS handler's finally block, tying a queue's lifetime to its single WebSocket consumer's connection
 
 ### Pending Todos
 
-v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defined and committed. Phase 7 Plan 07-01 executed; Plans 07-02 (streaming/deps/main FastAPI app) and 07-03 (live_llm e2e + human-verify checkpoint) remain to complete Phase 7.
+v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defined and committed. Phase 7 Plans 07-01 and 07-02 executed; Plan 07-03 (live_llm e2e + human-verify checkpoint) remains to complete Phase 7.
 
 ### Blockers/Concerns
 
@@ -149,6 +152,6 @@ v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defin
 
 ## Session Continuity
 
-Last session: 2026-09-12T01:58:45.208Z
-Stopped at: Completed 07-01-PLAN.md (extra_hooks kwarg + webapp/backend schemas/auth foundation). Next: Plan 07-02 (streaming/deps/main FastAPI app).
+Last session: 2026-09-12T02:04:02.608Z
+Stopped at: Completed 07-02-PLAN.md (streaming.py queue registry + hook factory, deps.py, main.py FastAPI app with POST /api/ask + WS /ws/{stream_id}). Next: Plan 07-03 (live_llm e2e + human-verify checkpoint).
 Resume file: None

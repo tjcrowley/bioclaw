@@ -143,11 +143,11 @@ Plans:
   3. Any request to any backend route without the correct shared-password credential is rejected (unauthenticated).
   4. A request presenting the correct shared password succeeds against the same routes.
   5. The backend runs and is verifiable entirely on localhost — no deployment to any external or production environment.
-**Plans**: 1/3 plans executed
+**Plans**: 2/3 plans executed
 
 Plans:
 - [x] 07-01-PLAN.md — Wave 1: additive extra_hooks on build_options/run_session/ask_question + webapp/backend schemas.py/auth.py contracts + fastapi[standard] install (API-05, API-02)
-- [ ] 07-02-PLAN.md — Wave 2: streaming.py queue registry + deps.py + main.py (POST /api/ask, WS /ws/{stream_id}) with fast-tier tests (API-01, API-02, API-05)
+- [x] 07-02-PLAN.md — Wave 2: streaming.py queue registry + deps.py + main.py (POST /api/ask, WS /ws/{stream_id}) with fast-tier tests (API-01, API-02, API-05)
 - [ ] 07-03-PLAN.md — Wave 3: live_llm end-to-end integration test + human-verify checkpoint (API-01, API-02)
 
 ### Phase 8: Session & Dataset Endpoints
@@ -199,7 +199,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 4. Bio-FM Tool Layer — Cell-Type Annotation | 2/5 | In Progress|  |
 | 5. Perturbation-Response Tool + VCC Benchmark | 6/6 | Complete   | 2026-09-10 |
 | 6. Natural-Language Q&A Capstone | 3/3 | Complete   | 2026-09-11 |
-| 7. Backend API + Streaming Foundation | 1/3 | In Progress | - |
+| 7. Backend API + Streaming Foundation | 2/3 | In Progress|  |
 | 8. Session & Dataset Endpoints | 0/TBD | Not started | - |
 | 9. Frontend Chat UI | 0/TBD | Not started | - |
 | 10. Packaging & Local Verification | 0/TBD | Not started | - |
