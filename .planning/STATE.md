@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
-current_plan: 08-02
-status: execution
-stopped_at: Completed 08-02-PLAN.md
-last_updated: "2026-09-12T14:08:25.471Z"
-last_activity: 2026-09-12 — Plan 08-02 executed autonomously (no checkpoints); API-04 closed.
+current_plan: 08-03
+status: planning
+stopped_at: "Completed 08-03-PLAN.md (live_llm end-to-end session/upload integration test + phase-gate checkpoint, approved by Darren after a citability fix). Phase 8 (Session & Dataset Endpoints) is complete. Next: plan Phase 9 (Frontend Chat UI)."
+last_updated: "2026-09-12T18:30:00.000Z"
+last_activity: 2026-09-12 — Plan 08-03 checkpoint approved by Darren; Phase 8 complete.
 progress:
   total_phases: 10
-  completed_phases: 7
+  completed_phases: 8
   total_plans: 35
-  completed_plans: 34
-  percent: 97
+  completed_plans: 35
+  percent: 100
 ---
 
 # Project State
@@ -26,15 +26,15 @@ See: .planning/PROJECT.md (updated 2026-09-11)
 
 ## Current Position
 
-Milestone: v1.1 Web UI — Phase 8 in progress
-Phase: 8 of 10 (Session & Dataset Endpoints) — Plans 1-2 of 3 complete
-Plan: 08-02 (Wave 2, done -- dataset upload endpoint, API-04 closed) → 08-03 (Wave 3, live_llm end-to-end integration test + human-verify checkpoint) next
-Current Plan: 08-02
-Next: Execute Plan 08-03 (live_llm end-to-end integration test: real upload + real resume, human-verify checkpoint)
-Status: Plan 08-02 complete and committed. POST /api/upload is implemented (password-gated, .h5/.h5ad single-file or .mtx 3-file-trio, wired to ingest_10x() against agent.tools.STORE_ROOT, dataset_id recorded into SessionMemory and recalled by the next /api/ask in the same session), tested (10 fast-tier tests in tests/test_webapp_upload.py, full suite 193 passed/5 deselected), and verified. API-04 closed.
-Last activity: 2026-09-12 — Plan 08-02 executed autonomously (no checkpoints); API-04 closed.
+Milestone: v1.1 Web UI — Phase 8 complete
+Phase: 8 of 10 (Session & Dataset Endpoints) — 3/3 plans complete
+Plan: 08-03 (Wave 3, done -- live_llm end-to-end integration test + human-verify checkpoint, approved) → Phase 9 (Frontend Chat UI) next
+Current Plan: 08-03
+Next: Plan Phase 9 (Frontend Chat UI, UI-01..07)
+Status: Plan 08-03 complete and committed. The live_llm test (tests/test_webapp_session_upload_integration.py) initially exposed a real bug: the agent refused to analyze an upload-recalled dataset_id, citing its own anti-hallucination rule, since POST /api/upload bypasses the PostToolUse hook/audit-log path that rule assumed existed. Fixed in qa/session.py + agent/session.py (session-recalled datasets are now explicitly framed as legitimate, already-verified inputs the model must act on with a tool call) and in the test's own assertions (require a resolved analyze_dataset citation, check the version-independent dataset name rather than an impossible exact-id match). Re-verified live twice by Darren against the real Anthropic API (1 passed both times). Manual curl checks (401 unauthenticated, 200 authenticated) passed against a local single-worker uvicorn process; no deployment of any kind performed. Full fast suite green (193 passed, 6 deselected). Phase 8 complete. API-03/API-04 closed.
+Last activity: 2026-09-12 — Plan 08-03 checkpoint approved by Darren; Phase 8 complete.
 
-Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) — v1.1 Phase 7: 3/3 plans complete, Phase 8: 2/3 plans complete
+Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) — v1.1 Phase 7: 3/3 plans complete, Phase 8: 3/3 plans complete
 
 ## Performance Metrics
 
@@ -86,6 +86,7 @@ Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) �
 | Phase 07-backend-api-streaming-foundation P03 | ~15min | 2 tasks | 1 files |
 | Phase 08 P01 | ~10min | 3 tasks | 9 files |
 | Phase 08 P02 | ~6min | 2 tasks | 3 files |
+| Phase 08-session-dataset-endpoints P03 | ~4h (checkpoint cycle: live run, root-cause fix, two re-verifications) | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -144,20 +145,22 @@ Recent decisions affecting current work:
 - [Phase 07-backend-api-streaming-foundation]: 07-03: live_llm end-to-end test tolerates SDK-internal ToolSearch meta tool-call events by asserting on the first mcp__bioclaw__* event, not the first event received; checkpoint approved live by Darren (1 passed, 401 unauthenticated / 200 authenticated, localhost-only). Phase 7 complete -- API-01/API-02/API-05 closed.
 - [Phase 08]: 08-01: sessions table implemented exactly per plan spec (additive, upsert-on-touch); session_memory.touch() placed before build_options() in run_session() so zero-tool-call sessions are still listable; _fake_ask_question test double upgraded to touch injected session_memory for real DI-wiring coverage
 - [Phase 08]: 08-02: uploads.py's stage() distinguishes single-file .h5/.h5ad from real 3-file .mtx MEX trio by exact name-set equality, never a naive file-count check; upload_dataset() reads agent_tools.STORE_ROOT as a module-attribute lookup at call time (never copied to a local) so tests' monkeypatch.setattr reliably takes effect
+- [Phase 08]: 08-03: live_llm checkpoint surfaced a real anti-hallucination refusal bug -- POST /api/upload writes directly to SessionMemory via ingest_10x(), bypassing the PostToolUse hook/audit-log path QA_SYSTEM_PROMPT's citation rule assumed existed, so the agent correctly refused to treat an upload-recalled dataset_id as verified. Fixed by explicitly framing "(Session context: ...)" datasets as legitimate, already-verified inputs in QA_SYSTEM_PROMPT (qa/session.py) and SYSTEM_PROMPT/_recall_preamble (agent/session.py), instructing the model to call the appropriate tool on them directly. Also fixed the test's own weak `dataset_id in answer` assertion (passed even on a refusal message) and its impossible exact-id-match expectation (analyze_dataset writes a new store version as output, e.g. recalled `@1` in, cited `@2` out -- pre-existing Phase 2 versioning behavior) -- corrected to check for a resolved analyze_dataset citation plus the version-independent dataset name. Re-verified live twice by Darren against the real Anthropic API (1 passed both times). Phase 8 complete -- API-03/API-04 closed.
 
 ### Pending Todos
 
-v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defined and committed. Phase 7 (all 3 plans: 07-01, 07-02, 07-03) is complete. Phase 8 (Session & Dataset Endpoints, API-03/API-04): Plan 08-01 (session listing + session_id resumption, API-03) and Plan 08-02 (dataset upload endpoint, API-04) are now complete. Plan 08-03 (live_llm end-to-end integration test + human-verify checkpoint, autonomous: false) is next and last for Phase 8.
+v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defined and committed. Phase 7 (all 3 plans) and Phase 8 (all 3 plans: 08-01, 08-02, 08-03; Session & Dataset Endpoints, API-03/API-04) are now complete. Phase 9 (Frontend Chat UI, UI-01..07) is next and needs planning (`/gsd:plan-phase 9`).
 
 ### Blockers/Concerns
 
 - Phase 4 (Bio-FM annotation): RESOLVED at planning time (2026-09-05) — scGPT chosen over Geneformer (PyPI-installable, confirmed CPU-capable via `load_pretrained`, zero-shot reference-mapping needs no fine-tuning; Geneformer's own model card requires GPU and isn't on PyPI). Dependency isolation (scGPT's live PyPI pins) confirmed working, isolated into `bio_fm_worker/.venv`, closed by 04-05.
 - Phase 5 (Perturbation + VCC): GEARS/cell-gears environment isolation was MEDIUM confidence and version-sensitive but resolved by execution. VCC scope question resolved (task format/metrics only, confirmed 2026-09-03). Task 3 (real VCC data download smoke test) remains DEFERRED — no GCP billing account available; gated behind `vcc_data` marker, ready to run when billing is enabled. Non-blocking for milestone completion (public task format/metrics scope was already validated).
 - Phase 6 (NL Q&A): RESOLVED — hallucination-mitigation (claim traceability, confidence surfacing) pattern validated live end to end via 06-03's checkpoint; no longer a research risk, it's a working, tested implementation.
+- Phase 8 (Session & Dataset Endpoints): RESOLVED — 08-03's checkpoint surfaced and fixed a real gap in the citation protocol's coverage (non-tool-call context injection paths like direct upload); no longer a risk for Phase 9/10, which consume this now-complete API surface.
 - Project-wide validation with Elliot Roth: resolved 2026-09-03 (see Decisions above). Remaining open item (non-blocking): check overlap with Cardiac Base Editor / FDT-BioTech on cardiomyocyte single-cell data as an early test dataset (CONCEPT.md).
 
 ## Session Continuity
 
-Last session: 2026-09-12T14:07:44.108Z
-Stopped at: Completed 08-02-PLAN.md
+Last session: 2026-09-12T18:30:00.000Z
+Stopped at: Completed 08-03-PLAN.md
 Resume file: None
