@@ -159,10 +159,10 @@ Plans:
   2. A client can call an endpoint to resume a specific prior session by ID and continue that session's conversation with its prior context intact.
   3. A client can upload a `.mtx`/`.h5` dataset file to an endpoint that invokes `ingest_10x` and returns the ingest result/status as part of the conversation flow.
   4. The session and upload endpoints are gated behind the same shared-password check as Phase 7 — no unauthenticated access.
-**Plans**: 3 plans
+**Plans**: 1/3 plans complete
 
 Plans:
-- [ ] 08-01-PLAN.md — Wave 1: session_id plumbing fix + SessionMemory sessions table + GET /api/sessions[/{id}] (API-03)
+- [x] 08-01-PLAN.md — Wave 1: session_id plumbing fix + SessionMemory sessions table + GET /api/sessions[/{id}] (API-03) (completed 2026-09-12)
 - [ ] 08-02-PLAN.md — Wave 2: POST /api/upload multipart staging (.h5/.mtx trio) + ingest_10x wiring + conversation-flow recall (API-04)
 - [ ] 08-03-PLAN.md — Wave 3: live_llm end-to-end integration test (real upload + real resume) + human-verify checkpoint (API-03, API-04)
 
