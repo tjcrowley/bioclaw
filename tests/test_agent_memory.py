@@ -47,3 +47,42 @@ def test_record_note_is_optional(tmp_path):
     mem.record("sess-1", "pilot@3")
 
     assert mem.recent_datasets("sess-1") == ["pilot@3"]
+
+
+def test_touch_creates_listable_session(tmp_path):
+    mem = SessionMemory(root=tmp_path / "memory.sqlite")
+    mem.touch("sess-1")
+    sessions = mem.list_sessions()
+    assert len(sessions) == 1
+    assert sessions[0]["session_id"] == "sess-1"
+
+
+def test_touch_twice_updates_not_duplicates(tmp_path):
+    mem = SessionMemory(root=tmp_path / "memory.sqlite")
+    mem.touch("sess-1")
+    mem.touch("sess-1")
+    assert len(mem.list_sessions()) == 1
+
+
+def test_list_sessions_orders_by_last_active(tmp_path):
+    mem = SessionMemory(root=tmp_path / "memory.sqlite")
+    mem.touch("sess-1")
+    mem.touch("sess-2")
+    mem.touch("sess-1")  # bump sess-1 back to most-recently-active
+    sessions = mem.list_sessions()
+    assert sessions[0]["session_id"] == "sess-1"
+
+
+def test_list_sessions_includes_recent_datasets(tmp_path):
+    mem = SessionMemory(root=tmp_path / "memory.sqlite")
+    mem.touch("sess-1")
+    mem.record("sess-1", "pilot@1")
+    sessions = mem.list_sessions()
+    assert sessions[0]["recent_datasets"] == ["pilot@1"]
+
+
+def test_session_exists(tmp_path):
+    mem = SessionMemory(root=tmp_path / "memory.sqlite")
+    assert mem.session_exists("nope") is False
+    mem.touch("sess-1")
+    assert mem.session_exists("sess-1") is True

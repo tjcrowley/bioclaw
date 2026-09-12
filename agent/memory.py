@@ -27,6 +27,14 @@ CREATE TABLE IF NOT EXISTS session_memory (
 )
 """
 
+_CREATE_SESSIONS_TABLE_SQL = """
+CREATE TABLE IF NOT EXISTS sessions (
+    session_id TEXT PRIMARY KEY,
+    created_at TEXT NOT NULL,
+    last_active_at TEXT NOT NULL
+)
+"""
+
 
 class SessionMemory:
     """SQLite-backed dataset-reference/finding store, keyed by session_id.
@@ -37,6 +45,7 @@ class SessionMemory:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self._connect() as conn:
             conn.execute(_CREATE_TABLE_SQL)
+            conn.execute(_CREATE_SESSIONS_TABLE_SQL)
 
     def _connect(self) -> sqlite3.Connection:
         return sqlite3.connect(self.path)
@@ -57,3 +66,48 @@ class SessionMemory:
                 (session_id, limit),
             ).fetchall()
         return [r[0] for r in rows]
+
+    def touch(self, session_id: str) -> None:
+        """Marks `session_id` as started/active, making it listable via
+        `list_sessions()` even if no dataset-producing tool call ever
+        happens in this session (API-03). Idempotent: a second call on the
+        same `session_id` upserts `last_active_at` without creating a
+        duplicate row."""
+        now = datetime.now(timezone.utc).isoformat()
+        with self._connect() as conn:
+            conn.execute(
+                "INSERT INTO sessions (session_id, created_at, last_active_at) "
+                "VALUES (?, ?, ?) "
+                "ON CONFLICT(session_id) DO UPDATE SET last_active_at = excluded.last_active_at",
+                (session_id, now, now),
+            )
+            conn.commit()
+
+    def list_sessions(self, limit: int = 50) -> list[dict]:
+        """Returns every touched session, most-recently-active first, each
+        entry including `session_id`, `created_at`, `last_active_at`, and
+        `recent_datasets` (via `recent_datasets()`)."""
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT session_id, created_at, last_active_at FROM sessions "
+                "ORDER BY last_active_at DESC, rowid DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        return [
+            {
+                "session_id": r[0],
+                "created_at": r[1],
+                "last_active_at": r[2],
+                "recent_datasets": self.recent_datasets(r[0]),
+            }
+            for r in rows
+        ]
+
+    def session_exists(self, session_id: str) -> bool:
+        """True only after `touch()` (or any write to the `sessions`
+        table) has been called for `session_id`, False otherwise."""
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT 1 FROM sessions WHERE session_id = ?", (session_id,)
+            ).fetchone()
+        return row is not None

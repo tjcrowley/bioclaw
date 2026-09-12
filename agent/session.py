@@ -202,6 +202,7 @@ async def run_session(
 
     session_memory = session_memory or SessionMemory()
     session_id = session_id or str(uuid.uuid4())
+    session_memory.touch(session_id)  # makes every session listable (API-03), independent of tool-call activity
     options = build_options(
         session_memory,
         session_id,
