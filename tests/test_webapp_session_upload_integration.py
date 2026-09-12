@@ -60,9 +60,33 @@ def test_upload_then_ask_recalls_dataset_in_same_session(tmp_path, analyzable_mt
     ask_body = ask_resp.json()
     assert ask_body["session_id"] == session_id
     assert ask_body["answer"], "Expected a non-empty answer from the real agent"
-    assert dataset_id in ask_body["answer"], (
-        f"Expected the real agent's answer to reference the uploaded dataset_id "
-        f"{dataset_id!r} (recalled via SessionMemory), got: {ask_body['answer']!r}"
+
+    # A substring match on dataset_id is too weak here: the model can quote
+    # a dataset_id while refusing to analyze it (e.g. citing its own
+    # anti-hallucination rule because it did not ingest the dataset itself
+    # in this turn). Require an actual resolved analyze_dataset citation,
+    # proving the model called the tool and produced a real, log-backed
+    # result -- not just that it echoed the recalled id back.
+    citations = ask_body["citations"]
+    analyze_citations = [
+        c for c in citations
+        if "analyze_dataset" in c[0] and c[2] is not None
+    ]
+    assert analyze_citations, (
+        "Expected the real agent to call analyze_dataset on the recalled "
+        f"dataset and cite a resolved tool result, got citations={citations!r} "
+        f"answer={ask_body['answer']!r}"
+    )
+    # analyze_dataset's own output is a NEW store version (the clustered
+    # result), distinct from the raw ingest version recalled here -- so the
+    # exact upload-time dataset_id can never appear verbatim in a real
+    # answer. The dataset *name* (version-independent) is the correct
+    # invariant: it proves the model operated on the right dataset, not a
+    # fabricated one.
+    dataset_name = dataset_id.split("@")[0]
+    assert dataset_name in ask_body["answer"], (
+        f"Expected the real agent's answer to reference the uploaded dataset "
+        f"name {dataset_name!r} (recalled via SessionMemory), got: {ask_body['answer']!r}"
     )
 
     sessions_resp = client.get("/api/sessions", headers={"Authorization": "Bearer testpass"})

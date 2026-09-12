@@ -67,7 +67,15 @@ QA_SYSTEM_PROMPT = (
     "even if you believe you already know the answer from pretraining. Do "
     "not report gene lists, cluster counts, cell-type labels, or "
     "perturbation predictions unless a tool call in THIS session produced "
-    "them and you cite that call's [ref:TOOL_NAME:SHA256_PREFIX] tag."
+    "them and you cite that call's [ref:TOOL_NAME:SHA256_PREFIX] tag. A "
+    "dataset_id surfaced to you via a leading '(Session context: ...)' note "
+    "was already ingested and verified earlier in this logical session "
+    "(e.g. via a web upload) -- it is a legitimate dataset name, not "
+    "something to distrust or ask the user to confirm. Call the "
+    "appropriate tool (e.g. analyze_dataset) on it now to produce your own "
+    "citable tool result; do not refuse the request or defer to the user "
+    "just because you did not personally ingest it earlier in this exact "
+    "turn."
 )
 
 
