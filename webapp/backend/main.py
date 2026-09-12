@@ -1,16 +1,31 @@
-"""FastAPI app: POST /api/ask (API-01) + WS /ws/{stream_id} (API-02), both
-password-gated (API-05). Single Uvicorn worker only -- see
-webapp/backend/streaming.py's module docstring.
+"""FastAPI app: POST /api/ask (API-01) + WS /ws/{stream_id} (API-02) +
+POST /api/upload (API-04), all password-gated (API-05). Single Uvicorn
+worker only -- see webapp/backend/streaming.py's module docstring.
 """
-from fastapi import Depends, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+import uuid
+from typing import Annotated
 
-from webapp.backend import deps, streaming
+from fastapi import (
+    Depends,
+    FastAPI,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+    WebSocket,
+    WebSocketDisconnect,
+)
+
+import agent.tools as agent_tools
+from ingest.pipeline import ingest_10x
+from webapp.backend import deps, streaming, uploads
 from webapp.backend.auth import require_password, require_password_ws
 from webapp.backend.schemas import (
     AskRequest,
     AskResponse,
     SessionListResponse,
     SessionSummary,
+    UploadResponse,
 )
 
 app = FastAPI(title="bioclaw webapp backend")
@@ -50,6 +65,38 @@ async def get_session(
     return SessionSummary(
         session_id=session_id,
         recent_datasets=session_memory.recent_datasets(session_id),
+    )
+
+
+@app.post("/api/upload", dependencies=[Depends(require_password)])
+async def upload_dataset(
+    name: Annotated[str, Form()],
+    files: Annotated[list[UploadFile], File()],
+    session_id: Annotated[str | None, Form()] = None,
+    session_memory=Depends(deps.get_session_memory),
+) -> UploadResponse:
+    try:
+        staged_path = await uploads.stage(files)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    resolved_session_id = session_id or str(uuid.uuid4())
+    try:
+        dataset_id = ingest_10x(staged_path, name, store_root=agent_tools.STORE_ROOT)
+    except Exception as exc:
+        # ingest_10x can raise on a genuinely bad-but-present file (QC rejects every
+        # cell, duplicate name/version race, etc.) -- report it as a conversational
+        # result, not a bare 500 (08-RESEARCH.md Pitfall 5).
+        return UploadResponse(
+            status="error", detail=str(exc), dataset_id=None, session_id=resolved_session_id
+        )
+    finally:
+        uploads.cleanup(staged_path)
+
+    session_memory.touch(resolved_session_id)
+    session_memory.record(resolved_session_id, dataset_id, note=f"uploaded via /api/upload: {name}")
+    return UploadResponse(
+        status="success", dataset_id=dataset_id, detail=None, session_id=resolved_session_id
     )
 
 
