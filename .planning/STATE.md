@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
-current_plan: 08-01
+current_plan: 08-02
 status: execution
-stopped_at: Completed 08-01-PLAN.md
-last_updated: "2026-09-12T14:00:14.744Z"
-last_activity: 2026-09-12 — Plan 08-01 executed autonomously; API-03 closed.
+stopped_at: Completed 08-02-PLAN.md
+last_updated: "2026-09-12T14:08:25.471Z"
+last_activity: 2026-09-12 — Plan 08-02 executed autonomously (no checkpoints); API-04 closed.
 progress:
   total_phases: 10
   completed_phases: 7
   total_plans: 35
-  completed_plans: 33
-  percent: 100
+  completed_plans: 34
+  percent: 97
 ---
 
 # Project State
@@ -27,14 +27,14 @@ See: .planning/PROJECT.md (updated 2026-09-11)
 ## Current Position
 
 Milestone: v1.1 Web UI — Phase 8 in progress
-Phase: 8 of 10 (Session & Dataset Endpoints) — Plan 1 of (at least) 2 complete
-Plan: 08-01 (Wave 1, done -- session listing + session_id resumption, API-03 closed) → 08-02 (dataset upload endpoint, API-04) next
-Current Plan: 08-01
-Next: Execute/plan Plan 08-02 (dataset upload endpoint, API-04)
-Status: Plan 08-01 complete and committed. GET /api/sessions, GET /api/sessions/{session_id}, and POST /api/ask's session_id resumption are all implemented, tested (44 fast-tier tests across the three touched test files, full suite 183 passed/5 deselected), and verified. API-03 closed.
-Last activity: 2026-09-12 — Plan 08-01 executed autonomously (no checkpoints); API-03 closed.
+Phase: 8 of 10 (Session & Dataset Endpoints) — Plans 1-2 of 3 complete
+Plan: 08-02 (Wave 2, done -- dataset upload endpoint, API-04 closed) → 08-03 (Wave 3, live_llm end-to-end integration test + human-verify checkpoint) next
+Current Plan: 08-02
+Next: Execute Plan 08-03 (live_llm end-to-end integration test: real upload + real resume, human-verify checkpoint)
+Status: Plan 08-02 complete and committed. POST /api/upload is implemented (password-gated, .h5/.h5ad single-file or .mtx 3-file-trio, wired to ingest_10x() against agent.tools.STORE_ROOT, dataset_id recorded into SessionMemory and recalled by the next /api/ask in the same session), tested (10 fast-tier tests in tests/test_webapp_upload.py, full suite 193 passed/5 deselected), and verified. API-04 closed.
+Last activity: 2026-09-12 — Plan 08-02 executed autonomously (no checkpoints); API-04 closed.
 
-Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) — v1.1 Phase 7: 3/3 plans complete, Phase 8: 1/3 plans complete
+Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) — v1.1 Phase 7: 3/3 plans complete, Phase 8: 2/3 plans complete
 
 ## Performance Metrics
 
@@ -85,6 +85,7 @@ Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) �
 | Phase 07-backend-api-streaming-foundation P02 | 5min | 2 tasks | 4 files |
 | Phase 07-backend-api-streaming-foundation P03 | ~15min | 2 tasks | 1 files |
 | Phase 08 P01 | ~10min | 3 tasks | 9 files |
+| Phase 08 P02 | ~6min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -142,10 +143,11 @@ Recent decisions affecting current work:
 - [Phase 07-backend-api-streaming-foundation]: 07-02: streaming.drop_queue(stream_id) called in the WS handler's finally block, tying a queue's lifetime to its single WebSocket consumer's connection
 - [Phase 07-backend-api-streaming-foundation]: 07-03: live_llm end-to-end test tolerates SDK-internal ToolSearch meta tool-call events by asserting on the first mcp__bioclaw__* event, not the first event received; checkpoint approved live by Darren (1 passed, 401 unauthenticated / 200 authenticated, localhost-only). Phase 7 complete -- API-01/API-02/API-05 closed.
 - [Phase 08]: 08-01: sessions table implemented exactly per plan spec (additive, upsert-on-touch); session_memory.touch() placed before build_options() in run_session() so zero-tool-call sessions are still listable; _fake_ask_question test double upgraded to touch injected session_memory for real DI-wiring coverage
+- [Phase 08]: 08-02: uploads.py's stage() distinguishes single-file .h5/.h5ad from real 3-file .mtx MEX trio by exact name-set equality, never a naive file-count check; upload_dataset() reads agent_tools.STORE_ROOT as a module-attribute lookup at call time (never copied to a local) so tests' monkeypatch.setattr reliably takes effect
 
 ### Pending Todos
 
-v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defined and committed. Phase 7 (all 3 plans: 07-01, 07-02, 07-03) is complete. Phase 8 (Session & Dataset Endpoints, API-03/API-04): Plan 08-01 (session listing + session_id resumption, API-03) is now complete. Plan 08-02 (dataset upload endpoint, API-04) is next.
+v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defined and committed. Phase 7 (all 3 plans: 07-01, 07-02, 07-03) is complete. Phase 8 (Session & Dataset Endpoints, API-03/API-04): Plan 08-01 (session listing + session_id resumption, API-03) and Plan 08-02 (dataset upload endpoint, API-04) are now complete. Plan 08-03 (live_llm end-to-end integration test + human-verify checkpoint, autonomous: false) is next and last for Phase 8.
 
 ### Blockers/Concerns
 
@@ -156,6 +158,6 @@ v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defin
 
 ## Session Continuity
 
-Last session: 2026-09-12T14:00:09.701Z
-Stopped at: Completed 08-01-PLAN.md
+Last session: 2026-09-12T14:07:44.108Z
+Stopped at: Completed 08-02-PLAN.md
 Resume file: None

@@ -12,7 +12,7 @@
 - [x] **API-01**: FastAPI backend exposes an endpoint that accepts a natural-language question and returns the agent's answer, wrapping `qa/session.py::ask_question()`
 - [x] **API-02**: Backend streams tool-call activity to the client as it happens during agent execution (tool name, args summary, status) over a WebSocket, not just the final answer
 - [x] **API-03**: Backend exposes endpoints to list existing sessions and to resume a session by ID, backed by the existing `SessionMemory` (SQLite) layer
-- [ ] **API-04**: Backend exposes an upload endpoint that accepts a `.mtx`/`.h5` dataset and invokes `ingest_10x` as part of the conversation flow
+- [x] **API-04**: Backend exposes an upload endpoint that accepts a `.mtx`/`.h5` dataset and invokes `ingest_10x` as part of the conversation flow
 - [x] **API-05**: All backend routes are gated behind a single shared password (one shared secret, not per-user accounts) — unauthenticated requests are rejected
 
 ### Frontend Chat UI
@@ -52,7 +52,7 @@
 | API-01 | Phase 7 | Complete |
 | API-02 | Phase 7 | Complete |
 | API-03 | Phase 8 | Complete |
-| API-04 | Phase 8 | Pending |
+| API-04 | Phase 8 | Complete |
 | API-05 | Phase 7 | Complete |
 | UI-01 | Phase 9 | Pending |
 | UI-02 | Phase 9 | Pending |

@@ -159,11 +159,11 @@ Plans:
   2. A client can call an endpoint to resume a specific prior session by ID and continue that session's conversation with its prior context intact.
   3. A client can upload a `.mtx`/`.h5` dataset file to an endpoint that invokes `ingest_10x` and returns the ingest result/status as part of the conversation flow.
   4. The session and upload endpoints are gated behind the same shared-password check as Phase 7 — no unauthenticated access.
-**Plans**: 1/3 plans complete
+**Plans**: 2/3 plans complete
 
 Plans:
 - [x] 08-01-PLAN.md — Wave 1: session_id plumbing fix + SessionMemory sessions table + GET /api/sessions[/{id}] (API-03) (completed 2026-09-12)
-- [ ] 08-02-PLAN.md — Wave 2: POST /api/upload multipart staging (.h5/.mtx trio) + ingest_10x wiring + conversation-flow recall (API-04)
+- [x] 08-02-PLAN.md — Wave 2: POST /api/upload multipart staging (.h5/.mtx trio) + ingest_10x wiring + conversation-flow recall (API-04) (completed 2026-09-12)
 - [ ] 08-03-PLAN.md — Wave 3: live_llm end-to-end integration test (real upload + real resume) + human-verify checkpoint (API-03, API-04)
 
 ### Phase 9: Frontend Chat UI
@@ -205,6 +205,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 5. Perturbation-Response Tool + VCC Benchmark | 6/6 | Complete   | 2026-09-10 |
 | 6. Natural-Language Q&A Capstone | 3/3 | Complete   | 2026-09-11 |
 | 7. Backend API + Streaming Foundation | 3/3 | Complete   | 2026-09-12 |
-| 8. Session & Dataset Endpoints | 0/TBD | Not started | - |
+| 8. Session & Dataset Endpoints | 2/3 | In Progress|  |
 | 9. Frontend Chat UI | 0/TBD | Not started | - |
 | 10. Packaging & Local Verification | 0/TBD | Not started | - |
