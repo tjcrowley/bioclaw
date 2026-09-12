@@ -143,7 +143,7 @@ Plans:
   3. Any request to any backend route without the correct shared-password credential is rejected (unauthenticated).
   4. A request presenting the correct shared password succeeds against the same routes.
   5. The backend runs and is verifiable entirely on localhost — no deployment to any external or production environment.
-**Plans**: 3/3 plans complete
+**Plans**: 3 plans complete
 
 Plans:
 - [x] 07-01-PLAN.md — Wave 1: additive extra_hooks on build_options/run_session/ask_question + webapp/backend schemas.py/auth.py contracts + fastapi[standard] install (API-05, API-02)
@@ -159,7 +159,12 @@ Plans:
   2. A client can call an endpoint to resume a specific prior session by ID and continue that session's conversation with its prior context intact.
   3. A client can upload a `.mtx`/`.h5` dataset file to an endpoint that invokes `ingest_10x` and returns the ingest result/status as part of the conversation flow.
   4. The session and upload endpoints are gated behind the same shared-password check as Phase 7 — no unauthenticated access.
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 08-01-PLAN.md — Wave 1: session_id plumbing fix + SessionMemory sessions table + GET /api/sessions[/{id}] (API-03)
+- [ ] 08-02-PLAN.md — Wave 2: POST /api/upload multipart staging (.h5/.mtx trio) + ingest_10x wiring + conversation-flow recall (API-04)
+- [ ] 08-03-PLAN.md — Wave 3: live_llm end-to-end integration test (real upload + real resume) + human-verify checkpoint (API-03, API-04)
 
 ### Phase 9: Frontend Chat UI
 **Goal**: A researcher-facing, OpenClaw-styled web frontend delivers the full local chat experience — password login, message thread, live tool-call activity, resolvable citations, session sidebar, and dataset upload — consuming the Phase 7-8 API, with no import or runtime dependency on the OpenClaw codebase itself.
