@@ -74,6 +74,7 @@ QA_SYSTEM_PROMPT = (
 async def ask_question(
     question: str,
     session_memory: SessionMemory | None = None,
+    session_id: str | None = None,
     log_path: Path = Path("tool_calls.jsonl"),
     extra_hooks: list | None = None,
 ) -> tuple[str, str, list]:
@@ -90,6 +91,11 @@ async def ask_question(
     session_memory:
         Optional `SessionMemory` for cross-turn dataset-reference recall.
         `run_session()` creates a fresh one if omitted.
+    session_id:
+        Optional known session id (API-03). When given, forwarded verbatim
+        to `run_session()` so the call resumes that session's dataset-
+        reference memory rather than generating a fresh one. `None`
+        (default) preserves the existing fresh-session behavior.
     log_path:
         Path to the JSONL tool-call log (also passed to `run_session()`'s
         PostToolUse logging hook, so citations resolve against the log
@@ -114,6 +120,7 @@ async def ask_question(
     texts, session_id = await run_session(
         question,
         session_memory=session_memory,
+        session_id=session_id,
         log_path=log_path,
         system_prompt=QA_SYSTEM_PROMPT,
         extra_hooks=extra_hooks,

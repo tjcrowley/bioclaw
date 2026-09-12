@@ -158,3 +158,14 @@ class TestAskQuestionWiring:
             )
 
             assert mock_run.call_args.kwargs["extra_hooks"] == [dummy_hook]
+
+    def test_ask_question_forwards_session_id(self, tmp_path):
+        log_path = tmp_path / "tool_calls.jsonl"
+        with patch("qa.session.run_session", new_callable=AsyncMock) as mock_run, \
+             patch("qa.session.verify_answer_citations") as mock_verify:
+            mock_run.return_value = (["answer"], "sess-42")
+            mock_verify.return_value = []
+
+            asyncio.run(ask_question("q", session_id="sess-42", log_path=log_path))
+
+            assert mock_run.call_args.kwargs["session_id"] == "sess-42"

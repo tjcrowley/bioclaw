@@ -23,3 +23,21 @@ class AskResponse(BaseModel):
     answer: str
     session_id: str
     citations: list = []
+
+
+class SessionSummary(BaseModel):
+    session_id: str
+    created_at: str | None = None
+    last_active_at: str | None = None
+    recent_datasets: list[str] = []
+
+
+class SessionListResponse(BaseModel):
+    sessions: list[SessionSummary]
+
+
+class UploadResponse(BaseModel):
+    status: str
+    dataset_id: str | None = None
+    detail: str | None = None
+    session_id: str | None = None
