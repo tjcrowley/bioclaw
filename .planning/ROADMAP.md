@@ -178,7 +178,14 @@ Plans:
   5. A sidebar lists past sessions (from API-03) and lets the researcher resume any of them, restoring that session's thread.
   6. A dataset upload control in the composer (drag-and-drop or file picker) calls API-04 and surfaces ingest progress/result inline in the thread.
   7. The overall visual design (sidebar + main panel layout, dark theme, information density) is modeled on OpenClaw's own web UI, achieved by visual replication in bioclaw's own frontend code only — no OpenClaw code is imported or depended on.
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 09-01-PLAN.md — Wave 1: Frontend scaffold (index.html, style.css, main.js) + POST /api/login + StaticFiles mount (UI-06, UI-07)
+- [ ] 09-02-PLAN.md — Wave 2: JS API client module (api.js): fetch wrapper, WebSocket manager, all endpoint functions (UI-02)
+- [ ] 09-03-PLAN.md — Wave 2: Chat thread + live activity view components (chat.js): message thread, activity events, composer wiring (UI-01, UI-02)
+- [ ] 09-04-PLAN.md — Wave 3: Citation rendering + session sidebar + upload control + full app wiring (citations.js, sessions.js, main.js update) (UI-03, UI-04, UI-05)
+- [ ] 09-05-PLAN.md — Wave 4: Fast-tier suite verification + human-verify browser checkpoint (UI-01..07)
 
 ### Phase 10: Packaging & Local Verification
 **Goal**: The webapp (backend + frontend) ships self-contained in its own directory inside the `bioclaw` repo with its own dependencies, runs locally via a single documented command, and the full v1.1 feature set is manually verified end-to-end on that local run — with no deployment to any production/public environment performed or required.
@@ -206,5 +213,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 6. Natural-Language Q&A Capstone | 3/3 | Complete   | 2026-09-11 |
 | 7. Backend API + Streaming Foundation | 3/3 | Complete   | 2026-09-12 |
 | 8. Session & Dataset Endpoints | 3/3 | Complete   | 2026-09-12 |
-| 9. Frontend Chat UI | 0/TBD | Not started | - |
+| 9. Frontend Chat UI | 0/5 | Not started | - |
 | 10. Packaging & Local Verification | 0/TBD | Not started | - |
