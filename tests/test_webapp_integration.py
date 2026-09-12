@@ -42,9 +42,23 @@ def test_ask_streams_real_tool_events_end_to_end(tmp_path, analyzable_mtx_dir, m
         body = resp.json()
         assert body["answer"], "Expected a non-empty answer from the real agent"
 
-        event = ws.receive_json()
-        assert event["tool_name"].startswith("mcp__bioclaw__"), (
-            f"Expected a real bioclaw tool-call event, got: {event}"
+        # The Claude Agent SDK may emit generic meta-tool events (e.g.
+        # `ToolSearch`, used to discover mcp__bioclaw__* tool schemas) over
+        # the WebSocket before the first real domain tool-call event
+        # arrives. Skip any non-domain events, up to a bounded number of
+        # receives, until a real mcp__bioclaw__* event is found.
+        max_events = 10
+        received_events = []
+        event = None
+        for _ in range(max_events):
+            candidate = ws.receive_json()
+            received_events.append(candidate)
+            if candidate.get("tool_name", "").startswith("mcp__bioclaw__"):
+                event = candidate
+                break
+        assert event is not None, (
+            f"Expected a real bioclaw tool-call event within {max_events} "
+            f"WebSocket messages, but none matched. Received: {received_events}"
         )
 
     print("\n=== WEBAPP E2E ANSWER ===")
