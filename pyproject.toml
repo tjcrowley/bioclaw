@@ -13,6 +13,11 @@ dependencies = [
     "gcsfs>=2026.8.0",
 ]
 
+[project.optional-dependencies]
+web = [
+    "fastapi[standard]>=0.141.1",
+]
+
 [dependency-groups]
 dev = [
     "pytest>=8",
