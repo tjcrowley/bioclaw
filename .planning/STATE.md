@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 current_plan: 07-03
-status: "Plan 07-03 Task 1 executed and committed (tests/test_webapp_integration.py -- live_llm end-to-end test). PAUSED at Task 2's human-verify checkpoint: awaiting a real ANTHROPIC_API_KEY run of the live_llm test plus manual curl auth checks against a locally-running uvicorn process."
-stopped_at: "Plan 07-03 Task 1 complete (commit ac744e8). Paused at Task 2 human-verify checkpoint -- needs manual verification with real ANTHROPIC_API_KEY and BIOCLAW_WEB_PASSWORD, then curl checks against a local uvicorn server. Resume Plan 07-03 after user runs the checkpoint steps and confirms."
-last_updated: "2026-09-12T02:10:00.000Z"
-last_activity: 2026-09-12 — Plan 07-03 Task 1 executed (commit ac744e8); paused at human-verify checkpoint.
+status: planning
+stopped_at: "Completed 07-03-PLAN.md (live_llm end-to-end webapp integration test + phase-gate checkpoint, approved by Darren). Phase 7 (Backend API + Streaming Foundation) is complete. Next: plan Phase 8 (Session & Dataset Endpoints, API-03/API-04)."
+last_updated: "2026-09-12T04:39:37.394Z"
+last_activity: 2026-09-12 — Plan 07-03 checkpoint approved by Darren; Phase 7 complete.
 progress:
   total_phases: 10
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 32
-  completed_plans: 31
-  percent: 97
+  completed_plans: 32
+  percent: 100
 ---
 
 # Project State
@@ -26,15 +26,15 @@ See: .planning/PROJECT.md (updated 2026-09-11)
 
 ## Current Position
 
-Milestone: v1.1 Web UI — Phase 7 in progress
-Phase: 7 of 10 (Backend API + Streaming Foundation) — Wave 2 (07-02) executed
-Plan: 07-01 (Wave 1, done) → 07-02 (Wave 2, done) → 07-03 (Wave 3, Task 1 done, PAUSED at human-verify checkpoint)
+Milestone: v1.1 Web UI — Phase 7 complete
+Phase: 7 of 10 (Backend API + Streaming Foundation) — complete (all 3 plans executed and verified)
+Plan: 07-01 (Wave 1, done) → 07-02 (Wave 2, done) → 07-03 (Wave 3, done -- live_llm checkpoint approved)
 Current Plan: 07-03
-Next: Resume /gsd:execute-phase 7 after human verification of the 07-03 checkpoint (real ANTHROPIC_API_KEY live_llm test + curl auth checks)
-Status: Plan 07-03 Task 1 executed and committed (tests/test_webapp_integration.py, commit ac744e8). PAUSED at Task 2's human-verify checkpoint -- awaiting user to run the live_llm test with a real ANTHROPIC_API_KEY and the manual curl auth checks against a locally-running single-worker uvicorn process (all localhost-only).
-Last activity: 2026-09-12 — Plan 07-03 Task 1 executed (commit ac744e8); paused at human-verify checkpoint.
+Next: Plan Phase 8 (Session & Dataset Endpoints, API-03/API-04) via /gsd:plan-phase 8
+Status: Phase 7 complete -- ready to plan Phase 8. Plan 07-03's live_llm end-to-end test and its checkpoint (real ANTHROPIC_API_KEY, real ask_question() call, real WebSocket tool-call streaming, 401/200 auth gate, localhost-only) were confirmed approved by Darren. API-01, API-02, API-05 all closed.
+Last activity: 2026-09-12 — Plan 07-03 checkpoint approved by Darren; Phase 7 complete.
 
-Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) — v1.1 Phase 7: 2/3 plans complete
+Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) — v1.1 Phase 7: 3/3 plans complete
 
 ## Performance Metrics
 
@@ -83,6 +83,7 @@ Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) �
 | Phase 06-natural-language-qa-capstone P03 | ~95min (cross-session; checkpoint bugfixing) | 2 tasks | 4 files |
 | Phase 07 P01 | 10min | 2 tasks | 11 files |
 | Phase 07-backend-api-streaming-foundation P02 | 5min | 2 tasks | 4 files |
+| Phase 07-backend-api-streaming-foundation P03 | ~15min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -138,10 +139,11 @@ Recent decisions affecting current work:
 - [Phase 07]: [Phase 07-backend-api-streaming-foundation]: 07-01: fastapi[standard] installed via uv add --optional web then uv sync --extra web (never a bare uv sync, which would uninstall the just-added web extra before this task's own fastapi-importing tests run)
 - [Phase 07-backend-api-streaming-foundation]: 07-02: FastAPI WS handler accepts the WebSocket only after require_password_ws's Depends() resolves, relying on FastAPI 0.141's support for raising WebSocketException from a dependency to reject unauthenticated handshakes pre-accept
 - [Phase 07-backend-api-streaming-foundation]: 07-02: streaming.drop_queue(stream_id) called in the WS handler's finally block, tying a queue's lifetime to its single WebSocket consumer's connection
+- [Phase 07-backend-api-streaming-foundation]: 07-03: live_llm end-to-end test tolerates SDK-internal ToolSearch meta tool-call events by asserting on the first mcp__bioclaw__* event, not the first event received; checkpoint approved live by Darren (1 passed, 401 unauthenticated / 200 authenticated, localhost-only). Phase 7 complete -- API-01/API-02/API-05 closed.
 
 ### Pending Todos
 
-v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defined and committed. Phase 7 Plans 07-01 and 07-02 executed; Plan 07-03 (live_llm e2e + human-verify checkpoint) remains to complete Phase 7.
+v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defined and committed. Phase 7 (all 3 plans: 07-01, 07-02, 07-03) is now complete. Phase 8 (Session & Dataset Endpoints, API-03/API-04) is next and needs planning.
 
 ### Blockers/Concerns
 
@@ -152,6 +154,6 @@ v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defin
 
 ## Session Continuity
 
-Last session: 2026-09-12T02:04:02.608Z
-Stopped at: Completed 07-02-PLAN.md (streaming.py queue registry + hook factory, deps.py, main.py FastAPI app with POST /api/ask + WS /ws/{stream_id}). Next: Plan 07-03 (live_llm e2e + human-verify checkpoint).
+Last session: 2026-09-12T04:39:22.850Z
+Stopped at: Completed 07-03-PLAN.md (live_llm end-to-end webapp integration test + phase-gate checkpoint, approved by Darren). Phase 7 (Backend API + Streaming Foundation) is complete. Next: plan Phase 8 (Session & Dataset Endpoints, API-03/API-04).
 Resume file: None
