@@ -11,6 +11,7 @@ import asyncio
 import pytest
 from fastapi.testclient import TestClient
 
+from agent.memory import SessionMemory
 from webapp.backend import auth, deps, schemas, streaming
 from webapp.backend.main import app
 
@@ -111,7 +112,7 @@ def test_drop_queue_removes_entry():
     assert q1 is not q2
 
 
-async def _fake_ask_question(question, session_memory=None, extra_hooks=None, log_path=None):
+async def _fake_ask_question(question, session_memory=None, session_id=None, extra_hooks=None, log_path=None):
     for hook in extra_hooks or []:
         await hook(
             {
@@ -122,7 +123,10 @@ async def _fake_ask_question(question, session_memory=None, extra_hooks=None, lo
             "tool-use-1",
             {},
         )
-    return "fake answer", "sess-1", []
+    resolved_session_id = session_id or "sess-1"
+    if session_memory is not None:
+        session_memory.touch(resolved_session_id)
+    return "fake answer", resolved_session_id, []
 
 
 def test_ask_returns_answer(monkeypatch):
@@ -176,3 +180,89 @@ def test_ws_rejected_without_password(monkeypatch):
     with pytest.raises(Exception):
         with client.websocket_connect("/ws/stream-2"):
             pass
+
+
+def test_ask_resumes_existing_session_id(monkeypatch, tmp_path):
+    monkeypatch.setenv("BIOCLAW_WEB_PASSWORD", "testpass")
+    app.dependency_overrides[deps.get_ask_question] = lambda: _fake_ask_question
+    app.dependency_overrides[deps.get_session_memory] = lambda: SessionMemory(root=tmp_path / "m.sqlite")
+    try:
+        client = TestClient(app)
+        resp = client.post(
+            "/api/ask",
+            json={"question": "q1", "session_id": "sess-42"},
+            headers={"Authorization": "Bearer testpass"},
+        )
+        assert resp.json()["session_id"] == "sess-42"  # NOT a fresh default
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_list_sessions_returns_metadata(monkeypatch, tmp_path):
+    monkeypatch.setenv("BIOCLAW_WEB_PASSWORD", "testpass")
+    mem = SessionMemory(root=tmp_path / "m.sqlite")
+    mem.touch("sess-1")
+    mem.record("sess-1", "pilot@1")
+    app.dependency_overrides[deps.get_session_memory] = lambda: mem
+    try:
+        client = TestClient(app)
+        resp = client.get("/api/sessions", headers={"Authorization": "Bearer testpass"})
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["sessions"][0]["session_id"] == "sess-1"
+        assert body["sessions"][0]["recent_datasets"] == ["pilot@1"]
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_list_sessions_rejected_without_password(monkeypatch):
+    monkeypatch.setenv("BIOCLAW_WEB_PASSWORD", "testpass")
+    client = TestClient(app)
+    resp = client.get("/api/sessions")
+    assert resp.status_code == 401
+
+
+def test_get_session_returns_404_for_unknown_session(monkeypatch, tmp_path):
+    monkeypatch.setenv("BIOCLAW_WEB_PASSWORD", "testpass")
+    app.dependency_overrides[deps.get_session_memory] = lambda: SessionMemory(root=tmp_path / "m.sqlite")
+    try:
+        client = TestClient(app)
+        resp = client.get("/api/sessions/no-such-session", headers={"Authorization": "Bearer testpass"})
+        assert resp.status_code == 404
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_resume_recalls_prior_dataset_reference(monkeypatch, tmp_path):
+    monkeypatch.setenv("BIOCLAW_WEB_PASSWORD", "testpass")
+    mem = SessionMemory(root=tmp_path / "m.sqlite")
+    app.dependency_overrides[deps.get_session_memory] = lambda: mem
+
+    async def _fake_with_recall(question, session_memory=None, session_id=None, extra_hooks=None, log_path=None):
+        sid = session_id or "sess-99"
+        if session_memory is not None:
+            session_memory.touch(sid)
+            if not session_memory.recent_datasets(sid):
+                session_memory.record(sid, "pilot@1")
+        return "answer", sid, []
+
+    app.dependency_overrides[deps.get_ask_question] = lambda: _fake_with_recall
+    try:
+        client = TestClient(app)
+        r1 = client.post(
+            "/api/ask",
+            json={"question": "ingest pilot", "session_id": "sess-99"},
+            headers={"Authorization": "Bearer testpass"},
+        )
+        assert r1.json()["session_id"] == "sess-99"
+        assert mem.recent_datasets("sess-99") == ["pilot@1"]
+
+        r2 = client.post(
+            "/api/ask",
+            json={"question": "what clusters?", "session_id": "sess-99"},
+            headers={"Authorization": "Bearer testpass"},
+        )
+        assert r2.json()["session_id"] == "sess-99"
+        assert mem.recent_datasets("sess-99") == ["pilot@1"]
+    finally:
+        app.dependency_overrides.clear()
