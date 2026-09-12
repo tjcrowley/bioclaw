@@ -75,6 +75,7 @@ async def ask_question(
     question: str,
     session_memory: SessionMemory | None = None,
     log_path: Path = Path("tool_calls.jsonl"),
+    extra_hooks: list | None = None,
 ) -> tuple[str, str, list]:
     """Ask a natural-language question against the bioclaw tool server.
 
@@ -93,6 +94,11 @@ async def ask_question(
         Path to the JSONL tool-call log (also passed to `run_session()`'s
         PostToolUse logging hook, so citations resolve against the log
         this call itself writes).
+    extra_hooks:
+        Optional list of additional `PostToolUse` hook callables, forwarded
+        unchanged to `run_session()`/`build_options()` and appended to the
+        existing logging/memory hooks (e.g. a streaming hook that surfaces
+        tool-call activity to a caller in real time).
 
     Returns
     -------
@@ -110,6 +116,7 @@ async def ask_question(
         session_memory=session_memory,
         log_path=log_path,
         system_prompt=QA_SYSTEM_PROMPT,
+        extra_hooks=extra_hooks,
     )
     answer = texts[0] if texts else ""
     citation_results = verify_answer_citations(answer, log_path)

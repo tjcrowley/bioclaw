@@ -141,3 +141,20 @@ class TestAskQuestionWiring:
 
             assert answer == ""
             mock_verify.assert_called_once_with("", log_path)
+
+    def test_ask_question_forwards_extra_hooks(self, tmp_path):
+        log_path = tmp_path / "tool_calls.jsonl"
+
+        async def dummy_hook(input_data, tool_use_id, context):
+            return {}
+
+        with patch("qa.session.run_session", new_callable=AsyncMock) as mock_run, \
+             patch("qa.session.verify_answer_citations") as mock_verify:
+            mock_run.return_value = (["answer"], "sid")
+            mock_verify.return_value = []
+
+            asyncio.run(
+                ask_question("q", log_path=log_path, extra_hooks=[dummy_hook])
+            )
+
+            assert mock_run.call_args.kwargs["extra_hooks"] == [dummy_hook]

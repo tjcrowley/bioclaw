@@ -149,7 +149,13 @@ def build_options(
     session_id: str,
     log_path: Path = DEFAULT_LOG_PATH,
     system_prompt: str = SYSTEM_PROMPT,
+    extra_hooks: list | None = None,
 ) -> ClaudeAgentOptions:
+    hooks = [
+        _make_log_hook(log_path),
+        record_dataset_reference(session_memory, session_id),
+    ]
+    hooks.extend(extra_hooks or [])
     return ClaudeAgentOptions(
         mcp_servers={"bioclaw": bioclaw_server},
         allowed_tools=["mcp__bioclaw__*"],
@@ -160,16 +166,7 @@ def build_options(
         # bioclaw MCP server, nothing external.
         permission_mode="bypassPermissions",
         system_prompt=system_prompt,
-        hooks={
-            "PostToolUse": [
-                HookMatcher(
-                    hooks=[
-                        _make_log_hook(log_path),
-                        record_dataset_reference(session_memory, session_id),
-                    ]
-                )
-            ]
-        },
+        hooks={"PostToolUse": [HookMatcher(hooks=hooks)]},
         max_turns=30,
     )
 
@@ -180,6 +177,7 @@ async def run_session(
     session_id: str | None = None,
     log_path: Path = DEFAULT_LOG_PATH,
     system_prompt: str = SYSTEM_PROMPT,
+    extra_hooks: list | None = None,
 ) -> tuple[list[str], str]:
     """Runs one or more turns of a Claude Agent SDK session against the
     bioclaw tool server, within a single ClaudeSDKClient context.
@@ -209,6 +207,7 @@ async def run_session(
         session_id,
         log_path=log_path,
         system_prompt=system_prompt,
+        extra_hooks=extra_hooks,
     )
 
     final_texts: list[str] = []

@@ -137,3 +137,28 @@ def test_recall_preamble_nonempty_after_record(tmp_path):
 
     assert preamble != ""
     assert "pilot@1" in preamble
+
+
+async def dummy_hook(input_data, tool_use_id, context):
+    return {}
+
+
+def test_build_options_appends_extra_hooks(tmp_path):
+    mem = SessionMemory(root=tmp_path / "memory.sqlite")
+    options = build_options(
+        mem, "sess-1", log_path=tmp_path / "log.jsonl", extra_hooks=[dummy_hook]
+    )
+
+    post_tool_use = options.hooks["PostToolUse"]
+    assert len(post_tool_use) == 1
+    assert len(post_tool_use[0].hooks) == 3
+    assert dummy_hook in post_tool_use[0].hooks
+
+
+def test_build_options_extra_hooks_defaults_to_none_safely(tmp_path):
+    mem = SessionMemory(root=tmp_path / "memory.sqlite")
+    options = build_options(mem, "sess-1", log_path=tmp_path / "log.jsonl")
+
+    post_tool_use = options.hooks["PostToolUse"]
+    assert len(post_tool_use) == 1
+    assert len(post_tool_use[0].hooks) == 2
