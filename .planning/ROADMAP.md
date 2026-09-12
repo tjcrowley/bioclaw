@@ -20,8 +20,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Bio-FM Tool Layer — Cell-Type Annotation** - The agent calls a bio foundation model as a tool for cell-type annotation, always paired with a statistical baseline (completed 2026-09-08)
 - [x] **Phase 5: Perturbation-Response Tool + VCC Benchmark** - The agent predicts perturbation response as a tool call, independently validated against Arc Institute's public benchmark (completed 2026-09-10)
 - [x] **Phase 6: Natural-Language Q&A Capstone** - A researcher asks a plain-language question and gets a traceable, uncertainty-aware, interpreted answer (completed 2026-09-11)
-- [ ] **Phase 7: Backend API + Streaming Foundation** - A password-gated FastAPI backend wraps `ask_question()` over HTTP and streams live tool-call activity over WebSocket
-- [ ] **Phase 8: Session & Dataset Endpoints** - Backend endpoints expose session list/resume and dataset upload, built on the authenticated Phase 7 foundation
+- [x] **Phase 7: Backend API + Streaming Foundation** - A password-gated FastAPI backend wraps `ask_question()` over HTTP and streams live tool-call activity over WebSocket (completed 2026-09-11)
+- [x] **Phase 8: Session & Dataset Endpoints** - Backend endpoints expose session list/resume and dataset upload, built on the authenticated Phase 7 foundation (completed 2026-09-12)
 - [ ] **Phase 9: Frontend Chat UI** - An OpenClaw-styled chat frontend delivers login, message thread, live tool activity, citation rendering, session sidebar, and dataset upload
 - [ ] **Phase 10: Packaging & Local Verification** - The webapp ships self-contained, runs via one documented command, and is manually verified end-to-end locally
 
