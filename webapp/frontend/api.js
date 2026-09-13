@@ -1,27 +1,89 @@
-// api.js — STUB placeholder (real implementation lands in Plan 09-02).
-//
-// Task 2 of Plan 09-01's test suite (tests/test_webapp_frontend.py) asserts
-// these exports exist and that the file is served as text/javascript, since
-// the full test suite for the whole Phase 9 frontend is authored up front in
-// 09-01. This stub satisfies that contract with no-op bodies; Plan 09-02
-// overwrites this file with the complete API client module.
+// api.js — BioClaw API client module
+// All functions use credentials:'include' to send the session cookie automatically.
+// On 401, a 'bioclaw:unauthorized' CustomEvent is dispatched on window.
 
-export function login() {
-    throw new Error('api.js: not yet implemented (see Plan 09-02)');
+function _handle401() {
+    window.dispatchEvent(new CustomEvent('bioclaw:unauthorized'));
 }
 
-export function askQuestion() {
-    throw new Error('api.js: not yet implemented (see Plan 09-02)');
+async function _fetch(url, opts = {}) {
+    const resp = await fetch(url, { credentials: 'include', ...opts });
+    if (resp.status === 401) {
+        _handle401();
+        throw new Error('unauthorized');
+    }
+    return resp;
 }
 
-export function openToolStream() {
-    throw new Error('api.js: not yet implemented (see Plan 09-02)');
+export async function login(password) {
+    const resp = await fetch('/api/login', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+    });
+    if (!resp.ok) throw new Error('unauthorized');
+    return resp.json();
 }
 
-export function listSessions() {
-    throw new Error('api.js: not yet implemented (see Plan 09-02)');
+export async function askQuestion(question, sessionId, streamId) {
+    const resp = await _fetch('/api/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            question,
+            session_id: sessionId || null,
+            stream_id: streamId || null,
+        }),
+    });
+    if (!resp.ok) throw new Error(`ask failed: ${resp.status}`);
+    return resp.json();
 }
 
-export function uploadDataset() {
-    throw new Error('api.js: not yet implemented (see Plan 09-02)');
+export function openToolStream(streamId, { onEvent, onClose } = {}) {
+    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    // Browser sends session cookie on WS upgrade automatically — no ?session= needed.
+    const ws = new WebSocket(`${protocol}//${location.host}/ws/${streamId}`);
+
+    ws.addEventListener('message', (e) => {
+        try {
+            const event = JSON.parse(e.data);
+            if (typeof onEvent === 'function') onEvent(event);
+        } catch { /* ignore parse errors */ }
+    });
+
+    ws.addEventListener('close', () => {
+        if (typeof onClose === 'function') onClose();
+    });
+
+    ws.addEventListener('error', () => {
+        // WS errors often precede the close event; onClose handles cleanup
+    });
+
+    return {
+        close() { ws.close(); },
+    };
+}
+
+export async function listSessions() {
+    const resp = await _fetch('/api/sessions');
+    if (!resp.ok) throw new Error(`list sessions failed: ${resp.status}`);
+    return resp.json();
+}
+
+export async function getSession(sessionId) {
+    const resp = await _fetch(`/api/sessions/${encodeURIComponent(sessionId)}`);
+    if (resp.status === 404) return null;
+    if (!resp.ok) throw new Error(`get session failed: ${resp.status}`);
+    return resp.json();
+}
+
+export async function uploadDataset(formData) {
+    // formData is a FormData object — do NOT set Content-Type header (browser sets multipart boundary)
+    const resp = await _fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+    });
+    if (!resp.ok) throw new Error(`upload failed: ${resp.status}`);
+    return resp.json();
 }
