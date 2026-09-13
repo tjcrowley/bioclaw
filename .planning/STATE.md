@@ -152,10 +152,11 @@ Recent decisions affecting current work:
 - [Phase 09-frontend-chat-ui]: 09-01: POST /api/login calls auth._valid() directly (bypassing Depends(require_password)) since login IS the auth step, and sets a session cookie whose value is the raw password -- reuses the pre-existing Phase 7 session-cookie contract in auth.py verbatim, no new token scheme. StaticFiles mounted at /app as the LAST route registered so it never shadows /api/* or /ws/*.
 - [Phase 09-frontend-chat-ui]: 09-01: Plan's own tests/test_webapp_frontend.py (forward-authored to cover the whole Phase 9 frontend contract) asserts api.js/chat.js/citations.js/sessions.js exist with specific exports before Plans 09-02/09-03/09-04 actually build them -- added minimal stub modules (exported functions that throw "not yet implemented") so 09-01's own test suite passes now; those plans fully overwrite the stubs via Write, no merge risk.
 - [Phase 09-frontend-chat-ui]: 09-02: api.js implemented exactly per plan's provided code (login, askQuestion, openToolStream, listSessions, getSession, uploadDataset); shared _fetch() helper centralizes credentials:'include' and 401->bioclaw:unauthorized event dispatch; WS URL built from location.protocol/location.host, no password in query string -- no deviations needed
+- [Phase 09-frontend-chat-ui]: 09-03: chat.js implemented exactly per plan's provided code; window.__* global hooks (window.__renderAnswerWithCitations, window.__onNewSessionId, window.__onFilesSelected, window.__currentSessionId) established as the coupling point to citations.js/sessions.js (Plan 09-04), avoiding a circular ES module import (chat.js <-> citations.js); WS-before-POST ordering (openToolStream() called and handlers registered before askQuestion() is awaited) preserved verbatim per 09-RESEARCH.md Pitfall 1 -- no deviations needed
 
 ### Pending Todos
 
-v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defined and committed. Phase 7 (all 3 plans) and Phase 8 (all 3 plans: 08-01, 08-02, 08-03; Session & Dataset Endpoints, API-03/API-04) are complete. Phase 9 (Frontend Chat UI, UI-01..07) is planned (5 plans: 09-01..09-05); 09-01 (frontend scaffold + login endpoint, UI-06/UI-07) and 09-02 (webapp/frontend/api.js — complete API client module, UI-02) are now complete and committed. Next: Plan 09-03 (chat.js, executing concurrently) and Plan 09-04 (sessions.js/citations.js).
+v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defined and committed. Phase 7 (all 3 plans) and Phase 8 (all 3 plans: 08-01, 08-02, 08-03; Session & Dataset Endpoints, API-03/API-04) are complete. Phase 9 (Frontend Chat UI, UI-01..07) is planned (5 plans: 09-01..09-05); 09-01 (frontend scaffold + login endpoint, UI-06/UI-07), 09-02 (webapp/frontend/api.js — complete API client module, UI-02), and 09-03 (webapp/frontend/chat.js — chat thread + live activity view, UI-01/UI-02) are now complete and committed. Next: Plan 09-04 (sessions.js/citations.js — session list, citation modal, upload wiring).
 
 ### Blockers/Concerns
 
@@ -167,6 +168,6 @@ v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defin
 
 ## Session Continuity
 
-Last session: 2026-09-13T07:23:59.186Z
-Stopped at: Completed 09-02-PLAN.md
+Last session: 2026-09-13T07:24:44.000Z
+Stopped at: Completed 09-03-PLAN.md
 Resume file: None
