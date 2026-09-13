@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BioClaw</title>
+  <link rel="stylesheet" href="/app/style.css">
+</head>
+<body>
+  <div id="login-overlay">
+    <div class="login-card">
+      <h1 class="login-title">BioClaw</h1>
+      <p class="login-subtitle">Single-cell research assistant</p>
+      <form id="login-form">
+        <input id="password-input" type="password" placeholder="Password" autocomplete="current-password" required>
+        <button id="login-btn" type="submit">Sign in</button>
+        <p id="login-error" class="error-msg" hidden>Incorrect password.</p>
+      </form>
+    </div>
+  </div>
+
+  <div id="app" hidden>
+    <nav id="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-title">BioClaw</span>
+        <button id="new-session-btn" class="icon-btn" title="New session">+</button>
+      </div>
+      <ul id="session-list" class="session-list"></ul>
+    </nav>
+    <main id="main-panel">
+      <div id="chat-thread" class="chat-thread"></div>
+      <div id="activity-view" class="activity-view" hidden></div>
+      <form id="composer-form" class="composer">
+        <label id="upload-btn" class="upload-btn" title="Upload dataset">
+          &#128196;
+          <input id="file-input" type="file" multiple accept=".h5,.h5ad,.mtx,.tsv.gz" hidden>
+        </label>
+        <input id="question-input" type="text" placeholder="Ask a question about your data..." autocomplete="off">
+        <button id="send-btn" type="submit">Send</button>
+      </form>
+    </main>
+  </div>
+
+  <div id="citation-modal" class="modal" hidden>
+    <div class="modal-backdrop" id="modal-backdrop"></div>
+    <div class="modal-card">
+      <button class="modal-close" id="modal-close-btn">&#x2715;</button>
+      <pre id="citation-detail" class="citation-detail"></pre>
+    </div>
+  </div>
+
+  <script type="module" src="/app/main.js"></script>
+</body>
+</html>
