@@ -41,3 +41,11 @@ class UploadResponse(BaseModel):
     dataset_id: str | None = None
     detail: str | None = None
     session_id: str | None = None
+
+
+class LoginRequest(BaseModel):
+    password: str
+
+
+class LoginResponse(BaseModel):
+    ok: bool

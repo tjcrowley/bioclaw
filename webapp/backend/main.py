@@ -2,6 +2,7 @@
 POST /api/upload (API-04), all password-gated (API-05). Single Uvicorn
 worker only -- see webapp/backend/streaming.py's module docstring.
 """
+import os as _os
 import uuid
 from typing import Annotated
 
@@ -11,18 +12,22 @@ from fastapi import (
     File,
     Form,
     HTTPException,
+    Response,
     UploadFile,
     WebSocket,
     WebSocketDisconnect,
 )
+from fastapi.staticfiles import StaticFiles
 
 import agent.tools as agent_tools
 from ingest.pipeline import ingest_10x
 from webapp.backend import deps, streaming, uploads
-from webapp.backend.auth import require_password, require_password_ws
+from webapp.backend.auth import _valid, require_password, require_password_ws
 from webapp.backend.schemas import (
     AskRequest,
     AskResponse,
+    LoginRequest,
+    LoginResponse,
     SessionListResponse,
     SessionSummary,
     UploadResponse,
@@ -116,3 +121,21 @@ async def stream_events(
         pass
     finally:
         streaming.drop_queue(stream_id)
+
+
+@app.post("/api/login")
+async def login(req: LoginRequest, response: Response) -> LoginResponse:
+    if not _valid(req.password):
+        raise HTTPException(status_code=401, detail="unauthorized")
+    response.set_cookie(
+        key="session",
+        value=req.password,
+        httponly=True,
+        samesite="strict",
+        path="/",
+    )
+    return LoginResponse(ok=True)
+
+
+_FRONTEND_DIR = _os.path.join(_os.path.dirname(__file__), "..", "frontend")
+app.mount("/app", StaticFiles(directory=_FRONTEND_DIR, html=True), name="frontend")
