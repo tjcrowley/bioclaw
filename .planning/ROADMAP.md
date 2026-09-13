@@ -213,5 +213,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 6. Natural-Language Q&A Capstone | 3/3 | Complete   | 2026-09-11 |
 | 7. Backend API + Streaming Foundation | 3/3 | Complete   | 2026-09-12 |
 | 8. Session & Dataset Endpoints | 3/3 | Complete   | 2026-09-12 |
-| 9. Frontend Chat UI | 3/5 | In Progress|  |
+| 9. Frontend Chat UI | 4/5 | In Progress|  |
 | 10. Packaging & Local Verification | 0/TBD | Not started | - |
