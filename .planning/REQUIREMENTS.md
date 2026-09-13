@@ -18,7 +18,7 @@
 ### Frontend Chat UI
 
 - [ ] **UI-01**: Chat-style message thread showing question/answer turns for the active session
-- [ ] **UI-02**: Live tool-call activity view rendered inline as calls happen (ingest/analyze/annotate/predict_perturbation), sourced from the API-02 stream
+- [x] **UI-02**: Live tool-call activity view rendered inline as calls happen (ingest/analyze/annotate/predict_perturbation), sourced from the API-02 stream
 - [ ] **UI-03**: Citations in agent answers (`[ref:TOOL_NAME:SHA256_PREFIX]`) render as inspectable elements resolving to the underlying JSONL audit log entry, not raw bracket tags
 - [ ] **UI-04**: Session sidebar lists past sessions (from API-03) and lets the researcher resume any of them
 - [ ] **UI-05**: Dataset upload control in the composer area (drag-and-drop or file picker) that calls API-04 and surfaces ingest progress/result in the thread
@@ -55,7 +55,7 @@
 | API-04 | Phase 8 | Complete |
 | API-05 | Phase 7 | Complete |
 | UI-01 | Phase 9 | Pending |
-| UI-02 | Phase 9 | Pending |
+| UI-02 | Phase 9 | Complete |
 | UI-03 | Phase 9 | Pending |
 | UI-04 | Phase 9 | Pending |
 | UI-05 | Phase 9 | Pending |

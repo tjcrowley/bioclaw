@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
-current_plan: 09-02
+current_plan: 09-03
 status: execution
-stopped_at: Completed 09-01-PLAN.md
-last_updated: "2026-09-13T07:17:21.538Z"
-last_activity: 2026-09-13 — Plan 09-01 (frontend scaffold + login endpoint) executed and committed.
+stopped_at: Completed 09-03-PLAN.md
+last_updated: "2026-09-13T07:24:44.000Z"
+last_activity: 2026-09-13 — Plan 09-03 (chat.js chat thread + activity view) executed and committed.
 progress:
   total_phases: 10
   completed_phases: 8
   total_plans: 40
-  completed_plans: 36
-  percent: 90
+  completed_plans: 39
+  percent: 98
 ---
 
 # Project State
@@ -27,14 +27,14 @@ See: .planning/PROJECT.md (updated 2026-09-11)
 ## Current Position
 
 Milestone: v1.1 Web UI — Phase 9 in progress
-Phase: 9 of 10 (Frontend Chat UI) — 1/5 plans complete
-Plan: 09-01 (Wave 1, done -- frontend scaffold + POST /api/login + StaticFiles mount) → Plan 09-02 (api.js client module) next
-Current Plan: 09-01
-Next: Plan 09-02 (webapp/frontend/api.js — complete API client module)
-Status: Plan 09-01 complete and committed. Added POST /api/login (direct auth._valid() call, no prior-auth dependency, sets HttpOnly session cookie) and mounted StaticFiles at /app (webapp/frontend/, mounted last so it never shadows /api/* or /ws/*). Built the full dark-theme frontend shell: index.html (#login-overlay + #app with #sidebar/#main-panel), style.css (complete OpenClaw design-token system + grid layout), main.js (auth-check-on-load + login form handler). Deviation: added minimal stub api.js/chat.js/citations.js/sessions.js (exported function names only) because the plan's own forward-authored test suite (tests/test_webapp_frontend.py) asserts those files exist and export specific functions ahead of Plans 09-02/09-03/09-04 actually implementing them; stubs will be fully overwritten by those plans. All 15 tests in tests/test_webapp_frontend.py pass; full fast suite (208 passed, 6 deselected) green. UI-06/UI-07 closed.
-Last activity: 2026-09-13 — Plan 09-01 (frontend scaffold + login endpoint) executed and committed.
+Phase: 9 of 10 (Frontend Chat UI) — 3/5 plans complete
+Plan: 09-03 (Wave 2, done -- chat.js chat thread + live activity view) → Plan 09-04 (sessions.js/citations.js) next
+Current Plan: 09-03
+Next: Plan 09-04 (sessions.js/citations.js — session list, citation modal, upload wiring)
+Status: Plan 09-03 complete and committed. Fully overwrote 09-01's stub `webapp/frontend/chat.js` with the complete chat thread + live activity view component per plan spec verbatim: `sendMessage()` opens the WS stream (via api.js's `openToolStream`) BEFORE calling `askQuestion()` so no early tool events are lost (09-RESEARCH.md Pitfall 1); `appendMessage()` renders XSS-safe user/system bubbles and defers to `window.__renderAnswerWithCitations` for assistant bubbles (hook set later by citations.js in Plan 09-04); `renderActivityEvent()` renders inline tool-call activity with error styling; composer submit, file-input change, and main-panel drag-and-drop are wired to `sendMessage`/`window.__onFilesSelected`. No deviations — api.js (Plan 09-02, executing concurrently) already exported the required `askQuestion`/`openToolStream` signatures via its 09-01 stub, so chat.js's import contract was satisfied throughout. Targeted tests (test_chat_js_exports, test_static_js_files_served) pass; full fast suite green (208 passed, 6 deselected). UI-01/UI-02 closed.
+Last activity: 2026-09-13 — Plan 09-03 (chat.js chat thread + activity view) executed and committed.
 
-Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) — v1.1 Phase 7: 3/3 plans complete, Phase 8: 3/3 plans complete, Phase 9: 1/5 plans complete
+Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) — v1.1 Phase 7: 3/3 plans complete, Phase 8: 3/3 plans complete, Phase 9: 3/5 plans complete
 
 ## Performance Metrics
 
@@ -88,6 +88,8 @@ Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) �
 | Phase 08 P02 | ~6min | 2 tasks | 3 files |
 | Phase 08-session-dataset-endpoints P03 | ~4h (checkpoint cycle: live run, root-cause fix, two re-verifications) | 2 tasks | 3 files |
 | Phase 09-frontend-chat-ui P01 | ~6min | 2 tasks | 10 files |
+| Phase 09-frontend-chat-ui P02 | ~2min | 1 tasks | 1 files |
+| Phase 09-frontend-chat-ui P03 | ~3min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -149,10 +151,11 @@ Recent decisions affecting current work:
 - [Phase 08]: 08-03: live_llm checkpoint surfaced a real anti-hallucination refusal bug -- POST /api/upload writes directly to SessionMemory via ingest_10x(), bypassing the PostToolUse hook/audit-log path QA_SYSTEM_PROMPT's citation rule assumed existed, so the agent correctly refused to treat an upload-recalled dataset_id as verified. Fixed by explicitly framing "(Session context: ...)" datasets as legitimate, already-verified inputs in QA_SYSTEM_PROMPT (qa/session.py) and SYSTEM_PROMPT/_recall_preamble (agent/session.py), instructing the model to call the appropriate tool on them directly. Also fixed the test's own weak `dataset_id in answer` assertion (passed even on a refusal message) and its impossible exact-id-match expectation (analyze_dataset writes a new store version as output, e.g. recalled `@1` in, cited `@2` out -- pre-existing Phase 2 versioning behavior) -- corrected to check for a resolved analyze_dataset citation plus the version-independent dataset name. Re-verified live twice by Darren against the real Anthropic API (1 passed both times). Phase 8 complete -- API-03/API-04 closed.
 - [Phase 09-frontend-chat-ui]: 09-01: POST /api/login calls auth._valid() directly (bypassing Depends(require_password)) since login IS the auth step, and sets a session cookie whose value is the raw password -- reuses the pre-existing Phase 7 session-cookie contract in auth.py verbatim, no new token scheme. StaticFiles mounted at /app as the LAST route registered so it never shadows /api/* or /ws/*.
 - [Phase 09-frontend-chat-ui]: 09-01: Plan's own tests/test_webapp_frontend.py (forward-authored to cover the whole Phase 9 frontend contract) asserts api.js/chat.js/citations.js/sessions.js exist with specific exports before Plans 09-02/09-03/09-04 actually build them -- added minimal stub modules (exported functions that throw "not yet implemented") so 09-01's own test suite passes now; those plans fully overwrite the stubs via Write, no merge risk.
+- [Phase 09-frontend-chat-ui]: 09-02: api.js implemented exactly per plan's provided code (login, askQuestion, openToolStream, listSessions, getSession, uploadDataset); shared _fetch() helper centralizes credentials:'include' and 401->bioclaw:unauthorized event dispatch; WS URL built from location.protocol/location.host, no password in query string -- no deviations needed
 
 ### Pending Todos
 
-v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defined and committed. Phase 7 (all 3 plans) and Phase 8 (all 3 plans: 08-01, 08-02, 08-03; Session & Dataset Endpoints, API-03/API-04) are complete. Phase 9 (Frontend Chat UI, UI-01..07) is planned (5 plans: 09-01..09-05) and 09-01 (frontend scaffold + login endpoint, UI-06/UI-07) is now complete and committed. Next: Plan 09-02 (webapp/frontend/api.js — complete API client module).
+v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defined and committed. Phase 7 (all 3 plans) and Phase 8 (all 3 plans: 08-01, 08-02, 08-03; Session & Dataset Endpoints, API-03/API-04) are complete. Phase 9 (Frontend Chat UI, UI-01..07) is planned (5 plans: 09-01..09-05); 09-01 (frontend scaffold + login endpoint, UI-06/UI-07) and 09-02 (webapp/frontend/api.js — complete API client module, UI-02) are now complete and committed. Next: Plan 09-03 (chat.js, executing concurrently) and Plan 09-04 (sessions.js/citations.js).
 
 ### Blockers/Concerns
 
@@ -164,6 +167,6 @@ v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defin
 
 ## Session Continuity
 
-Last session: 2026-09-13T07:17:21.538Z
-Stopped at: Completed 09-01-PLAN.md
+Last session: 2026-09-13T07:23:59.186Z
+Stopped at: Completed 09-02-PLAN.md
 Resume file: None
