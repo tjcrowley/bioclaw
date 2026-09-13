@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
-current_plan: 08-03
-status: planning
-stopped_at: "Phase 8 (Session & Dataset Endpoints) verified complete (08-VERIFICATION.md, 9/9 must-haves passed). Next: plan Phase 9 (Frontend Chat UI)."
-last_updated: "2026-09-12T18:37:25.073Z"
-last_activity: 2026-09-12 — Plan 08-03 checkpoint approved by Darren; Phase 8 complete.
+current_plan: 09-02
+status: execution
+stopped_at: Completed 09-01-PLAN.md
+last_updated: "2026-09-13T07:17:21.538Z"
+last_activity: 2026-09-13 — Plan 09-01 (frontend scaffold + login endpoint) executed and committed.
 progress:
   total_phases: 10
   completed_phases: 8
-  total_plans: 35
-  completed_plans: 35
-  percent: 100
+  total_plans: 40
+  completed_plans: 36
+  percent: 90
 ---
 
 # Project State
@@ -26,15 +26,15 @@ See: .planning/PROJECT.md (updated 2026-09-11)
 
 ## Current Position
 
-Milestone: v1.1 Web UI — Phase 8 complete
-Phase: 8 of 10 (Session & Dataset Endpoints) — 3/3 plans complete
-Plan: 08-03 (Wave 3, done -- live_llm end-to-end integration test + human-verify checkpoint, approved) → Phase 9 (Frontend Chat UI) next
-Current Plan: 08-03
-Next: Plan Phase 9 (Frontend Chat UI, UI-01..07)
-Status: Plan 08-03 complete and committed. The live_llm test (tests/test_webapp_session_upload_integration.py) initially exposed a real bug: the agent refused to analyze an upload-recalled dataset_id, citing its own anti-hallucination rule, since POST /api/upload bypasses the PostToolUse hook/audit-log path that rule assumed existed. Fixed in qa/session.py + agent/session.py (session-recalled datasets are now explicitly framed as legitimate, already-verified inputs the model must act on with a tool call) and in the test's own assertions (require a resolved analyze_dataset citation, check the version-independent dataset name rather than an impossible exact-id match). Re-verified live twice by Darren against the real Anthropic API (1 passed both times). Manual curl checks (401 unauthenticated, 200 authenticated) passed against a local single-worker uvicorn process; no deployment of any kind performed. Full fast suite green (193 passed, 6 deselected). Phase 8 complete. API-03/API-04 closed.
-Last activity: 2026-09-12 — Plan 08-03 checkpoint approved by Darren; Phase 8 complete.
+Milestone: v1.1 Web UI — Phase 9 in progress
+Phase: 9 of 10 (Frontend Chat UI) — 1/5 plans complete
+Plan: 09-01 (Wave 1, done -- frontend scaffold + POST /api/login + StaticFiles mount) → Plan 09-02 (api.js client module) next
+Current Plan: 09-01
+Next: Plan 09-02 (webapp/frontend/api.js — complete API client module)
+Status: Plan 09-01 complete and committed. Added POST /api/login (direct auth._valid() call, no prior-auth dependency, sets HttpOnly session cookie) and mounted StaticFiles at /app (webapp/frontend/, mounted last so it never shadows /api/* or /ws/*). Built the full dark-theme frontend shell: index.html (#login-overlay + #app with #sidebar/#main-panel), style.css (complete OpenClaw design-token system + grid layout), main.js (auth-check-on-load + login form handler). Deviation: added minimal stub api.js/chat.js/citations.js/sessions.js (exported function names only) because the plan's own forward-authored test suite (tests/test_webapp_frontend.py) asserts those files exist and export specific functions ahead of Plans 09-02/09-03/09-04 actually implementing them; stubs will be fully overwritten by those plans. All 15 tests in tests/test_webapp_frontend.py pass; full fast suite (208 passed, 6 deselected) green. UI-06/UI-07 closed.
+Last activity: 2026-09-13 — Plan 09-01 (frontend scaffold + login endpoint) executed and committed.
 
-Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) — v1.1 Phase 7: 3/3 plans complete, Phase 8: 3/3 plans complete
+Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) — v1.1 Phase 7: 3/3 plans complete, Phase 8: 3/3 plans complete, Phase 9: 1/5 plans complete
 
 ## Performance Metrics
 
@@ -87,6 +87,7 @@ Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) �
 | Phase 08 P01 | ~10min | 3 tasks | 9 files |
 | Phase 08 P02 | ~6min | 2 tasks | 3 files |
 | Phase 08-session-dataset-endpoints P03 | ~4h (checkpoint cycle: live run, root-cause fix, two re-verifications) | 2 tasks | 3 files |
+| Phase 09-frontend-chat-ui P01 | ~6min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -146,10 +147,12 @@ Recent decisions affecting current work:
 - [Phase 08]: 08-01: sessions table implemented exactly per plan spec (additive, upsert-on-touch); session_memory.touch() placed before build_options() in run_session() so zero-tool-call sessions are still listable; _fake_ask_question test double upgraded to touch injected session_memory for real DI-wiring coverage
 - [Phase 08]: 08-02: uploads.py's stage() distinguishes single-file .h5/.h5ad from real 3-file .mtx MEX trio by exact name-set equality, never a naive file-count check; upload_dataset() reads agent_tools.STORE_ROOT as a module-attribute lookup at call time (never copied to a local) so tests' monkeypatch.setattr reliably takes effect
 - [Phase 08]: 08-03: live_llm checkpoint surfaced a real anti-hallucination refusal bug -- POST /api/upload writes directly to SessionMemory via ingest_10x(), bypassing the PostToolUse hook/audit-log path QA_SYSTEM_PROMPT's citation rule assumed existed, so the agent correctly refused to treat an upload-recalled dataset_id as verified. Fixed by explicitly framing "(Session context: ...)" datasets as legitimate, already-verified inputs in QA_SYSTEM_PROMPT (qa/session.py) and SYSTEM_PROMPT/_recall_preamble (agent/session.py), instructing the model to call the appropriate tool on them directly. Also fixed the test's own weak `dataset_id in answer` assertion (passed even on a refusal message) and its impossible exact-id-match expectation (analyze_dataset writes a new store version as output, e.g. recalled `@1` in, cited `@2` out -- pre-existing Phase 2 versioning behavior) -- corrected to check for a resolved analyze_dataset citation plus the version-independent dataset name. Re-verified live twice by Darren against the real Anthropic API (1 passed both times). Phase 8 complete -- API-03/API-04 closed.
+- [Phase 09-frontend-chat-ui]: 09-01: POST /api/login calls auth._valid() directly (bypassing Depends(require_password)) since login IS the auth step, and sets a session cookie whose value is the raw password -- reuses the pre-existing Phase 7 session-cookie contract in auth.py verbatim, no new token scheme. StaticFiles mounted at /app as the LAST route registered so it never shadows /api/* or /ws/*.
+- [Phase 09-frontend-chat-ui]: 09-01: Plan's own tests/test_webapp_frontend.py (forward-authored to cover the whole Phase 9 frontend contract) asserts api.js/chat.js/citations.js/sessions.js exist with specific exports before Plans 09-02/09-03/09-04 actually build them -- added minimal stub modules (exported functions that throw "not yet implemented") so 09-01's own test suite passes now; those plans fully overwrite the stubs via Write, no merge risk.
 
 ### Pending Todos
 
-v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defined and committed. Phase 7 (all 3 plans) and Phase 8 (all 3 plans: 08-01, 08-02, 08-03; Session & Dataset Endpoints, API-03/API-04) are now complete. Phase 9 (Frontend Chat UI, UI-01..07) is next and needs planning (`/gsd:plan-phase 9`).
+v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defined and committed. Phase 7 (all 3 plans) and Phase 8 (all 3 plans: 08-01, 08-02, 08-03; Session & Dataset Endpoints, API-03/API-04) are complete. Phase 9 (Frontend Chat UI, UI-01..07) is planned (5 plans: 09-01..09-05) and 09-01 (frontend scaffold + login endpoint, UI-06/UI-07) is now complete and committed. Next: Plan 09-02 (webapp/frontend/api.js — complete API client module).
 
 ### Blockers/Concerns
 
@@ -161,6 +164,6 @@ v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defin
 
 ## Session Continuity
 
-Last session: 2026-09-12T18:30:00.000Z
-Stopped at: Completed 08-03-PLAN.md
+Last session: 2026-09-13T07:17:21.538Z
+Stopped at: Completed 09-01-PLAN.md
 Resume file: None

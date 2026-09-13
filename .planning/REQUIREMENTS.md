@@ -22,8 +22,8 @@
 - [ ] **UI-03**: Citations in agent answers (`[ref:TOOL_NAME:SHA256_PREFIX]`) render as inspectable elements resolving to the underlying JSONL audit log entry, not raw bracket tags
 - [ ] **UI-04**: Session sidebar lists past sessions (from API-03) and lets the researcher resume any of them
 - [ ] **UI-05**: Dataset upload control in the composer area (drag-and-drop or file picker) that calls API-04 and surfaces ingest progress/result in the thread
-- [ ] **UI-06**: Login screen gated by the shared password; no chat UI is reachable before authenticating
-- [ ] **UI-07**: Visual style modeled on OpenClaw's own web UI (sidebar + main panel layout, dark theme, similar information density) — replicated visually, not by importing OpenClaw code
+- [x] **UI-06**: Login screen gated by the shared password; no chat UI is reachable before authenticating
+- [x] **UI-07**: Visual style modeled on OpenClaw's own web UI (sidebar + main panel layout, dark theme, similar information density) — replicated visually, not by importing OpenClaw code
 
 ### Packaging
 
@@ -59,8 +59,8 @@
 | UI-03 | Phase 9 | Pending |
 | UI-04 | Phase 9 | Pending |
 | UI-05 | Phase 9 | Pending |
-| UI-06 | Phase 9 | Pending |
-| UI-07 | Phase 9 | Pending |
+| UI-06 | Phase 9 | Complete |
+| UI-07 | Phase 9 | Complete |
 | PKG-01 | Phase 10 | Pending |
 | PKG-02 | Phase 10 | Pending |
 
