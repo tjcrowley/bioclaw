@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
-current_plan: 09-04
-status: executing
-stopped_at: Completed 09-04-PLAN.md
-last_updated: "2026-09-13T07:38:39.535Z"
-last_activity: 2026-09-13 — Plan 09-04 (citations.js/sessions.js/main.js wiring) executed and committed.
+current_plan: 09-05
+status: paused
+stopped_at: Plan 09-05 Task 1 complete (fast-tier suite green); PAUSED at Task 2 human-verify checkpoint — awaiting Darren
+last_updated: "2026-09-13T07:46:06.452Z"
+last_activity: 2026-09-13 — Plan 09-05 Task 1 (fast-tier suite verification) executed; paused awaiting Darren's Task 2 browser checkpoint sign-off.
 progress:
   total_phases: 10
-  completed_phases: 8
+  completed_phases: 9
   total_plans: 40
-  completed_plans: 39
-  percent: 98
+  completed_plans: 40
+  percent: 100
 ---
 
 # Project State
@@ -26,15 +26,15 @@ See: .planning/PROJECT.md (updated 2026-09-11)
 
 ## Current Position
 
-Milestone: v1.1 Web UI — Phase 9 in progress
-Phase: 9 of 10 (Frontend Chat UI) — 4/5 plans complete
-Plan: 09-04 (Wave 3, done -- citations.js/sessions.js/main.js wiring) → Plan 09-05 (fast-tier suite verification + human-verify browser checkpoint) next
-Current Plan: 09-04
-Next: Plan 09-05 (Wave 4 — fast-tier suite verification + human-verify browser checkpoint, UI-01..07)
-Status: Plan 09-04 complete and committed. Overwrote 09-01's stubs `webapp/frontend/citations.js` and `webapp/frontend/sessions.js` and replaced `webapp/frontend/main.js` with the fully wired entry point, per plan spec verbatim: `renderAnswerWithCitations()` replaces `[ref:TOOL:SHA]` tags with HTML-escaped `<button class="citation-ref">` elements and `showCitationDetail()` resolves a click to the audit-log record (or a not-found message) in `#citation-modal`; `loadSessionList()`/`resumeSession()`/`addOrRefreshSession()` implement the session sidebar backed by `GET /api/sessions`/`GET /api/sessions/{id}`, with resume re-associating subsequent questions with that `session_id` and surfacing `recent_datasets` as a system message (no full history replay, per 09-RESEARCH.md Pattern 6); `main.js` now imports all four modules and sets every `window.__*` hook (`__bootApp`, `__renderAnswerWithCitations`, `__onNewSessionId`, `__newSession`, `__onFilesSelected`), with `__onFilesSelected` building a `FormData`, calling `uploadDataset()`, and appending the ingest result as a system message. No deviations — all three tasks' provided code used as-is. Targeted tests (test_citations_js_exports, test_sessions_js_exports) pass; full test_webapp_frontend.py suite green (15/15); full fast suite green (208 passed, 6 deselected). UI-03/UI-04/UI-05 closed. Phase 9 now has a complete, runnable frontend end to end.
-Last activity: 2026-09-13 — Plan 09-04 (citations.js/sessions.js/main.js wiring) executed and committed.
+Milestone: v1.1 Web UI — Phase 9 in progress (PAUSED at checkpoint)
+Phase: 9 of 10 (Frontend Chat UI) — 4/5 plans complete, 09-05 in progress (Task 1 done, Task 2 pending human action)
+Plan: 09-05 (Wave 4 — fast-tier suite verification + human-verify browser checkpoint, UI-01..07) — Task 1 done, PAUSED at Task 2
+Current Plan: 09-05
+Next: Darren must perform the Task 2 browser walkthrough (see 09-05-PLAN.md's checkpoint / 09-05-SUMMARY.md) and report "approved" or describe failures; a continuation agent then finalizes 09-05 and Phase 9.
+Status: Plan 09-05 Task 1 complete — full fast-tier suite green (`uv run --extra web pytest tests/ -x -q -m "not live_llm and not bio_fm_smoke and not vcc_data"`: 208 passed, 6 deselected, 0 failed) with zero regressions; all 13 explicitly-named tests in `tests/test_webapp_frontend.py` (login, static serving, JS export contracts, design tokens) pass individually. All 7 UI requirements (UI-01..UI-07) each have at least one passing automated test (see 09-05-SUMMARY.md coverage table). No code changes were needed — no deviations. PAUSED at Task 2 (`type="manual"`, human-verify checkpoint): Darren must start the local backend (`BIOCLAW_WEB_PASSWORD=... ANTHROPIC_API_KEY=... uv run --extra web uvicorn webapp.backend.main:app --port 8000`, localhost-only) and manually click through all 7 requirements in a real browser at `http://localhost:8000/app`, then report back. This plan cannot be completed autonomously.
+Last activity: 2026-09-13 — Plan 09-05 Task 1 (fast-tier suite verification) executed; paused awaiting Darren's Task 2 browser checkpoint sign-off.
 
-Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) — v1.1 Phase 7: 3/3 plans complete, Phase 8: 3/3 plans complete, Phase 9: 4/5 plans complete
+Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) — v1.1 Phase 7: 3/3 plans complete, Phase 8: 3/3 plans complete, Phase 9: 4/5 plans complete, 09-05 paused at human-verify checkpoint
 
 ## Performance Metrics
 
@@ -158,7 +158,7 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defined and committed. Phase 7 (all 3 plans) and Phase 8 (all 3 plans: 08-01, 08-02, 08-03; Session & Dataset Endpoints, API-03/API-04) are complete. Phase 9 (Frontend Chat UI, UI-01..07) is planned (5 plans: 09-01..09-05); 09-01 (frontend scaffold + login endpoint, UI-06/UI-07), 09-02 (webapp/frontend/api.js — complete API client module, UI-02), 09-03 (webapp/frontend/chat.js — chat thread + live activity view, UI-01/UI-02), and 09-04 (citations.js/sessions.js/main.js wiring — citation rendering, session sidebar, upload flow, UI-03/UI-04/UI-05) are now complete and committed. Next: Plan 09-05 (Wave 4 — fast-tier suite verification + human-verify browser checkpoint, UI-01..07).
+v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defined and committed. Phase 7 (all 3 plans) and Phase 8 (all 3 plans: 08-01, 08-02, 08-03; Session & Dataset Endpoints, API-03/API-04) are complete. Phase 9 (Frontend Chat UI, UI-01..07) is planned (5 plans: 09-01..09-05); 09-01 (frontend scaffold + login endpoint, UI-06/UI-07), 09-02 (webapp/frontend/api.js — complete API client module, UI-02), 09-03 (webapp/frontend/chat.js — chat thread + live activity view, UI-01/UI-02), and 09-04 (citations.js/sessions.js/main.js wiring — citation rendering, session sidebar, upload flow, UI-03/UI-04/UI-05) are complete and committed. Plan 09-05 Task 1 (fast-tier suite verification, all 208 tests + 13 targeted frontend tests green) is done; PAUSED at Task 2 (human-verify browser checkpoint) — awaiting Darren to manually walk through UI-01..UI-07 in a browser and report back before Phase 9 and this plan can be marked complete.
 
 ### Blockers/Concerns
 
@@ -167,9 +167,10 @@ v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defin
 - Phase 6 (NL Q&A): RESOLVED — hallucination-mitigation (claim traceability, confidence surfacing) pattern validated live end to end via 06-03's checkpoint; no longer a research risk, it's a working, tested implementation.
 - Phase 8 (Session & Dataset Endpoints): RESOLVED — 08-03's checkpoint surfaced and fixed a real gap in the citation protocol's coverage (non-tool-call context injection paths like direct upload); no longer a risk for Phase 9/10, which consume this now-complete API surface.
 - Project-wide validation with Elliot Roth: resolved 2026-09-03 (see Decisions above). Remaining open item (non-blocking): check overlap with Cardiac Base Editor / FDT-BioTech on cardiomyocyte single-cell data as an early test dataset (CONCEPT.md).
+- Phase 9 Plan 09-05 PAUSED at Task 2 human-verify checkpoint — Darren must start the local backend (BIOCLAW_WEB_PASSWORD + ANTHROPIC_API_KEY, uv run --extra web uvicorn webapp.backend.main:app --port 8000, localhost-only) and manually verify UI-01..UI-07 at http://localhost:8000/app, then report back. Fast-tier suite is already green (208 passed, 6 deselected) — this is the only remaining step before Phase 9 completes.
 
 ## Session Continuity
 
-Last session: 2026-09-13T07:35:46.891Z
-Stopped at: Completed 09-04-PLAN.md
+Last session: 2026-09-13T07:46:06.448Z
+Stopped at: Plan 09-05 Task 1 complete (fast-tier suite green); PAUSED at Task 2 human-verify checkpoint — awaiting Darren
 Resume file: None
