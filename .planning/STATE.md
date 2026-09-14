@@ -4,9 +4,9 @@ milestone: v1.1
 milestone_name: milestone
 current_plan: 09-05
 status: paused
-stopped_at: Plan 09-05 Task 1 complete (fast-tier suite green); PAUSED at Task 2 human-verify checkpoint — awaiting Darren
-last_updated: "2026-09-13T07:46:06.452Z"
-last_activity: 2026-09-13 — Plan 09-05 Task 1 (fast-tier suite verification) executed; paused awaiting Darren's Task 2 browser checkpoint sign-off.
+stopped_at: Plan 09-05 Task 1 complete (fast-tier suite green); Task 2 human-verify checkpoint found a real bug (login overlay CSS specificity), fixed in commit 04ae403; checkpoint still PENDING Darren's re-verification
+last_updated: "2026-09-14T00:28:51.701Z"
+last_activity: 2026-09-13 — Bug found during Darren's Task 2 human-verify browser test (correct password did not transition off the login screen); root-caused to a CSS specificity conflict in webapp/frontend/style.css (#login-overlay/#app ID-selector display rules beating the UA [hidden]{display:none} rule), fixed and committed (04ae403); backend auth confirmed correct via curl cookie-jar test; fast-tier suite re-confirmed green (208 passed). Checkpoint still PENDING — Darren must re-test in browser before Phase 9/plan 09-05 can be marked complete.
 progress:
   total_phases: 10
   completed_phases: 9
@@ -30,9 +30,9 @@ Milestone: v1.1 Web UI — Phase 9 in progress (PAUSED at checkpoint)
 Phase: 9 of 10 (Frontend Chat UI) — 4/5 plans complete, 09-05 in progress (Task 1 done, Task 2 pending human action)
 Plan: 09-05 (Wave 4 — fast-tier suite verification + human-verify browser checkpoint, UI-01..07) — Task 1 done, PAUSED at Task 2
 Current Plan: 09-05
-Next: Darren must perform the Task 2 browser walkthrough (see 09-05-PLAN.md's checkpoint / 09-05-SUMMARY.md) and report "approved" or describe failures; a continuation agent then finalizes 09-05 and Phase 9.
-Status: Plan 09-05 Task 1 complete — full fast-tier suite green (`uv run --extra web pytest tests/ -x -q -m "not live_llm and not bio_fm_smoke and not vcc_data"`: 208 passed, 6 deselected, 0 failed) with zero regressions; all 13 explicitly-named tests in `tests/test_webapp_frontend.py` (login, static serving, JS export contracts, design tokens) pass individually. All 7 UI requirements (UI-01..UI-07) each have at least one passing automated test (see 09-05-SUMMARY.md coverage table). No code changes were needed — no deviations. PAUSED at Task 2 (`type="manual"`, human-verify checkpoint): Darren must start the local backend (`BIOCLAW_WEB_PASSWORD=... ANTHROPIC_API_KEY=... uv run --extra web uvicorn webapp.backend.main:app --port 8000`, localhost-only) and manually click through all 7 requirements in a real browser at `http://localhost:8000/app`, then report back. This plan cannot be completed autonomously.
-Last activity: 2026-09-13 — Plan 09-05 Task 1 (fast-tier suite verification) executed; paused awaiting Darren's Task 2 browser checkpoint sign-off.
+Next: Darren must re-test in his browser at http://localhost:8000/app (hard-refresh to bypass cache) after the CSS fix, confirm login now works and all 7 UI requirements pass, and report back "approved" or describe remaining failures; a continuation agent then finalizes 09-05 and Phase 9.
+Status: Plan 09-05 Task 1 complete — full fast-tier suite green (`uv run --extra web pytest tests/ -x -q -m "not live_llm and not bio_fm_smoke and not vcc_data"`: 208 passed, 6 deselected, 0 failed) with zero regressions; all 13 explicitly-named tests in `tests/test_webapp_frontend.py` (login, static serving, JS export contracts, design tokens) pass individually. All 7 UI requirements (UI-01..UI-07) each have at least one passing automated test (see 09-05-SUMMARY.md coverage table). Task 2 (`type="manual"`, human-verify checkpoint) is IN PROGRESS: Darren's first browser walkthrough surfaced a real bug ("incorrect password says 'incorrect password' but the correct password sends me back to the password form") -- root cause was a CSS specificity conflict in webapp/frontend/style.css where `#login-overlay`/`#app` ID-selector `display` rules always beat the browser's default `[hidden]{display:none}` rule, so `main.js`'s `showApp()`/`showLogin()` toggling of the `hidden` DOM property had no visual effect (the backend auth flow itself was already correct, confirmed via curl cookie-jar test: wrong password->401, correct password->200+Set-Cookie, authenticated /api/sessions with cookie->200). Fixed with a 7-line CSS addition (`#login-overlay[hidden], #app[hidden] { display: none; }`), committed as 04ae403; fast-tier suite re-run green (208 passed, no regressions). This fix was auto-applied per Deviation Rule 1 (bug fix, no architectural change) -- the human-verify checkpoint itself is STILL PENDING and cannot be marked complete until Darren re-tests in his browser and confirms.
+Last activity: 2026-09-13 — Bug found and fixed during Darren's Task 2 human-verify browser test; checkpoint still pending Darren's re-verification.
 
 Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) — v1.1 Phase 7: 3/3 plans complete, Phase 8: 3/3 plans complete, Phase 9: 4/5 plans complete, 09-05 paused at human-verify checkpoint
 
@@ -155,6 +155,7 @@ Recent decisions affecting current work:
 - [Phase 09-frontend-chat-ui]: 09-02: api.js implemented exactly per plan's provided code (login, askQuestion, openToolStream, listSessions, getSession, uploadDataset); shared _fetch() helper centralizes credentials:'include' and 401->bioclaw:unauthorized event dispatch; WS URL built from location.protocol/location.host, no password in query string -- no deviations needed
 - [Phase 09-frontend-chat-ui]: 09-03: chat.js implemented exactly per plan's provided code; window.__* global hooks (window.__renderAnswerWithCitations, window.__onNewSessionId, window.__onFilesSelected, window.__currentSessionId) established as the coupling point to citations.js/sessions.js (Plan 09-04), avoiding a circular ES module import (chat.js <-> citations.js); WS-before-POST ordering (openToolStream() called and handlers registered before askQuestion() is awaited) preserved verbatim per 09-RESEARCH.md Pitfall 1 -- no deviations needed
 - [Phase 09-frontend-chat-ui]: 09-04: citations.js/sessions.js/main.js implemented exactly per plan's provided code verbatim -- no deviations. Delegated .citation-ref click listener lives inside citations.js itself (attached to #chat-thread at module load) so chat.js never imports citations.js, preserving the window.* hook-only coupling pattern from 09-03.
+- [Phase 09-frontend-chat-ui]: 09-05 checkpoint: bug found and fixed during Darren's Task 2 human-verify browser test -- login overlay CSS specificity bug (#login-overlay/#app ID-selector display rules beat UA [hidden]{display:none}), fixed by adding #login-overlay[hidden],#app[hidden]{display:none} to style.css (commit 04ae403). Backend auth was never broken (confirmed via curl cookie-jar test). Checkpoint remains PENDING Darren's re-verification.
 
 ### Pending Todos
 
@@ -167,10 +168,10 @@ v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defin
 - Phase 6 (NL Q&A): RESOLVED — hallucination-mitigation (claim traceability, confidence surfacing) pattern validated live end to end via 06-03's checkpoint; no longer a research risk, it's a working, tested implementation.
 - Phase 8 (Session & Dataset Endpoints): RESOLVED — 08-03's checkpoint surfaced and fixed a real gap in the citation protocol's coverage (non-tool-call context injection paths like direct upload); no longer a risk for Phase 9/10, which consume this now-complete API surface.
 - Project-wide validation with Elliot Roth: resolved 2026-09-03 (see Decisions above). Remaining open item (non-blocking): check overlap with Cardiac Base Editor / FDT-BioTech on cardiomyocyte single-cell data as an early test dataset (CONCEPT.md).
-- Phase 9 Plan 09-05 PAUSED at Task 2 human-verify checkpoint — Darren must start the local backend (BIOCLAW_WEB_PASSWORD + ANTHROPIC_API_KEY, uv run --extra web uvicorn webapp.backend.main:app --port 8000, localhost-only) and manually verify UI-01..UI-07 at http://localhost:8000/app, then report back. Fast-tier suite is already green (208 passed, 6 deselected) — this is the only remaining step before Phase 9 completes.
+- Phase 9 Plan 09-05 PAUSED at Task 2 human-verify checkpoint — Darren's first browser test found a real bug (login overlay CSS specificity: correct password appeared to bounce back to the login form even though backend auth and app-shell rendering were both correct underneath an overlay that never visually hid). Fixed in webapp/frontend/style.css, commit 04ae403; fast-tier suite re-confirmed green (208 passed, 6 deselected). Darren must restart the local backend (BIOCLAW_WEB_PASSWORD + ANTHROPIC_API_KEY, uv run --extra web uvicorn webapp.backend.main:app --port 8000, localhost-only), hard-refresh http://localhost:8000/app to load the new CSS, and re-verify UI-01..UI-07, then report back. This is the only remaining step before Phase 9 completes.
 
 ## Session Continuity
 
-Last session: 2026-09-13T07:46:06.448Z
-Stopped at: Plan 09-05 Task 1 complete (fast-tier suite green); PAUSED at Task 2 human-verify checkpoint — awaiting Darren
+Last session: 2026-09-14T00:28:51.701Z
+Stopped at: Plan 09-05 Task 1 complete (fast-tier suite green); Task 2 human-verify checkpoint found and fixed a real bug (login overlay CSS specificity, commit 04ae403); checkpoint still PENDING Darren's re-verification at http://localhost:8000/app
 Resume file: None
