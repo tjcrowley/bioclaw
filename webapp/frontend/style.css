@@ -34,6 +34,13 @@ body {
   background: var(--bg-page);
   z-index: 100;
 }
+/* #login-overlay/#app's own `display` declarations (specificity 1,0,0) beat the
+   UA stylesheet's `[hidden] { display: none }` (specificity 0,1,0), so toggling
+   the `hidden` property from JS had no visual effect without these overrides. */
+#login-overlay[hidden],
+#app[hidden] {
+  display: none;
+}
 .login-card {
   background: var(--bg-panel);
   border: 1px solid var(--border);
