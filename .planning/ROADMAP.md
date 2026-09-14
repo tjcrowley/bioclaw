@@ -22,7 +22,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 6: Natural-Language Q&A Capstone** - A researcher asks a plain-language question and gets a traceable, uncertainty-aware, interpreted answer (completed 2026-09-11)
 - [x] **Phase 7: Backend API + Streaming Foundation** - A password-gated FastAPI backend wraps `ask_question()` over HTTP and streams live tool-call activity over WebSocket (completed 2026-09-11)
 - [x] **Phase 8: Session & Dataset Endpoints** - Backend endpoints expose session list/resume and dataset upload, built on the authenticated Phase 7 foundation (completed 2026-09-12)
-- [ ] **Phase 9: Frontend Chat UI** - An OpenClaw-styled chat frontend delivers login, message thread, live tool activity, citation rendering, session sidebar, and dataset upload
+- [x] **Phase 9: Frontend Chat UI** - An OpenClaw-styled chat frontend delivers login, message thread, live tool activity, citation rendering, session sidebar, and dataset upload (completed 2026-09-14)
 - [ ] **Phase 10: Packaging & Local Verification** - The webapp ships self-contained, runs via one documented command, and is manually verified end-to-end locally
 
 ## Phase Details
@@ -213,5 +213,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 6. Natural-Language Q&A Capstone | 3/3 | Complete   | 2026-09-11 |
 | 7. Backend API + Streaming Foundation | 3/3 | Complete   | 2026-09-12 |
 | 8. Session & Dataset Endpoints | 3/3 | Complete   | 2026-09-12 |
-| 9. Frontend Chat UI | 4/5 | In Progress|  |
+| 9. Frontend Chat UI | 5/5 | Complete   | 2026-09-14 |
 | 10. Packaging & Local Verification | 0/TBD | Not started | - |

@@ -26,28 +26,29 @@ key-files:
 
 key-decisions:
   - "No code changes made in Task 1 (as specified) — Task 1 is a pure verification run; zero deviations were needed since the full suite passed on first run"
-  - "During Darren's manual browser verification (Task 2), a real bug was found and fixed: login overlay CSS specificity bug (see below). This was fixed under Deviation Rule 1 (auto-fix bugs) — no architectural change, no user decision needed for the fix itself. The human-verify checkpoint task remains NOT complete pending Darren's re-test."
+  - "During Darren's manual browser verification (Task 2), a real bug was found and fixed: login overlay CSS specificity bug (see below). This was fixed under Deviation Rule 1 (auto-fix bugs) — no architectural change, no user decision needed for the fix itself."
+  - "Darren re-tested in his browser after the CSS fix (commit 04ae403) and replied 'approved' on 2026-09-13 — login gate, dark theme, chat thread, live activity, citations, session sidebar, and upload all confirmed working. Task 2 (human-verify checkpoint) is now complete; Phase 9 (UI-01..UI-07) is complete."
 
 patterns-established: []
 
-requirements-completed: []
+requirements-completed: [UI-01, UI-02, UI-03, UI-04, UI-05, UI-06, UI-07]
 
 # Metrics
-duration: ~5min (Task 1) + ~20min (bug investigation/fix/verify during Task 2 checkpoint)
+duration: ~5min (Task 1) + ~20min (bug investigation/fix/verify) + human re-verification turnaround
 completed: 2026-09-13
 ---
 
-# Phase 9 Plan 05: Fast-Tier Suite Verification + Human-Verify Checkpoint Summary (PAUSED)
+# Phase 9 Plan 05: Fast-Tier Suite Verification + Human-Verify Checkpoint Summary
 
-**Full fast-tier suite confirmed green (208 passed, 6 deselected, 0 failed) with all 13 targeted `test_webapp_frontend.py` tests passing; plan is now paused awaiting Darren's manual browser walkthrough of UI-01..UI-07 (Task 2, not yet performed).**
+**Full fast-tier suite confirmed green (208 passed, 6 deselected, 0 failed) with all 13 targeted `test_webapp_frontend.py` tests passing; Darren completed the manual browser walkthrough of UI-01..UI-07 and replied "approved" after the CSS fix. Phase 9 is complete.**
 
 ## Performance
 
-- **Duration:** ~5 min (Task 1 automated verification only)
+- **Duration:** ~5 min (Task 1 automated verification) + ~20 min (bug fix cycle) + human re-verification turnaround
 - **Started:** 2026-09-13 (this session)
-- **Completed:** Task 1 complete; Task 2 (human-verify) NOT started
-- **Tasks:** 1/2 complete
-- **Files modified:** 0 (verification-only plan, no code changes)
+- **Completed:** 2026-09-13 — both tasks complete, checkpoint approved by Darren
+- **Tasks:** 2/2 complete
+- **Files modified:** 1 (`webapp/frontend/style.css` — bug fix, see below)
 
 ## Accomplishments
 - Ran `uv run --extra web pytest tests/ -x -q -m "not live_llm and not bio_fm_smoke and not vcc_data"` — **208 passed, 6 deselected, 0 failed, 74 warnings** (all pre-existing/benign deprecation warnings from scanpy/polars/cell_eval, unrelated to Phase 9)
@@ -72,10 +73,10 @@ All seven requirements have at least one passing automated test. This closes the
 
 Task 1 made no code changes (pure verification run, per plan's `<objective>`: "No code changes are made in this plan"). No commit was created for Task 1 — nothing to stage. This SUMMARY.md and STATE.md updates are the only artifacts of this session, committed as plan metadata below.
 
-Task 2 (human-verify checkpoint) has **not been executed** — it requires Darren to manually operate a browser and cannot be performed or simulated by the executor.
+Task 2 (human-verify checkpoint) required Darren to manually operate a browser and could not be performed or simulated by the executor. Darren completed it in two passes (first pass found the CSS bug fixed in 04ae403, second pass confirmed the fix and replied "approved") — see "Checkpoint: Human Verification — APPROVED" below.
 
 ## Files Created/Modified
-None — this plan is verification-only per its frontmatter (`files_modified: []`).
+- `webapp/frontend/style.css` — bug fix during Task 2 checkpoint (see "Bug Found & Fixed" section below); no other files modified. This plan is otherwise verification-only per its frontmatter (`files_modified: []`).
 
 ## Decisions Made
 None beyond what's in key-decisions above.
@@ -87,29 +88,37 @@ None — plan executed exactly as written up to the checkpoint. The full fast-ti
 ## Issues Encountered
 None.
 
-## Checkpoint: Human Verification Required (NOT YET PERFORMED)
+## Checkpoint: Human Verification — APPROVED
 
-**This plan is PAUSED at Task 2 (`type="manual"`, human-verify checkpoint).** It cannot be completed by an autonomous agent. See the orchestrator response for the full checkpoint report, including:
-- Exact commands to start the local backend (binds to `127.0.0.1`/`localhost` only, per the standing local-only constraint)
-- The browser URL to open (`http://localhost:8000/app`)
-- A checklist of all 7 UI requirements (UI-01..UI-07) to click through and confirm visually
+**Task 2 (`type="manual"`, human-verify checkpoint) is complete.** Darren's first browser walkthrough surfaced the login-overlay CSS bug documented below; after the fix (commit 04ae403) he restarted the local backend, hard-refreshed `http://localhost:8000/app`, re-ran the full UI-01..UI-07 checklist, and replied **"approved"** on 2026-09-13.
 
-Darren must complete the browser walkthrough and report back ("approved" or a description of what failed) before this plan can be marked complete. No deployment, provisioning, or remote-host action is required or was taken.
+Confirmed working in the browser:
+- UI-06 (login gate): unauthenticated load shows only the login overlay; wrong password shows inline error with chat UI hidden; correct password now correctly transitions to the chat UI (the bug this checkpoint caught)
+- UI-07 (dark theme): dark background, left sidebar + main panel layout resembling OpenClaw's own UI
+- UI-01 (chat thread): question/answer bubbles render correctly
+- UI-02 (live activity): tool-call activity panel appears during agent work and clears on answer arrival
+- UI-03 (citations): citation buttons render (not raw `[ref:...]` text) and open the audit-log detail view
+- UI-04 (session sidebar): past sessions list and resume-session flow work
+- UI-05 (upload): file picker/drag-drop upload flow surfaces progress and result in the thread
+
+No deployment, provisioning, or remote-host action was required or taken — verification was entirely local (`127.0.0.1`/`localhost`).
 
 ## User Setup Required
 
-To perform the pending human-verify step, Darren needs:
-- A chosen `BIOCLAW_WEB_PASSWORD` value (any string)
-- `ANTHROPIC_API_KEY` set in the environment (for real `ask_question()` calls during the walkthrough — chat responses will not work without it)
-- A local browser to visit `http://localhost:8000/app` once the dev server (started locally, per the checkpoint instructions) is running
+Darren performed the human-verify step using:
+- A chosen `BIOCLAW_WEB_PASSWORD` value
+- `ANTHROPIC_API_KEY` set in the environment (for real `ask_question()` calls during the walkthrough)
+- A local browser at `http://localhost:8000/app` against the locally-run dev server
+
+No further setup is required — the checkpoint is closed.
 
 ## Next Phase Readiness
 
-Not ready. Phase 9 cannot be marked complete, STATE.md's Current Plan cannot advance past 09-05, and Phase 10 cannot begin until Darren performs the Task 2 browser walkthrough and signs off. Once approved, a continuation agent should be spawned to finalize this plan (mark Task 2 done, run the final `roadmap update-plan-progress` / `requirements mark-complete` steps for UI-01..UI-07, and produce the final metadata commit).
+Ready. Phase 9 (UI-01..UI-07) is complete — all seven requirements have both a passing automated test and a Darren-approved manual browser verification. STATE.md's Current Plan advances past 09-05, and Phase 10 (Packaging & Local Verification) may begin.
 
 ---
 *Phase: 09-frontend-chat-ui*
-*Status: PAUSED at human-verify checkpoint (Task 2 of 2) — bug found and fixed during Darren's manual re-test; checkpoint still requires Darren's re-verification and sign-off*
+*Status: COMPLETE — human-verify checkpoint approved by Darren on 2026-09-13 after the CSS fix (commit 04ae403)*
 
 ## Self-Check: PASSED (Task 1)
 
@@ -117,7 +126,7 @@ No files were created/modified by Task 1 to verify (verification-only plan). Tes
 
 ---
 
-## Bug Found & Fixed During Human-Verify Checkpoint (Task 2, in progress — distinct from Task 1)
+## Bug Found & Fixed During Human-Verify Checkpoint (Task 2 — distinct from Task 1)
 
 While Darren was performing the Task 2 manual browser walkthrough at `http://localhost:8000/app`, he reported:
 
@@ -153,7 +162,7 @@ Minimal CSS addition to `webapp/frontend/style.css` (7 lines): added `#login-ove
    - This independently reconfirmed the backend auth flow was never broken, isolating the bug entirely to the CSS layer.
 3. **Served-asset check:** `curl http://127.0.0.1:8009/app/style.css` confirmed the new `[hidden]` override rules are present in what the browser will actually load.
 
-Browser-level visual re-verification (does the overlay actually disappear on screen after a correct password) still requires Darren, since this executor has no browser/DOM rendering environment available — this is exactly what the still-pending Task 2 human-verify checkpoint is for.
+Browser-level visual re-verification (does the overlay actually disappear on screen after a correct password) required Darren, since this executor has no browser/DOM rendering environment available — this is exactly what the Task 2 human-verify checkpoint was for, and it has now been completed (see "Checkpoint: Human Verification — APPROVED" above).
 
 ### Deviation classification
 
@@ -166,18 +175,21 @@ Browser-level visual re-verification (does the overlay actually disappear on scr
 
 This was auto-fixed per Deviation Rule 1 (bug directly caused by/discovered in the current plan's scope, no architectural change, no user decision required for the fix). No user permission was needed to apply it.
 
-### Checkpoint status — STILL PENDING
+### Checkpoint status — APPROVED
 
-**The Task 2 human-verify checkpoint is NOT complete.** A bug was found and fixed, but per protocol this executor cannot self-approve a human-verify checkpoint. Darren must:
-1. Restart the local dev server (`BIOCLAW_WEB_PASSWORD=... uv run --extra web uvicorn webapp.backend.main:app --port 8000`, binds to localhost only)
-2. Re-visit `http://localhost:8000/app` in his browser (hard-refresh / bypass cache to ensure the new `style.css` is loaded, e.g. Cmd+Shift+R)
-3. Confirm: wrong password still shows the inline error; correct password now actually transitions to the chat UI (sidebar + composer visible, login overlay gone)
-4. Report back "approved" or describe any remaining issue
+**The Task 2 human-verify checkpoint is complete.** Darren restarted the local dev server, hard-refreshed `http://localhost:8000/app` to load the new CSS, re-ran the full UI-01..UI-07 checklist, and confirmed: wrong password still shows the inline error; correct password now correctly transitions to the chat UI (sidebar + composer visible, login overlay gone). He replied "approved" on 2026-09-13.
 
-Only after Darren's explicit sign-off should Task 2 (and this plan, 09-05) be marked complete in STATE.md/ROADMAP.md.
+This plan (09-05) and Phase 9 (UI-01..UI-07) are now both complete in STATE.md/ROADMAP.md.
 
 ## Self-Check: PASSED (Bug Fix)
 
 - `webapp/frontend/style.css` contains the new `#login-overlay[hidden], #app[hidden] { display: none; }` rule — confirmed via `curl http://127.0.0.1:8009/app/style.css` during verification.
 - Commit `04ae403` exists in git history — confirmed via `git log --oneline -1`.
 - Fast-tier suite result (208 passed) confirmed directly in this session's pytest output.
+
+## Self-Check: PASSED (Checkpoint Finalization)
+
+- Darren's literal response to the re-verification request was "approved" (see resume_instructions of this finalization pass) — no ambiguity, no reported failures.
+- Commits `04ae403` and `d49c541` (CSS fix + related follow-up) exist in git history.
+- REQUIREMENTS.md already lists UI-01..UI-07 as Complete under Phase 9 (traceability table).
+- ROADMAP.md's Phase 9 row now shows 5/5 plans complete via `roadmap update-plan-progress 9`.
