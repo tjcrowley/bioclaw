@@ -25,6 +25,19 @@ Example target interaction: researcher uploads raw 10x output → agent QCs (mit
 
 Concept stage. See [CONCEPT.md](CONCEPT.md) for architecture detail and `.planning/` for the phased roadmap. Not yet presented to Elliot Roth / Biopunk Labs.
 
+## Web UI (v1.1)
+
+A self-contained local web front end wraps the agent in a chat interface. See
+[webapp/README.md](webapp/README.md) for full setup and the exact run command.
+
+Quick start:
+```bash
+uv sync --extra web
+BIOCLAW_WEB_PASSWORD=<your-password> ANTHROPIC_API_KEY=<your-key> \
+  uv run --extra web uvicorn webapp.backend.main:app --port 8000
+```
+Then open http://localhost:8000/app in a browser.
+
 ## First user
 
 Internal tool for Biopunk Labs researchers first — validate before productizing, same path OpenClaw took.
