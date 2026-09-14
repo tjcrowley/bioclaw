@@ -196,7 +196,11 @@ Plans:
   2. A single documented command starts the full webapp (backend + frontend) locally, from a clean checkout, without additional undocumented setup steps.
   3. Running that command and exercising the app manually confirms every v1.1 capability works together end to end: login gate, chat Q&A, live tool-call activity streaming, citation resolution, session list/resume, and dataset upload triggering ingest.
   4. No step in this phase deploys, or requires deploying, the webapp to DigitalOcean or any other production/public environment.
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 10-01-PLAN.md — Wave 1: automated no-OpenClaw-dependency test, demo dataset generator script, README + webapp/README.md documentation (PKG-01, PKG-02)
+- [ ] 10-02-PLAN.md — Wave 2: clean-checkout dry run + human-verify checkpoint — combined end-to-end browser walkthrough of all v1.1 capabilities (PKG-02)
 
 ## Progress
 
