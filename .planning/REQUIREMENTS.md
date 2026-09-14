@@ -27,8 +27,8 @@
 
 ### Packaging
 
-- [ ] **PKG-01**: Webapp (backend + frontend) ships self-contained inside the `bioclaw` repo in its own directory, with its own dependencies — no runtime or code dependency on the OpenClaw codebase
-- [ ] **PKG-02**: Webapp runs locally via a single documented command, sufficient to fully verify the feature before any deployment decision
+- [x] **PKG-01**: Webapp (backend + frontend) ships self-contained inside the `bioclaw` repo in its own directory, with its own dependencies — no runtime or code dependency on the OpenClaw codebase
+- [x] **PKG-02**: Webapp runs locally via a single documented command, sufficient to fully verify the feature before any deployment decision
 
 ### v2 (deferred beyond v1.1)
 
@@ -61,8 +61,8 @@
 | UI-05 | Phase 9 | Complete |
 | UI-06 | Phase 9 | Complete |
 | UI-07 | Phase 9 | Complete |
-| PKG-01 | Phase 10 | Pending |
-| PKG-02 | Phase 10 | Pending |
+| PKG-01 | Phase 10 | Complete |
+| PKG-02 | Phase 10 | Complete |
 
 **Coverage:** 14 total, 14 mapped (100%) ✓, 0 unmapped ✓
 

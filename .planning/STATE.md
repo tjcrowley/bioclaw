@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
-current_plan: 09-05 (complete)
-status: planning
-stopped_at: "Phase 9 complete (5/5 plans); human-verify checkpoint approved by Darren 2026-09-13 after the login-overlay CSS fix (commit 04ae403); 09-VERIFICATION.md PASSED 7/7 must-haves. Ready to plan Phase 10."
-last_updated: "2026-09-14T00:47:16.528Z"
+current_plan: 10-01 (complete)
+status: verifying
+stopped_at: Completed 10-01-PLAN.md
+last_updated: "2026-09-14T01:16:20.715Z"
 last_activity: 2026-09-13 — Darren re-tested in browser after the CSS fix and replied "approved"; Task 2 checkpoint closed, Phase 9 (5/5 plans) complete.
 progress:
   total_phases: 10
   completed_phases: 9
-  total_plans: 40
-  completed_plans: 40
-  percent: 100
+  total_plans: 42
+  completed_plans: 41
+  percent: 98
 ---
 
 # Project State
@@ -26,15 +26,15 @@ See: .planning/PROJECT.md (updated 2026-09-11)
 
 ## Current Position
 
-Milestone: v1.1 Web UI — Phase 9 complete; ready to start Phase 10
-Phase: 9 of 10 (Frontend Chat UI) — 5/5 plans complete
-Plan: 09-05 (Wave 4 — fast-tier suite verification + human-verify browser checkpoint, UI-01..07) — both tasks complete, checkpoint approved
-Current Plan: 09-05 (complete)
-Next: Plan and execute Phase 10 (Packaging & Local Verification, PKG-01/PKG-02) — the final phase of the v1.1 Web UI milestone.
-Status: Plan 09-05 complete. Task 1 — full fast-tier suite green (`uv run --extra web pytest tests/ -x -q -m "not live_llm and not bio_fm_smoke and not vcc_data"`: 208 passed, 6 deselected, 0 failed) with zero regressions; all 13 explicitly-named tests in `tests/test_webapp_frontend.py` (login, static serving, JS export contracts, design tokens) pass individually. All 7 UI requirements (UI-01..UI-07) each have at least one passing automated test (see 09-05-SUMMARY.md coverage table). Task 2 (`type="manual"`, human-verify checkpoint): Darren's first browser walkthrough surfaced a real bug ("incorrect password says 'incorrect password' but the correct password sends me back to the password form") -- root cause was a CSS specificity conflict in webapp/frontend/style.css where `#login-overlay`/`#app` ID-selector `display` rules always beat the browser's default `[hidden]{display:none}` rule, so `main.js`'s `showApp()`/`showLogin()` toggling of the `hidden` DOM property had no visual effect (the backend auth flow itself was already correct, confirmed via curl cookie-jar test: wrong password->401, correct password->200+Set-Cookie, authenticated /api/sessions with cookie->200). Fixed with a 7-line CSS addition (`#login-overlay[hidden], #app[hidden] { display: none; }`), committed as 04ae403; fast-tier suite re-run green (208 passed, no regressions). This fix was auto-applied per Deviation Rule 1 (bug fix, no architectural change). Darren then restarted the local backend, hard-refreshed http://localhost:8000/app, re-verified all seven UI requirements, and replied "approved" (2026-09-13). Phase 9 (UI-01..UI-07) is now complete.
-Last activity: 2026-09-13 — Darren re-tested in browser after the CSS fix and replied "approved"; Task 2 checkpoint closed, Phase 9 (5/5 plans) complete.
+Milestone: v1.1 Web UI — Phase 9 complete; Phase 10 in progress (1/2 plans complete)
+Phase: 10 of 10 (Packaging & Local Verification) — 1/2 plans complete
+Plan: 10-01 (Automated self-containment test, demo dataset script, run docs; PKG-01/PKG-02) — all 3 tasks complete
+Current Plan: 10-01 (complete)
+Next: Execute Plan 10-02 (clean-checkout dry run + combined manual checkpoint) — the final plan of the v1.1 Web UI milestone.
+Status: Plan 10-01 complete. Task 1 added `tests/test_webapp_packaging.py::test_webapp_has_no_openclaw_dependency`, a permanent pytest guard walking `webapp/` (.py/.js/.html/.css) for any OpenClaw reference, promoting the one-time manual grep from 09-VERIFICATION.md into a durable regression test (closes PKG-01's durability gap). Task 2 added `scripts/make_sample_dataset.py`, a standalone CLI (`generate_sample_dataset(out_dir)`) generating a synthetic 300-gene x 60-cell 10x MEX dataset to `data/demo_10x/` by default, covered by a smoke test in the same module -- unblocks Plan 10-02's manual upload-flow verification without needing a private test file. Task 3 documented the single run command: a new "Web UI" section in root `README.md` linking to a new `webapp/README.md` covering prerequisites, setup, the exact run command, the `/app` URL, the single-worker constraint, and demo-dataset generation. Full fast-tier suite re-confirmed green: 210 passed, 6 deselected, 0 failed (208 baseline + 2 new tests, zero regressions). No deviations from plan.
+Last activity: 2026-09-13 — Plan 10-01 executed autonomously (all tasks type="auto", no checkpoints); 3/3 tasks committed individually.
 
-Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) — v1.1 Phase 7: 3/3 plans complete, Phase 8: 3/3 plans complete, Phase 9: 5/5 plans complete
+Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) — v1.1 Phase 7: 3/3 plans complete, Phase 8: 3/3 plans complete, Phase 9: 5/5 plans complete, Phase 10: 1/2 plans complete
 
 ## Performance Metrics
 
@@ -92,6 +92,7 @@ Progress: v1.0 [██████████] 100% (29/29 plans, 6/6 phases) �
 | Phase 09-frontend-chat-ui P03 | ~3min | 1 tasks | 1 files |
 | Phase 09-frontend-chat-ui P04 | ~3min | 3 tasks | 3 files |
 | Phase 09-frontend-chat-ui P05 | ~5min + ~20min bugfix + human re-verify | 2 tasks | 1 files |
+| Phase 10 P01 | 4min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -158,10 +159,11 @@ Recent decisions affecting current work:
 - [Phase 09-frontend-chat-ui]: 09-04: citations.js/sessions.js/main.js implemented exactly per plan's provided code verbatim -- no deviations. Delegated .citation-ref click listener lives inside citations.js itself (attached to #chat-thread at module load) so chat.js never imports citations.js, preserving the window.* hook-only coupling pattern from 09-03.
 - [Phase 09-frontend-chat-ui]: 09-05 checkpoint: bug found and fixed during Darren's Task 2 human-verify browser test -- login overlay CSS specificity bug (#login-overlay/#app ID-selector display rules beat UA [hidden]{display:none}), fixed by adding #login-overlay[hidden],#app[hidden]{display:none} to style.css (commit 04ae403). Backend auth was never broken (confirmed via curl cookie-jar test). Checkpoint remains PENDING Darren's re-verification.
 - [Phase 09-frontend-chat-ui]: 09-05 checkpoint APPROVED: Darren re-tested in browser after the CSS fix (commit 04ae403) and confirmed all UI-01..UI-07 requirements work (login gate, dark theme, chat thread, live activity, citations, session sidebar, upload). Phase 9 (all 5 plans) is complete.
+- [Phase 10]: 10-01: test_webapp_has_no_openclaw_dependency and demo-dataset script land together; scripts/ needs no __init__.py under pythonpath=["."]
 
 ### Pending Todos
 
-v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defined and committed. Phase 7 (all 3 plans), Phase 8 (all 3 plans: 08-01, 08-02, 08-03; Session & Dataset Endpoints, API-03/API-04), and Phase 9 (all 5 plans: 09-01..09-05; Frontend Chat UI, UI-01..UI-07) are complete. 09-01 (frontend scaffold + login endpoint, UI-06/UI-07), 09-02 (webapp/frontend/api.js — complete API client module, UI-02), 09-03 (webapp/frontend/chat.js — chat thread + live activity view, UI-01/UI-02), 09-04 (citations.js/sessions.js/main.js wiring — citation rendering, session sidebar, upload flow, UI-03/UI-04/UI-05), and 09-05 (fast-tier suite verification + human-verify browser checkpoint, approved by Darren 2026-09-13) are all complete and committed. Next up: Phase 10 (Packaging & Local Verification, PKG-01/PKG-02) — the final phase of the v1.1 Web UI milestone, needs planning.
+v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defined and committed. Phase 7 (all 3 plans), Phase 8 (all 3 plans: 08-01, 08-02, 08-03; Session & Dataset Endpoints, API-03/API-04), and Phase 9 (all 5 plans: 09-01..09-05; Frontend Chat UI, UI-01..UI-07) are complete. Phase 10 (Packaging & Local Verification, PKG-01/PKG-02) is in progress: Plan 10-01 (automated no-OpenClaw test, demo dataset script, run docs) is complete. Next up: Plan 10-02 (clean-checkout dry run + combined manual checkpoint) — the final plan of the v1.1 Web UI milestone.
 
 ### Blockers/Concerns
 
@@ -174,6 +176,6 @@ v1.1 (Web UI) requirements (14, 100% mapped) and roadmap (phases 7-10) are defin
 
 ## Session Continuity
 
-Last session: 2026-09-14T00:40:58.132Z
-Stopped at: Completed 09-05-PLAN.md (Phase 9 complete, all 5 plans); checkpoint approved by Darren 2026-09-13
+Last session: 2026-09-14T01:15:26.370Z
+Stopped at: Completed 10-01-PLAN.md
 Resume file: None
