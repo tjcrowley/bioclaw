@@ -2,7 +2,7 @@
 
 **An agentic harness for biological foundation models — OpenClaw's orchestration pattern, retargeted at computational biology.**
 
-Working title. Built in collaboration with [Biopunk Labs](https://biopunklab.com/) (Elliot Roth).
+Built in collaboration with [Biopunk Labs](https://biopunklab.com/).
 
 ## The idea
 
@@ -23,7 +23,7 @@ Example target interaction: researcher uploads raw 10x output → agent QCs (mit
 
 ## Status
 
-Concept stage. See [CONCEPT.md](CONCEPT.md) for architecture detail and `.planning/` for the phased roadmap. Not yet presented to Elliot Roth / Biopunk Labs.
+v1.1 — web UI complete (login, chat, live tool-activity streaming, citation resolution, session sidebar, dataset upload). See [CONCEPT.md](CONCEPT.md) for architecture detail and `.planning/` for the phased build history.
 
 ## Web UI (v1.1)
 
@@ -38,6 +38,6 @@ BIOCLAW_WEB_PASSWORD=<your-password> ANTHROPIC_API_KEY=<your-key> \
 ```
 Then open http://localhost:8000/app in a browser.
 
-## First user
+## Target audience
 
-Internal tool for Biopunk Labs researchers first — validate before productizing, same path OpenClaw took.
+Single-cell biology researchers who spend hours writing and debugging scanpy/Seurat pipelines. The goal is to replace that loop with a plain-language conversation: describe the analysis, get back a QC'd, annotated, interpreted result.

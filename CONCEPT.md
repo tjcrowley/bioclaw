@@ -1,6 +1,6 @@
 # Concept Draft — BioClaw
 
-Status: **v1.0** — wedge and key open questions confirmed with Elliot 2026-09-03; see `.planning/PROJECT.md` Key Decisions for the full record.
+Status: **v1.1** — single-cell transcriptomics wedge validated, web UI complete. See `.planning/` for the phased build history.
 
 ## The angle
 
@@ -64,20 +64,12 @@ scripting) is real and largely unaddressed by agentic tooling.
    a multi-turn research conversation keeps dataset and finding context without
    the researcher re-stating it.
 
-## Open questions to resolve with Elliot
+## Key architecture decisions
 
-- [x] What does Biopunk Labs' team actually spend the most manual bioinformatics
-      hours on today? — **Confirmed: matches the single-cell wedge.**
-- [x] Does Biopunk Labs generate single-cell data in-house, or would the first
-      real dataset come from a public source? — **Public source** (e.g.
-      `cellxgene-census`, VCC's own public dataset) for the initial build.
-- [x] Hosting/compute: does Biopunk Labs have GPU capacity for self-hosting
-      scGPT/Geneformer, or does the MVP need to lean on hosted inference? —
-      **Self-hosted by default**, with a hosted-inference option kept available.
-- [ ] Any overlap with [Cardiac Base Editor](https://github.com/tjcrowley/cardiac-base-editor)
-      or [FDT-BioTech](https://github.com/tjcrowley/fdt-biotech-digital-twins) —
-      e.g., could single-cell cardiomyocyte data from either project double as an
-      early real-world test dataset? — still open.
+- **Wedge domain: single-cell transcriptomics** — the highest-pain, lowest-ingest-barrier domain for the MVP. Matches real daily researcher friction (manual QC/clustering/annotation scripting).
+- **Dataset source for initial build: public** — `cellxgene-census` or equivalent public repositories to avoid dependency on private lab data pipelines for the proof-of-concept.
+- **Hosting: self-hosted by default** — scGPT/Geneformer run on modest hardware; hosted-inference remains a drop-in option via the tool-layer abstraction.
+- **Open**: overlap check with [Cardiac Base Editor](https://github.com/tjcrowley/cardiac-base-editor) or [FDT-BioTech](https://github.com/tjcrowley/fdt-biotech-digital-twins) — cardiomyocyte single-cell data from either project may work as an early real-world test dataset.
 
 ## Alternative angles considered (not pursued yet)
 
@@ -90,7 +82,6 @@ scripting) is real and largely unaddressed by agentic tooling.
 
 ## Next steps
 
-1. See `.planning/ROADMAP.md` for the phased build roadmap (6 phases, full
-   requirement traceability) — ready to start with `/gsd:plan-phase 1`.
-2. Remaining open item: overlap check with Cardiac Base Editor / FDT-BioTech
-   on cardiomyocyte single-cell data as an early real-world test dataset.
+1. Swap the synthetic demo dataset for a real public single-cell dataset (e.g. from `cellxgene-census`) to validate the full pipeline end-to-end.
+2. Overlap check with [Cardiac Base Editor](https://github.com/tjcrowley/cardiac-base-editor) / [FDT-BioTech](https://github.com/tjcrowley/fdt-biotech-digital-twins) — cardiomyocyte single-cell data from either project may work as an early real-world test.
+3. See `.planning/ROADMAP.md` for the full phased build history (10 phases, v1.1 complete).

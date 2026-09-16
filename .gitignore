@@ -9,3 +9,4 @@ data/
 bio_fm_worker/checkpoints/
 agent/logs/
 agent/memory.sqlite
+tool_calls.jsonl
