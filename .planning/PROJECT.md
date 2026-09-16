@@ -17,18 +17,18 @@ A Biopunk Labs researcher can ask a plain-language question about a
 single-cell dataset and get back a QC'd, annotated, interpreted answer without
 writing a scanpy script by hand.
 
-## Current Milestone: v1.1 Web UI
+## Current Milestone: v1.2 Real Data + Bio FM Integration
 
-**Goal:** Give the v1.0 Q&A agent a self-contained web front end, styled after OpenClaw's own UX, so a researcher can use bioclaw without a terminal or a pytest invocation.
+**Goal:** Replace synthetic demo data with real public single-cell datasets, wire real bio foundation model inference into the annotation and perturbation tools, surface session conversation history in the UI, add result export, and ship a Docker compose that lets any researcher run the full stack with one command.
 
 **Target features:**
-- FastAPI backend wrapping `qa/session.py::ask_question()` (and the underlying agent session loop) as HTTP/WebSocket endpoints
-- Chat-style frontend, OpenClaw-styled: message thread, live tool-call activity stream (ingest/analyze/annotate/predict_perturbation appearing as they run), inline citation rendering resolving `[ref:TOOL_NAME:SHA256_PREFIX]` tags against the JSONL audit log
-- Session sidebar backed by the existing `SessionMemory` layer: list past Q&A sessions, resume any of them
-- Dataset upload from the chat itself (drag a `.mtx`/`.h5` file in), agent calls `ingest_10x` as part of the conversation — no CLI/pytest step required
-- Shared-password gate in front of the whole app (not full multi-tenant auth)
-- Ships self-contained inside the `bioclaw` repo (no dependency on the OpenClaw codebase itself — replicate the UX pattern, don't import it)
-- Target deploy environment: Dead Dog Studios DigitalOcean droplet (same pattern as the Iris project — Caddy TLS, systemd service) — build and verify locally first, deploy only on explicit go-ahead
+- cellxgene-census query tool — agent can fetch real public datasets by query (tissue, organism, assay) without a file upload
+- Direct `.h5ad` upload support — the standard single-cell format, not just the MTX trio
+- Real scGPT cell-type annotation — replace the subprocess shim stub with a working inference call against a real scGPT checkpoint
+- Geneformer perturbation prediction — add Geneformer as a second perturbation-response model option alongside the current linear baseline
+- Session history replay — resuming a session shows the prior conversation thread, not just a "Resuming…" message
+- Result export — download cluster assignments, DE tables, and annotation results as CSV; export the conversation's analysis as a reproducible scanpy script
+- Docker compose deployment — `docker compose up` starts the full stack (backend + frontend + optional GPU worker) with no manual setup steps
 
 ## Requirements
 
@@ -47,15 +47,21 @@ writing a scanpy script by hand.
 - Persist dataset and finding context across a multi-turn research conversation (session/memory layer) (v1.0, shipped 2026-09-11)
 - Researcher can ask a natural-language question and receive an interpreted answer (not raw model output) — the end-to-end demo (v1.0, shipped 2026-09-11)
 - Agent's perturbation predictions can be evaluated against the Virtual Cell Challenge's public dataset/task format (Arc Institute) as an external, credible benchmark (v1.0, shipped 2026-09-11)
+- Password-gated FastAPI backend wraps `ask_question()` as HTTP/WebSocket endpoints with live tool-call streaming (v1.1, shipped 2026-09-12)
+- Session list/resume endpoints backed by `SessionMemory` (v1.1, shipped 2026-09-12)
+- Dataset upload endpoint invoking `ingest_10x` as part of the conversation flow (v1.1, shipped 2026-09-12)
+- Vanilla-JS chat frontend: message thread, live activity view, citation resolution, session sidebar, upload control, login gate, OpenClaw-styled visuals (v1.1, shipped 2026-09-14)
+- Webapp ships self-contained with no OpenClaw dependency; runs via single documented command (v1.1, shipped 2026-09-15)
 
 ### Active
 
-- [ ] FastAPI backend wraps `qa/session.py::ask_question()` (and the underlying agent session loop) as HTTP/WebSocket endpoints
-- [ ] Chat-style frontend, OpenClaw-styled: message thread, live tool-call activity stream, inline citation rendering resolving `[ref:TOOL_NAME:SHA256_PREFIX]` tags against the JSONL audit log
-- [ ] Session sidebar backed by the existing `SessionMemory` layer: list past Q&A sessions, resume any of them
-- [ ] Dataset upload from the chat itself; agent calls `ingest_10x` as part of the conversation — no CLI/pytest step required
-- [ ] Shared-password gate in front of the whole app
-- [ ] Ships self-contained inside the `bioclaw` repo — no dependency on the OpenClaw codebase itself
+- [ ] cellxgene-census query tool — researcher asks for a dataset by tissue/organism/assay, agent fetches it from the public census without a file upload
+- [ ] Direct `.h5ad` upload support — standard single-cell format accepted alongside the existing MTX trio
+- [ ] Real scGPT cell-type annotation — working inference against a real checkpoint, not the subprocess stub
+- [ ] Geneformer perturbation prediction — second perturbation-response model option
+- [ ] Session history replay — resuming a session renders the prior conversation thread in the chat UI
+- [ ] Result export — CSV download for clusters/DE/annotations; reproducible scanpy script export
+- [ ] Docker compose deployment — one command starts the full stack from a clean checkout
 
 ### Out of Scope
 
@@ -125,4 +131,4 @@ writing a scanpy script by hand.
 | VCC benchmark scope = public task format + official metrics, not the live 2026 leaderboard | Leaderboard is zero-shot/cross-cell-line — a materially harder, out-of-scope bar; task-format benchmarking is achievable and still credible | Confirmed |
 
 ---
-*Last updated: 2026-09-11 after starting v1.1 Web UI milestone*
+*Last updated: 2026-09-15 after starting v1.2 Real Data + Bio FM Integration milestone*
