@@ -220,7 +220,12 @@ Plans:
   1. A researcher who resumes a session via the sidebar sees the complete prior conversation thread (all turns, inline tool activity, citations) — not a "Resuming session..." placeholder — with SQLite WAL mode enabled and per-message stored content capped at 64 KB to prevent database blowup.
   2. The upload endpoint accepts a single `.h5ad` file (in addition to the existing MTX trio) and routes it through the same ingest pipeline, returning the same ingest result shape.
   3. A researcher can click a download control for the active dataset and receive a CSV file containing cluster assignments, the DE table, and annotation results from the current session.
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 11-01-PLAN.md — HIST-01: messages table + WAL mode in SessionMemory, API enrichment, JS history replay
+- [ ] 11-02-PLAN.md — DATA-02: tiny_h5ad_file fixture + h5ad upload integration test
+- [ ] 11-03-PLAN.md — EXPORT-01: GET /api/export/csv endpoint + exportCsv() frontend + download button
 
 ### Phase 12: Agent Data Access + Script Export
 **Goal**: The agent can fetch real public single-cell datasets from cellxgene-census on demand without a file upload, and researchers can export any session's analysis as a self-contained scanpy script that reproduces the exact analysis run.
