@@ -2,6 +2,67 @@
 
 **Core Value:** A Biopunk Labs researcher can ask a plain-language question about a single-cell dataset and get back a QC'd, annotated, interpreted answer without writing a scanpy script by hand.
 
+## Milestone v1.2 — Real Data + Bio FM Integration (current)
+
+**Defined:** 2026-09-16
+**Goal:** Replace synthetic demo data with real public datasets, wire real bio FM inference, surface session history in the UI, add result export, and ship Docker compose.
+
+### Data Access
+
+- [ ] **DATA-01**: Researcher can ask the agent to fetch a real public single-cell dataset by tissue/organism/assay from cellxgene-census without uploading a file — the agent returns a dataset handle the existing ingest pipeline loads
+- [ ] **DATA-02**: The upload endpoint accepts direct `.h5ad` files (the standard single-cell format) alongside the existing MTX trio, routing to the same ingest pipeline
+
+### Foundation Models
+
+- [ ] **FM-01**: Agent calls real scGPT inference (not a stub) for cell-type annotation, returning per-cell-type predictions with a k-NN vote-fraction confidence proxy alongside the existing decoupler statistical baseline
+- [ ] **FM-02**: Agent can invoke Geneformer as a second perturbation-response model, returning a ranked gene list by cosine shift — explicitly distinct from the linear model's expression-vector output
+
+### Session UX
+
+- [ ] **HIST-01**: Resuming a session in the sidebar renders the full prior conversation thread (all turns, inline tool activity, citations) — not just a "Resuming session…" placeholder message
+
+### Export
+
+- [ ] **EXPORT-01**: Researcher can download cluster assignments, DE table, and annotation results for the active dataset as a CSV file from a backend endpoint
+- [ ] **EXPORT-02**: Researcher can export the current session's analysis as a reproducible scanpy script that captures all QC thresholds, analysis parameters, dataset source, and random seeds used during the session
+
+### Docker
+
+- [ ] **DOCK-01**: Full stack (backend + optional GPU worker for bio FM inference) starts with a single `docker compose up` command from a clean checkout, requiring only environment variable configuration — hard-codes single-worker constraint
+
+### v2 (deferred beyond v1.2)
+
+- **AUTH-01**: Per-user accounts / RBAC if bioclaw ever grows beyond a single shared internal tool
+- **BATCH-01**: Batch integration/correction (Harmony or scVI) across multiple samples — as a logged, conditional pipeline step
+- **DEPLOY-01**: Public/production DigitalOcean deploy (Caddy TLS, systemd) — only on Darren's explicit go-ahead
+
+### Out of Scope (v1.2)
+
+| Feature | Reason |
+|---------|--------|
+| Multi-tenant accounts, billing, OAuth | Internal tool until validated with Biopunk Labs |
+| Public cloud deployment | DOCK-01 is local compose only; production deploy requires explicit go-ahead |
+| Streaming/progressive census fetch into chat thread | Anti-feature — adds complexity without researcher value; just show a progress indicator |
+| Geneformer training / fine-tuning | Uses pre-trained weights only; fine-tuning is a separate research program |
+| Batch integration across samples | DATA-01 scope is single-dataset; multi-sample integration is v1.3+ |
+
+### Traceability (v1.2)
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| DATA-01 | TBD | Pending |
+| DATA-02 | TBD | Pending |
+| FM-01 | TBD | Pending |
+| FM-02 | TBD | Pending |
+| HIST-01 | TBD | Pending |
+| EXPORT-01 | TBD | Pending |
+| EXPORT-02 | TBD | Pending |
+| DOCK-01 | TBD | Pending |
+
+**Coverage:** 8 total, 0 mapped (roadmap TBD), 8 unmapped ⚠
+
+---
+
 ## Milestone v1.1 — Web UI (current)
 
 **Defined:** 2026-09-11
@@ -178,5 +239,5 @@
 **Coverage:** 23 total, 23 mapped (100%) ✓, 0 unmapped ✓
 
 ---
-*Requirements defined: 2026-09-03 (v1.0), 2026-09-11 (v1.1)*
-*Last updated: 2026-09-11 after creating v1.1 Web UI roadmap (Phases 7-10)*
+*Requirements defined: 2026-09-03 (v1.0), 2026-09-11 (v1.1), 2026-09-16 (v1.2)*
+*Last updated: 2026-09-16 after defining v1.2 Real Data + Bio FM Integration requirements*
