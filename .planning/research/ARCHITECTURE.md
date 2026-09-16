@@ -1,254 +1,627 @@
 # Architecture Research
 
-**Domain:** Agent-orchestrated bioinformatics (LLM agent + scientific data pipeline + specialist ML models as tools)
-**Researched:** 2026-09-03
-**Confidence:** MEDIUM — the pattern is consistent across multiple independent 2025-2026 systems (CellAgent, CellAtria/CellExpress, OmicVerse, Biomni, scBench, ChatSpatial), but this is an actively forming subfield with no single canonical reference architecture. Component boundaries below are HIGH confidence (converge across every source found); specific infra choices (serving frameworks, GPU sizing) are MEDIUM/LOW and should be re-verified against scGPT/Geneformer's actual model cards before Phase implementation.
+**Domain:** Agent-orchestrated bioinformatics (BioClaw v1.2 feature integration)
+**Researched:** 2026-09-16
+**Confidence:** HIGH — all integration points are grounded in direct codebase inspection (September 2026 state), not training-data inference.
 
-## Standard Architecture
+---
 
-### System Overview
+## v1.2 Integration Analysis
 
-```
-┌───────────────────────────────────────────────────────────────────────┐
-│                    AGENT ORCHESTRATOR (OpenClaw pattern)                │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌─────────────────┐  │
-│  │  Session/   │  │  Planning  │  │   Tool     │  │  Persistent      │  │
-│  │  Turn Loop  │  │  (plan →   │  │   Router   │  │  Memory (dataset │  │
-│  │             │  │  call →    │  │            │  │  refs, findings) │  │
-│  │             │  │  observe)  │  │            │  │                  │  │
-│  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘  └────────┬─────────┘  │
-│        └───────────────┴──────────────┬┴──────────────────┘            │
-│                                        │ typed tool calls (JSON in/out) │
-└────────────────────────────────────────┼────────────────────────────────┘
-                                          │  (never sees raw matrices —
-                                          │   only structured summaries)
-┌─────────────────────────────────────────┴──────────────────────────────┐
-│                            TOOL LAYER (bounded, typed)                  │
-│  ┌────────────────┐   ┌────────────────────┐   ┌─────────────────────┐ │
-│  │ Ingest Tools    │   │ Analysis Tools      │   │ Bio-FM Tools        │ │
-│  │ ingest_10x()    │   │ cluster()           │   │ annotate_celltype() │ │
-│  │ run_qc()        │   │ diff_expr()         │   │ predict_perturbation│ │
-│  │ (deterministic  │   │ (scanpy-backed,     │   │ ()  (thin client →  │ │
-│  │  pipeline)      │   │  deterministic)     │   │  model server)      │ │
-│  └───────┬─────────┘   └──────────┬──────────┘   └──────────┬──────────┘ │
-└──────────┼─────────────────────────┼───────────────────────┼───────────┘
-           │                         │                        │ network/RPC
-           ▼                         ▼                        ▼ boundary
-┌──────────────────────────────────────────┐   ┌──────────────────────────┐
-│         DATA / STATE LAYER                │   │   MODEL SERVING LAYER    │
-│  ┌────────────┐  ┌────────────────────┐   │   │  (separate process(es), │
-│  │ Canonical   │  │ Session/Memory     │   │   │   GPU-resident)         │
-│  │ AnnData     │  │ Store (dataset     │   │   │  ┌─────────┐┌─────────┐ │
-│  │ Store       │  │ refs, findings,    │   │   │  │ scGPT   ││Geneformer│ │
-│  │ (.h5ad,     │  │ conversation state)│   │   │  │ server  ││ server  │ │
-│  │  versioned) │  │                    │   │   │  └─────────┘└─────────┘ │
-│  └────────────┘  └────────────────────┘   │   │  ┌─────────────────────┐ │
-└──────────────────────────────────────────┘   │  │ Perturbation-response│ │
-                                                 │  │ model server         │ │
-                                                 │  └─────────────────────┘ │
-                                                 └──────────────────────────┘
-                          ▲
-                          │ same tool contract, bypasses agent loop
-┌─────────────────────────┴────────────────────────────────────────────┐
-│              BENCHMARK / EVAL HARNESS (offline, out-of-band)          │
-│   VCC public dataset loader → drives predict_perturbation() directly  │
-│   → scores against Arc Institute's held-out ground truth              │
-└─────────────────────────────────────────────────────────────────────┘
-```
+This document answers six specific architectural questions for the v1.2 milestone features. It replaces the earlier (2026-09-03) speculative architecture with concrete analysis of what the code actually looks like today and where each new feature slots in.
 
-### Component Responsibilities
+---
 
-| Component | Responsibility | Typical Implementation |
-|-----------|----------------|------------------------|
-| Agent Orchestrator | Multi-turn session loop, planning (plan → tool call → observe → continue), tool routing, persistent memory of dataset/finding context. Never touches raw data directly. | Claude via Anthropic API, OpenClaw-style agentic loop; tool calling via native function-calling or MCP tool schema |
-| Ingest Pipeline | Raw 10x `.mtx`/`.h5` → canonical `.h5ad`; standard QC (mito %, doublets, low-count filtering); versioned storage | Deterministic Python pipeline (scanpy/anndata/scanpy.pp), exposed to the agent as 1-2 coarse-grained tool calls, not a multi-step agent conversation |
-| Analysis Tool Layer | scanpy-backed operations: clustering, differential expression, trajectory inference | Wrapped scanpy functions with strict typed I/O (dataset ref in, structured result out); deterministic, no LLM involvement inside the tool |
-| Bio-FM Tool Layer | Bounded, typed tool wrappers around scGPT/Geneformer/perturbation models — annotate cell type, embed cells, predict perturbation response | Thin client (HTTP/gRPC) that calls a separate model-serving process; the tool wrapper itself has no GPU dependency |
-| Model Serving Layer | Loads and runs bio-FM weights on GPU, exposes an inference API | Standalone Python service (FastAPI/Triton/vLLM-style) per model, GPU-resident, decoupled from the agent process |
-| Data / State Layer | Canonical dataset store (versioned `.h5ad` + metadata index) and session/memory store (dataset refs, findings, conversation state) | Filesystem or object store for `.h5ad`; OpenClaw's existing session/memory primitives for conversation state |
-| Benchmark/Eval Harness | Loads Virtual Cell Challenge public dataset/task, drives the perturbation-prediction tool directly (not through the full agent loop), scores against VCC's held-out ground truth | Offline runner/script, consumes the same tool contract as the agent so scoring is apples-to-apples with what a researcher would actually get |
-
-## Recommended Project Structure
+## System Overview (current state, pre-v1.2)
 
 ```
-bioclaw/
-├── agent/                    # OpenClaw-pattern orchestrator
-│   ├── sessions/              # multi-turn session state
-│   ├── memory/                # persistent dataset/finding memory
-│   └── tool_registry/         # typed tool schemas, routes calls to tool layer
-├── ingest/                    # deterministic ingest pipeline
-│   ├── loaders/                # 10x .mtx/.h5 → AnnData
-│   ├── qc/                     # mito %, doublet detection, filtering
-│   └── pipeline.py             # single entrypoint the agent calls as a tool
-├── analysis/                  # scanpy-backed analysis tools
-│   ├── cluster.py
-│   ├── diff_expr.py
-│   └── trajectory.py
-├── models/                    # bio-FM tool layer
-│   ├── clients/                 # thin HTTP/gRPC clients invoked by agent tools
-│   └── serving/                 # standalone GPU-resident inference services
-│       ├── scgpt_server.py
-│       ├── geneformer_server.py
-│       └── perturbation_server.py
-├── data/                       # canonical dataset store + metadata index (versioned)
-├── eval/                       # benchmark harness
-│   ├── vcc/                     # Virtual Cell Challenge dataset/task loader
-│   └── scoring.py               # scoring against VCC ground truth, offline runner
-└── shared/                     # AnnData schema conventions, typed tool I/O contracts
+┌──────────────────────────────────────────────────────────────┐
+│                     FRONTEND (vanilla JS)                     │
+│  index.html + main.js + chat.js + sessions.js + api.js +     │
+│  citations.js + style.css                                     │
+│  Served by FastAPI StaticFiles at /app                        │
+└─────────────────────────────┬────────────────────────────────┘
+                               │ HTTP / WebSocket
+┌──────────────────────────────▼────────────────────────────────┐
+│                     WEBAPP BACKEND (FastAPI)                   │
+│  main.py: POST /api/ask, GET /api/sessions,                   │
+│  GET /api/sessions/{id}, POST /api/upload, WS /ws/{id},       │
+│  POST /api/login                                               │
+│  deps.py: SessionMemory singleton, ask_question injectable    │
+│  streaming.py: in-memory asyncio.Queue registry (single proc) │
+│  auth.py: shared-password cookie gate                         │
+└──────────────────────────────┬────────────────────────────────┘
+                               │ function call (same process)
+┌──────────────────────────────▼────────────────────────────────┐
+│                    QA LAYER (qa/session.py)                    │
+│  ask_question() → run_session() + verify_answer_citations()   │
+└──────────────────────────────┬────────────────────────────────┘
+                               │
+┌──────────────────────────────▼────────────────────────────────┐
+│                 AGENT SESSION (agent/session.py)               │
+│  ClaudeSDKClient agentic loop                                 │
+│  PostToolUse hooks: log_tool_call + record_dataset_reference  │
+│  +extra_hooks (streaming, future hooks)                       │
+└──────────────────────────────┬────────────────────────────────┘
+                               │ MCP tool calls (in-process)
+┌──────────────────────────────▼────────────────────────────────┐
+│              TOOL SURFACE (agent/tools.py)                    │
+│  @tool ingest_10x_tool                                        │
+│  @tool analyze_dataset_tool                                   │
+│  @tool annotate_cell_type_tool                                │
+│  @tool predict_perturbation_tool                              │
+└──────────────────────────────┬────────────────────────────────┘
+                               │ function calls
+┌──────────────────────────────▼────────────────────────────────┐
+│                PIPELINE LAYER                                  │
+│  ingest/pipeline.py::ingest_10x()                             │
+│  analysis/pipeline.py::analyze()                              │
+│  annotation/pipeline.py::annotate()                           │
+│  perturbation/pipeline.py::predict()                          │
+└──────────────────────────────┬────────────────────────────────┘
+                               │
+┌──────────────────────────────▼────────────────────────────────┐
+│                DATA / STATE LAYER                              │
+│  ingest/store.py::DatasetStore (SQLite registry + .h5ad files)│
+│  agent/memory.py::SessionMemory (SQLite, dataset refs only)   │
+│  tool_calls.jsonl (citation audit log)                        │
+└──────────────────────────────┬────────────────────────────────┘
+                               │ subprocess (isolation boundary)
+┌──────────────────────────────▼────────────────────────────────┐
+│          BIO FM WORKER (bio_fm_worker/, Python 3.9.6)         │
+│  bio_fm_worker/.venv: scgpt, torch==2.3.0, torchtext==0.18.0 │
+│  run_scgpt_embed.py: reads .h5ad, runs scGPT, prints JSON     │
+│  annotation/fm_client.py: subprocess shim (main venv side)    │
+└───────────────────────────────────────────────────────────────┘
 ```
 
-### Structure Rationale
+---
 
-- **`agent/` is isolated from `models/serving/`:** the orchestrator process should have zero GPU dependency. This lets the agent run anywhere (including no local GPU) while the model servers run on whatever hardware Biopunk Labs allocates — resolves the open "self-host vs. hosted" question from PROJECT.md without hard-coding a GPU dependency into the orchestrator's deployment.
-- **`ingest/` and `analysis/` are deterministic, not agentic:** these are plain Python pipelines with fixed logic (QC thresholds, clustering algorithms), each exposed to the agent as a small number of coarse-grained typed tool calls. This matches the pattern seen in CellAtria/CellExpress and OmicVerse — the LLM plans and interprets, but does not micromanage every pipeline step, which keeps results reproducible.
-- **`models/clients/` vs `models/serving/` split:** the tool wrapper the agent calls (`clients/`) is a thin, stateless network client; the actual model weights and GPU inference logic live in `serving/`, a separate long-running process. This boundary is the direct answer to "where does GPU inference infra fit relative to the agent" — it fits *behind* the tool layer, never inside the agent process.
-- **`eval/` is structurally parallel to `agent/`, not nested under it:** the benchmark harness calls the same tool contract (`models/clients/perturbation.py`) that the agent calls, but drives it directly for deterministic, repeatable scoring — it does not go through the LLM planning loop. This lets VCC validation run in CI without burning agent/LLM calls and without planning-loop nondeterminism polluting the score.
+## Q1: cellxgene-census Query Tool
 
-## Architectural Patterns
+### Where it slots in
 
-### Pattern 1: Deterministic Pipeline Behind a Coarse-Grained Tool Call
+The census query tool is a new `@tool`-decorated handler in `agent/tools.py`, exactly parallel to `ingest_10x_tool`. It is **not** a separate ingest branch — it is an alternative *data acquisition path* that feeds the existing ingest pipeline.
 
-**What:** Ingest/QC and scanpy analysis steps are implemented as ordinary, deterministic Python functions/pipelines. The agent invokes them as a small number of typed tool calls (`ingest_10x(path)`, `run_qc(dataset_id, params?)`, `cluster(dataset_id, resolution?)`) rather than reasoning step-by-step through each pipeline stage.
-**When to use:** Any operation with a well-defined, reproducible bioinformatics procedure (QC thresholds, standard scanpy workflows). This is most ingest and analysis work.
-**Trade-offs:** Loses some flexibility (agent can't improvise a novel QC heuristic mid-pipeline) but gains reproducibility, testability, and speed — critical for scientific validity. Confirmed pattern across CellAtria/CellExpress and OmicVerse's agent-enabled framework.
+The split:
+- `query_census_tool` in `agent/tools.py`: calls a new `ingest/census.py::ingest_from_census()` function, receives a `dataset_id` back, records it in session memory via the existing `record_dataset_reference` PostToolUse hook (unchanged).
+- `ingest/census.py` (new file): wraps `cellxgene_census.get_anndata()` to fetch a named slice by `organism`/`tissue`/`assay`/`obs_value_filter` + optional `n_cells` cap, then routes the resulting in-memory AnnData through the existing `ingest_10x()` pipeline (starting after the `loaders.load()` call, since the data is already in memory). Returns a `dataset_id`.
 
-### Pattern 2: Bio-FM as Bounded Typed Tool, Never a Chat Endpoint
+`cellxgene-census` is already in `pyproject.toml` (confirmed: `cellxgene-census>=1.18.0`). The tool needs no new top-level dependency. The existing `annotation/reference.py::build_reference_index()` already contains a working pattern for querying the census (`get_anndata`, `obs_value_filter`, S3 throttle config) that `ingest/census.py` can follow directly.
 
-**What:** scGPT/Geneformer/perturbation models are wrapped so the agent calls them with structured input (dataset reference + operation) and receives structured output (embeddings, cell-type labels, predicted expression deltas) — never a free-form conversation with the model.
-**When to use:** Every bio-FM integration point. This is explicitly required by PROJECT.md ("Chat interface to the bio foundation models directly" is out of scope).
-**Trade-offs:** None significant — this is the correct pattern; the alternative (treating a bio-FM as conversational) doesn't map to how these models work (they embed/predict/score, they don't converse) and would reintroduce hallucination risk on structured biological output.
-
-### Pattern 3: Model Serving Decoupled from the Agent Process (Client/Server Split)
-
-**What:** GPU-resident bio-FM inference runs as a separate long-lived service (one per model, or a shared inference server), reachable over a local network/RPC boundary. The agent's tool layer holds a thin client, not the model weights.
-**When to use:** Any model requiring GPU inference. Applies to scGPT, Geneformer, and the perturbation-response model.
-**Trade-offs:** Adds a network hop and a second deployable, but decouples GPU capacity planning from agent iteration — the agent can be redeployed/updated without touching model servers, and vice versa. It also directly resolves PROJECT.md's open question (self-host vs. hosted inference) since the client/server boundary is identical either way — only the endpoint URL changes.
+### Tool schema
 
 ```python
-# tool layer (no GPU dependency)
-def annotate_celltype(dataset_id: str) -> dict:
-    adata_ref = data_store.get(dataset_id)
-    result = scgpt_client.post("/annotate", {"dataset_ref": adata_ref})
-    return {"cell_types": result["labels"], "confidence": result["scores"]}
-
-# separate process, GPU-resident
-# models/serving/scgpt_server.py — loads scGPT weights once, serves /annotate, /embed
+@tool(
+    "query_census",
+    "Fetch a public single-cell dataset from CELLxGENE Census by tissue, "
+    "organism, and/or assay, ingest it with standard QC, and return a "
+    "dataset_id the analysis tools can use. 'tissue' (e.g. 'blood', 'lung'), "
+    "'organism' ('Homo sapiens' or 'Mus musculus'), and 'name' (the local "
+    "dataset name) are required. Optionally pass 'assay', 'obs_value_filter' "
+    "(additional CELLxGENE filter expression), and 'n_cells' (cap, default 5000).",
+    {"name": str, "tissue": str},  # organism has a sensible default; others optional
+)
 ```
 
-## Data Flow
-
-### Primary Flow: Raw Data → Interpreted Answer
+### Data flow
 
 ```
-Raw 10x output (.mtx/.h5)
-    ↓  ingest_10x()  [deterministic pipeline]
-Canonical AnnData (.h5ad) — versioned, stored, referenced by dataset_id
-    ↓  run_qc()  [deterministic pipeline]
-QC'd AnnData (mito%, doublets flagged, low-count filtered) — new version
-    ↓  agent plans: cluster() → annotate_celltype() → diff_expr() → predict_perturbation()
-Analysis tool layer (scanpy) + Bio-FM tool layer (scGPT/Geneformer/perturbation) operate
-on the same canonical AnnData, writing results into .obs/.uns or a derived AnnData
-    ↓  each tool returns a small structured JSON summary (NOT the full matrix)
-Agent context accumulates structured findings across tool calls
-    ↓  agent synthesizes
-Natural-language answer to researcher, with session memory recording dataset_id +
-key findings so a follow-up question ("what about cluster 3?") doesn't require
-re-stating context
+Agent calls query_census(name, tissue, organism, assay?, n_cells?)
+    ↓
+ingest/census.py::ingest_from_census()
+    cellxgene_census.open_soma() [existing pattern from annotation/reference.py]
+    cellxgene_census.get_anndata(organism, obs_value_filter="tissue_general == ...",
+                                  obs_column_names=[...])  → AnnData in memory
+    contract.set_counts_layer(adata)   [same as ingest_10x]
+    qc.run(adata)                      [same as ingest_10x]
+    store.save(name, adata, ...)       [same as ingest_10x]
+    returns dataset_id
+    ↓
+PostToolUse hook records dataset_id in SessionMemory  [unchanged]
+Agent receives {"dataset_id": "name@1"} and can call analyze_dataset next
 ```
 
-### Key Data Flows
+### Component map
 
-1. **Ingest → canonical store:** raw lab data enters exactly once through the deterministic ingest pipeline; everything downstream (agent, analysis tools, bio-FM tools) references the canonical `.h5ad` by `dataset_id`, never re-parses raw 10x files. This is the single point of format normalization.
-2. **Tool call → structured summary → agent context:** large artifacts (full AnnData matrices, embeddings) never enter the agent's context window. Tools write full results to the data store and return a bounded JSON summary (cluster counts, top DE genes, predicted-vs-control deltas). This keeps the agent loop fast and avoids context-window blowup on large single-cell matrices.
-3. **Bio-FM inference → network boundary:** any call touching scGPT/Geneformer/the perturbation model crosses a client/server boundary (agent tool layer → model serving process). This is the one flow that requires GPU and is the natural place to add batching/queuing later if concurrent researchers show up.
-4. **Eval harness → tool layer, bypassing the agent:** VCC benchmark scoring calls `predict_perturbation()` directly against VCC's public dataset, using the exact same tool contract and model server the agent uses in production — this validates the *tool*, and by extension what the agent can actually deliver, without agent-loop nondeterminism in the score.
+| Component | Status | Change |
+|-----------|--------|--------|
+| `agent/tools.py` | MODIFIED | Add `query_census_tool` |
+| `ingest/census.py` | NEW | Census fetch + pipeline wiring |
+| `ingest/pipeline.py` | UNCHANGED | Existing `ingest_10x()` re-used for post-fetch steps |
+| `annotation/reference.py` | UNCHANGED | Pattern donor only |
+| `pyproject.toml` | UNCHANGED | `cellxgene-census` already present |
 
-## Scaling Considerations
+---
 
-| Scale | Architecture Adjustments |
-|-------|--------------------------|
-| Single researcher, internal (v1 target) | Single-box deployment: agent process + tool layer as one local service, one GPU box (Biopunk Labs hardware) running model servers, local filesystem for the AnnData store. No queue needed. |
-| Small lab team (multiple concurrent researchers) | Add a job queue for ingest/analysis pipeline runs (long-running QC/clustering shouldn't block the agent's turn loop); shared dataset store (NAS or S3-compatible) instead of local filesystem; per-researcher session isolation in the memory layer; bio-FM servers may need request queuing/batching if concurrent tool calls exceed single-GPU throughput. |
-| External/multi-tenant (explicitly out of scope in v1) | Proper inference serving (batching-aware server, e.g. Triton or vLLM-style) for bio-FMs; auth/tenancy on both the agent session layer and the dataset store; ingest pipeline likely needs a real workflow manager (Nextflow/Snakemake) invoked as an agent tool rather than a single Python function. |
+## Q2: Session Message Storage (History Replay)
 
-### Scaling Priorities
+### Schema change to SessionMemory
 
-1. **First bottleneck:** GPU inference throughput once more than one researcher is calling bio-FM tools concurrently — single-request model servers will queue. Fix: add request batching or a queue in front of the model serving layer before touching the agent orchestrator.
-2. **Second bottleneck:** Dataset store contention/versioning once multiple researchers reference and mutate `.h5ad` files concurrently — local filesystem versioning breaks down. Fix: move to an object store with explicit dataset versioning/locking before scaling past a single-user internal tool.
+`agent/memory.py` currently has two tables: `session_memory` (dataset refs) and `sessions` (session index). A third table is needed:
 
-## Anti-Patterns
+```sql
+CREATE TABLE IF NOT EXISTS messages (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id TEXT NOT NULL,
+    role      TEXT NOT NULL,          -- 'user' | 'assistant'
+    content   TEXT NOT NULL,          -- message text
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS messages_session_idx ON messages (session_id, id);
+```
 
-### Anti-Pattern 1: Agent-in-the-Loop for Every Pipeline Step
+New methods on `SessionMemory`:
+- `record_message(session_id, role, content)` — called from the agentic loop after each turn
+- `get_messages(session_id) -> list[dict]` — returns `[{role, content, created_at}, ...]` ordered by id
 
-**What people do:** Let the LLM decide QC thresholds, filtering cutoffs, or clustering parameters cell-by-cell or step-by-step via chain-of-thought, instead of calling a deterministic pipeline.
-**Why it's wrong:** Nondeterministic, slow, expensive (many LLM calls for what should be one function call), and breaks scientific reproducibility — the same raw data could QC differently across runs.
-**Do this instead:** Ingest/QC/standard analysis are deterministic pipelines with sane defaults, exposed as a small number of coarse-grained tools. The agent can override specific parameters (e.g., "use a stricter mito% cutoff") but doesn't micromanage the procedure.
+### Where messages get written
 
-### Anti-Pattern 2: Loading Model Weights in the Agent Process
+`agent/session.py::run_session()` already runs a `for prompt in prompts:` loop. After each `client.query(...)` / `client.receive_response()` pair, append:
+1. `session_memory.record_message(session_id, "user", prompt)` (before the query)
+2. `session_memory.record_message(session_id, "assistant", final_text)` (after the response)
 
-**What people do:** Import scGPT/Geneformer directly into the same process as the agent loop for simplicity.
-**Why it's wrong:** Ties agent uptime and deployability to GPU availability; makes the agent process heavyweight and hard to redeploy independently; blocks the "self-host vs. hosted" decision from being deferred, since the model becomes structurally baked into the agent's deployment target.
-**Do this instead:** Model serving is always a separate process/service behind a stable client API, regardless of whether it's self-hosted on Biopunk Labs hardware or hosted elsewhere.
+This is a pure addition — no existing hook or pipeline logic changes.
 
-### Anti-Pattern 3: Chat Interface to a Bio Foundation Model
+### API change to GET /api/sessions/{id}
 
-**What people do:** Expose scGPT/Geneformer as something the researcher (or the agent) can "converse" with directly.
-**Why it's wrong:** These models embed/classify/score — they have no dialogue capability, and forcing conversational framing around structured outputs invites hallucinated interpretation. Explicitly excluded in PROJECT.md's scope.
-**Do this instead:** Bio-FMs are always invoked through bounded, typed tool calls; the agent (not the model) does the natural-language interpretation of the structured output.
+`webapp/backend/main.py::get_session()` currently returns `SessionSummary` with only `session_id` and `recent_datasets`. The response schema needs `messages` added:
 
-### Anti-Pattern 4: Streaming Full AnnData Objects Through Agent Context
+```python
+# schemas.py
+class MessageRecord(BaseModel):
+    role: str
+    content: str
+    created_at: str
 
-**What people do:** Return raw matrices, full `.obs`/`.var` tables, or entire embeddings as tool output so the agent "has everything."
-**Why it's wrong:** Single-cell matrices are large (hundreds of thousands of cells × thousands of genes); this blows the context window, wastes tokens, and doesn't help the LLM reason better.
-**Do this instead:** Tools write full results to the data store (referenced by ID) and return small structured summaries (counts, top genes, confidence scores) sized for agent context.
+class SessionSummary(BaseModel):
+    session_id: str
+    created_at: str | None = None
+    last_active_at: str | None = None
+    recent_datasets: list[str] = []
+    messages: list[MessageRecord] = []  # NEW
+```
 
-## Integration Points
+`get_session()` in `main.py` calls `session_memory.get_messages(session_id)` and populates the field. The endpoint path stays `GET /api/sessions/{session_id}` — no new route needed.
 
-### External Services
+### Frontend change to sessions.js
 
-| Service | Integration Pattern | Notes |
-|---------|---------------------|-------|
-| Anthropic Claude API | Agent orchestrator's LLM backend, native tool/function calling | Core dependency for the agentic loop; same integration point OpenClaw already uses |
-| Bio-FM model weights (scGPT, Geneformer) | Downloaded checkpoints (typically via HuggingFace Hub or the models' own repos), loaded into the model serving layer at process start | Both are self-hostable on modest single-GPU hardware per PROJECT.md's own framing (LOW confidence on exact VRAM figures — verify against current scGPT/Geneformer model cards before Phase implementation, as checkpoint sizes vary by variant) |
-| Virtual Cell Challenge public dataset (Arc Institute) | Downloaded once by the eval harness, not the live agent; ~300K scRNA-seq profiles, H1 hESC cells, 300 CRISPRi perturbations, 10x Genomics Flex chemistry | 2026 challenge format is zero-shot (no training set released — models predict on unperturbed baseline + gene list only); confirm current-year task format at virtualcellchallenge.org / arcinstitute.org before building the harness, since format changed between 2025 and 2026 |
-| GPU compute (self-hosted vs. cloud) | Model serving layer is a stable client/server boundary regardless of where the server runs | Open per PROJECT.md — decouple this decision from the tool layer design so it can be resolved later without rework |
+`sessions.js::resumeSession()` currently calls `getSession(sessionId)` and renders a single "Resuming session — last used: ..." stub message via `appendMessage()`.
 
-### Internal Boundaries
+Change: iterate over `summary.messages` and call `appendMessage({role, content})` for each, in order, before the "Resuming…" stub. If `messages` is empty or absent (old sessions pre-v1.2), fall back to the existing stub behavior.
 
-| Boundary | Communication | Notes |
-|----------|---------------|-------|
-| Agent Orchestrator ↔ Tool Layer | Typed function/tool calls (JSON in/out), native Claude tool calling or MCP-style tool schema | Agent never sees raw data — only structured tool results sized for context |
-| Tool Layer ↔ Data/State Layer | Direct file I/O / AnnData object handles (dataset_id → `.h5ad` path/version) | Not exposed to the agent directly; tool layer owns all reads/writes to canonical datasets |
-| Analysis Tools ↔ Bio-FM Tools | No direct coupling — both operate on the same canonical AnnData store; the agent composes them at the orchestration level (e.g., cluster, then annotate) | Keeps ingest/analysis and bio-FM concerns independently testable and deployable |
-| Bio-FM Tool Layer ↔ Model Serving Layer | HTTP/gRPC client-server call, crosses process (and possibly host) boundary | This is the one boundary that carries GPU dependency; everything else in the tool layer is CPU-only |
-| Eval Harness ↔ Tool Layer | Calls the same `predict_perturbation()` contract directly, bypassing the agent's planning loop | Ensures benchmark scoring reflects what the tool actually does, not agent-loop variance |
+`chat.js::appendMessage()` already handles both `role: 'user'` and `role: 'assistant'` (confirmed from frontend structure — chat thread renders both roles). No change needed to `chat.js`.
 
-## Suggested Build Order (Dependency-Driven)
+`api.js::getSession()` requires no change — it already returns the full JSON body and `messages` will just be present in the response.
 
-1. **Ingest pipeline** (raw 10x → canonical `.h5ad` + QC) — foundational; every other component depends on canonical data existing. Build and test standalone (no agent, no bio-FM) against a public dataset.
-2. **Analysis tool layer** (scanpy-backed cluster/DE) — depends only on canonical AnnData from step 1. Validate as plain Python functions before wrapping as agent tools; this proves the "coarse-grained deterministic tool" contract cheaply.
-3. **Agent orchestrator wiring** (OpenClaw-style session/memory/tool routing) — wire the loop to call the tools from steps 1-2 first, since they're CPU-only and deterministic. This validates the tool-calling contract and session/memory behavior before adding GPU complexity.
-4. **Model serving layer + Bio-FM tool layer** (scGPT/Geneformer annotation) — add once the tool contract is proven; this is where the self-host vs. hosted GPU decision must be resolved.
-5. **Perturbation-prediction tool** — builds directly on the model serving infra from step 4; this is the tool the VCC benchmark will exercise.
-6. **Benchmark/eval harness** (Virtual Cell Challenge) — built last; consumes the perturbation tool from step 5 directly (not through the full agent loop) for repeatable scoring. This is the validation step, not a build dependency for anything else — nothing downstream needs it, but it needs everything upstream.
+### Component map
 
-This ordering front-loads the deterministic, agent-independent pieces (ingest, analysis) so the hardest infra decision (GPU model serving) is made only once the tool-calling pattern is already proven end-to-end on cheap, CPU-only tools.
+| Component | Status | Change |
+|-----------|--------|--------|
+| `agent/memory.py` | MODIFIED | Add `messages` table, `record_message()`, `get_messages()` |
+| `agent/session.py` | MODIFIED | Call `record_message()` around each turn in `run_session()` |
+| `webapp/backend/schemas.py` | MODIFIED | Add `MessageRecord`, extend `SessionSummary.messages` |
+| `webapp/backend/main.py` | MODIFIED | `get_session()` populates `messages` field |
+| `webapp/frontend/sessions.js` | MODIFIED | `resumeSession()` renders historical messages |
+| `webapp/frontend/api.js` | UNCHANGED | Already returns full JSON |
+| `webapp/frontend/chat.js` | UNCHANGED | Already handles user/assistant roles |
+
+---
+
+## Q3: Geneformer Isolation
+
+### Separate venv from scGPT — required
+
+Geneformer requires Python >=3.10 (confirmed from `setup.py`). The existing `bio_fm_worker/.venv` is Python 3.9.6 (confirmed from `pyvenv.cfg`). These cannot share a venv.
+
+The correct structure is a new `bio_fm_worker/geneformer_worker/` directory with its own `.venv` on Python 3.10+, parallel to the existing scGPT isolation:
+
+```
+bio_fm_worker/
+├── .venv/                      # existing — Python 3.9.6, scGPT + torch==2.3.0
+├── run_scgpt_embed.py           # existing — scGPT subprocess entry point
+├── geneformer_worker/
+│   ├── .venv/                   # NEW — Python 3.10+, Geneformer + torch (unpinned)
+│   └── run_geneformer_perturb.py  # NEW — Geneformer subprocess entry point
+├── checkpoints/
+│   ├── scGPT_human/             # existing
+│   └── geneformer/              # NEW — Geneformer checkpoint download
+└── reference/
+    └── reference.h5ad           # existing
+```
+
+### Subprocess shim pattern (identical to fm_client.py)
+
+A new `perturbation/geneformer_client.py` mirrors `annotation/fm_client.py` exactly:
+- `call_geneformer_perturb(query_h5ad_path, target_gene, worker_python, script_path, model_dir)` shells out to `run_geneformer_perturb.py`
+- The worker script reads the `.h5ad`, runs Geneformer in-silico perturbation, prints JSON to stdout, exits 0 on success
+- Same `ensure_worker_compatible_h5ad()` serialization fix applies (pandas 3.0 StringDtype)
+
+### perturbation/pipeline.py change
+
+`perturbation/pipeline.py::predict()` currently calls `fit_from_adata()` (linear additive model). v1.2 adds Geneformer as an optional second prediction alongside the linear model. The function signature should add a `use_geneformer: bool = False` flag. When true, it calls `geneformer_client.call_geneformer_perturb(...)` and appends a third `PerturbationCall(method="geneformer", ...)` to the summary. The existing linear + naive_baseline pair is always computed first; Geneformer is additive, not a replacement.
+
+`perturbation/summary.py` will need a `geneformer_call: PerturbationCall | None = None` field on `PerturbationSummary`.
+
+### torch version risk
+
+Geneformer's `setup.py` lists `torch` without a version pin. This means `pip install geneformer` in the new `.venv` will pull the latest torch (currently 2.8.x), which is fine for a Python 3.10+ environment. There is no torchtext dependency in Geneformer (unlike scGPT), so the ABI mismatch that required `torch==2.3.0` in the scGPT venv does not apply here. No pre-emptive pin needed — but if a new conflict surfaces during installation it should be captured in `geneformer_worker/README.md` using the same pattern as the existing `bio_fm_worker/README.md`.
+
+### Component map
+
+| Component | Status | Change |
+|-----------|--------|--------|
+| `bio_fm_worker/geneformer_worker/.venv` | NEW | Python 3.10+, Geneformer installed |
+| `bio_fm_worker/geneformer_worker/run_geneformer_perturb.py` | NEW | Subprocess entry point |
+| `bio_fm_worker/checkpoints/geneformer/` | NEW | Model weights |
+| `perturbation/geneformer_client.py` | NEW | Subprocess shim (mirrors fm_client.py) |
+| `perturbation/pipeline.py` | MODIFIED | Add Geneformer call path (opt-in flag) |
+| `perturbation/summary.py` | MODIFIED | Add `geneformer_call` field |
+| `agent/tools.py::predict_perturbation_tool` | MODIFIED | Pass `use_geneformer` arg |
+| `bio_fm_worker/.venv` (scGPT) | UNCHANGED | Python 3.9.6 isolation preserved |
+
+---
+
+## Q4: Docker Compose Architecture
+
+### Single-process constraint and its impact on Docker design
+
+`webapp/backend/streaming.py` uses an in-process `asyncio.Queue` registry (`_QUEUES: dict[str, asyncio.Queue]`). This is documented as a "Single Uvicorn worker assumption" — the queue is local to the process. Multi-worker Uvicorn (e.g., `--workers 4`) would break streaming because a WebSocket request to `/ws/{id}` could land on a different worker than the `/api/ask` that created the queue.
+
+This constraint means: **the backend service must run as a single Uvicorn worker** in Docker. `CMD ["uvicorn", "webapp.backend.main:app", "--host", "0.0.0.0", "--port", "8000"]` — no `--workers N` flag.
+
+### Service layout
+
+Two services: `backend` + `gpu-worker` (optional/profile-gated). No separate nginx — the frontend is already served by FastAPI's `StaticFiles` mount at `/app`.
+
+```yaml
+# docker-compose.yml
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data               # dataset store (persisted)
+      - ./agent/memory.sqlite:/app/agent/memory.sqlite  # session memory
+      - ./tool_calls.jsonl:/app/tool_calls.jsonl        # audit log
+    environment:
+      - BIOCLAW_PASSWORD=${BIOCLAW_PASSWORD}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - BIOCLAW_STORE_ROOT=/app/data
+    command: ["uvicorn", "webapp.backend.main:app",
+              "--host", "0.0.0.0", "--port", "8000"]
+
+  gpu-worker:
+    build:
+      context: bio_fm_worker
+      dockerfile: Dockerfile.gpu-worker
+    volumes:
+      - ./bio_fm_worker/checkpoints:/checkpoints:ro
+      - ./bio_fm_worker/reference:/reference:ro
+    profiles:
+      - gpu                            # opt-in: docker compose --profile gpu up
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+```
+
+### Dockerfile strategy: multi-stage, NOT multi-service for the main app
+
+The main backend Dockerfile uses two stages to keep the final image lean:
+
+```
+Stage 1 (builder): python:3.12-slim
+  - Install uv
+  - Copy pyproject.toml, uv.lock
+  - uv sync --frozen (installs all deps incl. scanpy, anndata, cellxgene-census)
+
+Stage 2 (runtime): python:3.12-slim
+  - Copy .venv from builder
+  - Copy source (agent/, analysis/, annotation/, ingest/, perturbation/, qa/, webapp/)
+  - Expose 8000
+  - CMD uvicorn (single worker)
+```
+
+The bio_fm_worker/scGPT isolation is handled **at Docker build time** within the `gpu-worker` service's own `Dockerfile.gpu-worker`, using Python 3.9 as the base. The scGPT venv creation steps from `bio_fm_worker/README.md` (pip install scgpt, pin torch==2.3.0) become RUN commands in that Dockerfile. This removes the manual `bio_fm_worker/.venv` setup step from the user's `docker compose up` experience.
+
+The `backend` service's Docker container does **not** include `bio_fm_worker/` at all. The `annotation/fm_client.py` subprocess shim currently hardcodes paths like `bio_fm_worker/.venv/bin/python` — these paths need to be overridable via environment variables in Docker (`SCGPT_WORKER_PYTHON`, `GENEFORMER_WORKER_PYTHON`) so the backend can call into the `gpu-worker` container. This is the main architectural evolution Docker introduces: the subprocess shim becomes an optional network/inter-container call rather than a local filesystem call.
+
+**Inter-container subprocess path**: The cleanest v1.2 approach is to expose the `gpu-worker` as a minimal HTTP service (FastAPI or Flask, one endpoint per model) rather than a raw subprocess target. The backend then calls `http://gpu-worker:8080/annotate` instead of shelling out. The `fm_client.py` shim's `subprocess.run(...)` is replaced by `httpx.post(...)`. This also fixes the single-process constraint issue — HTTP calls work fine across workers if the queue constraint is ever lifted later.
+
+If the HTTP refactor is deferred for v1.2, the simpler fallback is shared bind-mounted filesystems (input .h5ad written to a shared volume, worker reads it, writes result JSON, backend reads result JSON). This is lower complexity but couples the two containers via filesystem state.
+
+### Component map
+
+| Component | Status | Change |
+|-----------|--------|--------|
+| `Dockerfile` | NEW | Multi-stage, main backend |
+| `docker-compose.yml` | NEW | backend + gpu-worker (profiled) |
+| `bio_fm_worker/Dockerfile.gpu-worker` | NEW | scGPT + Geneformer in Python 3.9/3.10 |
+| `.env.example` | NEW | `BIOCLAW_PASSWORD`, `ANTHROPIC_API_KEY` |
+| `annotation/fm_client.py` | MODIFIED | Worker path overridable via env var (or HTTP refactor) |
+| `perturbation/geneformer_client.py` | MODIFIED | Same env-var override |
+| `webapp/backend/streaming.py` | UNCHANGED | Single-worker constraint documented, honored |
+
+---
+
+## Q5: Result Export
+
+### Two distinct export surfaces
+
+**Surface A: Direct API endpoint — `GET /api/export/{dataset_id}`**
+
+Returns a CSV of the current dataset's obs metadata (cluster labels, cell-type annotations, perturbation results). This is the download button a researcher clicks in the UI. It is a pure FastAPI route — no agent involvement.
+
+The endpoint:
+1. Loads the named dataset from `DatasetStore`
+2. Extracts `adata.obs` as a pandas DataFrame
+3. Returns `StreamingResponse` with `media_type="text/csv"` and `Content-Disposition: attachment`
+
+Schema:
+```python
+@app.get("/api/export/{dataset_name}", dependencies=[Depends(require_password)])
+async def export_dataset(dataset_name: str, version: int | None = None): ...
+```
+
+`api.js` gets a new `exportDataset(datasetName, version)` function that opens the URL in a new tab (triggers browser download).
+
+**Surface B: Agent tool — `export_analysis_script`**
+
+An agent-callable tool that generates a reproducible Python script (scanpy code) representing the analysis steps performed in the conversation. The tool reads the session's `recent_datasets` from `SessionMemory` and the `tool_calls.jsonl` log entries for the session, then generates a script that reproduces the ingest → QC → cluster → annotate sequence.
+
+This is a new `@tool` in `agent/tools.py`:
+```python
+@tool(
+    "export_analysis_script",
+    "Generate a reproducible Python/scanpy script that reproduces the analysis "
+    "performed in this session. Returns the script as text the user can save and run.",
+    {"session_id": str},
+)
+```
+
+The generated script is returned as the tool's text content — the agent pastes it into its answer. No file is written server-side by this tool.
+
+### Why two surfaces, not one
+
+The CSV download is a synchronous, user-initiated browser action that should not require an agent turn (it's just data access, not a reasoning task). The script export requires reasoning (ordering the steps correctly, translating tool calls to scanpy API calls) and benefits from the agent's system prompt context. Combining them into one endpoint would either force every CSV download through an LLM call or strip the script generation of its reasoning layer.
+
+### Component map
+
+| Component | Status | Change |
+|-----------|--------|--------|
+| `webapp/backend/main.py` | MODIFIED | Add `GET /api/export/{dataset_name}` |
+| `webapp/backend/schemas.py` | UNCHANGED | No new schema needed (CSV response) |
+| `agent/tools.py` | MODIFIED | Add `export_analysis_script` tool |
+| `webapp/frontend/api.js` | MODIFIED | Add `exportDataset()` function |
+| `webapp/frontend/chat.js` or `main.js` | MODIFIED | Add export button/trigger in UI |
+
+---
+
+## Q6: Build Order
+
+Dependencies between the seven v1.2 features determine this ordering. Features with no external dependencies on other v1.2 features can be built in parallel; those with dependencies must wait.
+
+### Dependency graph
+
+```
+.h5ad upload fix (independent — ingest/loaders.py already handles .h5ad)
+    ↓ (blocks nothing — already partially done per uploads.py)
+
+scGPT ABI fix (independent — bio_fm_worker/.venv only)
+    ↓
+    └─→ Geneformer isolation (depends on scGPT fix being validated first,
+            and requires a working bio_fm_worker pattern to replicate)
+
+cellxgene-census query tool (independent — cellxgene-census already in pyproject.toml,
+    reference.py has working query pattern)
+
+Session history replay (independent of all FM/ingest features —
+    only touches memory.py, session.py, schemas.py, sessions.js)
+
+Result export: CSV endpoint (independent — DatasetStore already loads datasets)
+Result export: script tool (depends on session history replay — needs message log
+    from memory.py to generate the script accurately)
+
+Docker compose (depends on ALL of the above being stable — it packages the final state)
+```
+
+### Recommended build order
+
+**Phase 1 — No dependencies, highest value unlocked**
+
+1. `.h5ad` upload fix
+   - `uploads.py` already accepts `.h5ad` single-file uploads (confirmed: `_SINGLE_FILE_SUFFIXES = (".h5", ".h5ad")`)
+   - `ingest/loaders.py::load()` already handles `.h5ad` via `sc.read_h5ad()`
+   - The fix may be a test-and-verify, not a code change — check if `/api/upload` is fully wired for `.h5ad` end-to-end, including the frontend upload UI accepting `.h5ad` MIME/extension
+   - Confidence: this may already be working; verify before treating it as a build task
+
+2. Session history replay
+   - Pure backend + frontend change, no FM or ingest dependency
+   - Unblocks the script export tool (needs message log)
+   - Schema migration is additive (new table + new field), safe to land early
+
+3. Result export: CSV endpoint
+   - Independent FastAPI route + DatasetStore read
+   - No FM, no message history needed
+   - Can be built and shipped before session replay is done
+
+**Phase 2 — Unlocked after Phase 1**
+
+4. Result export: analysis script tool
+   - Depends on session history replay (Phase 1 item 2) having landed so `get_messages()` exists
+   - Builds on the `@tool` pattern already established in `agent/tools.py`
+
+5. cellxgene-census query tool
+   - No dependency on Phase 1 items, but sequenced here because it requires a test against the live Census API (network-dependent), making it slower to iterate on than Phase 1 items
+   - `annotation/reference.py` is the pattern template; adapt for ingest rather than reference building
+
+**Phase 3 — FM isolation work**
+
+6. scGPT ABI fix (real inference)
+   - Isolated to `bio_fm_worker/.venv` and `run_scgpt_embed.py`
+   - The README documents the fix was partially done (torch==2.3.0 applied, `import scgpt` works) but real inference against a checkpoint was not yet validated end-to-end
+   - Sequenced before Geneformer because it validates the subprocess pattern before introducing a second isolated venv
+
+7. Geneformer isolation + perturbation tool
+   - Requires scGPT pattern to be stable (item 6)
+   - Requires `bio_fm_worker/geneformer_worker/` setup, new subprocess shim, `perturbation/pipeline.py` extension
+   - Sequenced last in Phase 3 because it's the highest-risk item (new venv, new model API, new subprocess protocol)
+
+**Phase 4 — Packaging**
+
+8. Docker compose
+   - Depends on all seven features being stable
+   - The inter-container communication decision for the FM worker (shared volume vs HTTP) is the main architectural choice to resolve here
+   - Recommendation: HTTP service in the gpu-worker container — cleaner boundary, avoids shared-filesystem coupling, makes the worker independently restartable
+   - Build the main backend Dockerfile first (simpler, no GPU toolchain), validate `docker compose up` works without `--profile gpu`, then add the gpu-worker Dockerfile
+
+### Parallelizable pairs
+
+Phase 1 items 1/2/3 are fully independent and can be worked in parallel if there are parallel development streams.
+
+Phase 3 items 6 and 5 (cellxgene-census) are independent and can run in parallel.
+
+Phase 3 item 7 (Geneformer) must wait for item 6 (scGPT) to be validated.
+
+---
+
+## Component Boundaries: New vs Modified vs Unchanged
+
+```
+NEW FILES
+─────────────────────────────────────────────────────────────────
+ingest/census.py                    # census query + ingest pipeline
+perturbation/geneformer_client.py   # Geneformer subprocess shim
+bio_fm_worker/geneformer_worker/
+  .venv/                            # Python 3.10+, Geneformer
+  run_geneformer_perturb.py         # Geneformer subprocess entry point
+bio_fm_worker/checkpoints/geneformer/ # model weights
+Dockerfile                          # main backend multi-stage
+docker-compose.yml
+bio_fm_worker/Dockerfile.gpu-worker
+.env.example
+
+MODIFIED FILES (additive changes only — no existing logic removed)
+─────────────────────────────────────────────────────────────────
+agent/tools.py                      # +query_census_tool, +export_analysis_script_tool
+                                    #  predict_perturbation_tool: +use_geneformer arg
+agent/memory.py                     # +messages table, +record_message(), +get_messages()
+agent/session.py                    # +record_message() calls around each turn
+perturbation/pipeline.py            # +Geneformer call path (opt-in)
+perturbation/summary.py             # +geneformer_call field
+annotation/fm_client.py             # worker path → env-var overridable
+webapp/backend/main.py              # +GET /api/export/{dataset_name}
+webapp/backend/schemas.py           # +MessageRecord, +SessionSummary.messages
+webapp/frontend/api.js              # +exportDataset()
+webapp/frontend/sessions.js         # resumeSession() renders history
+webapp/frontend/main.js or chat.js  # +export trigger in UI
+
+UNCHANGED (confirmed by codebase inspection)
+─────────────────────────────────────────────────────────────────
+ingest/loaders.py                   # .h5ad already handled
+ingest/pipeline.py                  # ingest_10x() reused by census tool
+ingest/store.py                     # no change
+webapp/backend/uploads.py           # .h5ad already accepted
+webapp/backend/streaming.py         # single-process constraint honored
+webapp/backend/auth.py
+webapp/backend/deps.py
+webapp/frontend/api.js (getSession) # already returns full JSON body
+webapp/frontend/chat.js             # already handles user/assistant roles
+bio_fm_worker/.venv (scGPT)         # Python 3.9.6 isolation preserved
+bio_fm_worker/run_scgpt_embed.py    # scGPT shim unchanged
+annotation/pipeline.py
+analysis/pipeline.py
+qa/session.py
+```
+
+---
+
+## Data Flow Changes for v1.2
+
+### New flow: Census query → dataset
+
+```
+Agent: query_census(name="pbmc_lung", tissue="lung", n_cells=5000)
+    ↓
+ingest/census.py::ingest_from_census()
+    open_soma() → get_anndata(obs_value_filter="tissue_general == 'lung'", ...)
+    → AnnData in memory (skips loaders.load(), data already in memory)
+    contract.set_counts_layer() → qc.run() → store.save()
+    returns "pbmc_lung@1"
+    ↓
+Agent receives dataset_id, proceeds to analyze_dataset
+```
+
+### New flow: session history → frontend replay
+
+```
+GET /api/sessions/{id}
+    → session_memory.get_messages(session_id)  [new method]
+    → SessionSummary(messages=[{role, content, created_at}, ...])
+Frontend sessions.js::resumeSession()
+    → iterates summary.messages
+    → appendMessage({role, content}) for each  [existing chat.js function]
+    → user sees full prior conversation in chat thread
+```
+
+### New flow: CSV export
+
+```
+Frontend: user clicks "Export CSV" for dataset_name
+    → api.js::exportDataset(dataset_name) → GET /api/export/{dataset_name}
+    → FastAPI loads adata from DatasetStore
+    → returns StreamingResponse(adata.obs.to_csv(), media_type="text/csv")
+    → browser downloads file
+```
+
+### Existing flows: unchanged
+
+All existing `/api/ask`, `/api/upload`, `/ws/{id}`, `/api/sessions`, and `/api/sessions/{id}` flows are unaffected by v1.2 changes. The session memory additive schema migration (new `messages` table) is backward-compatible — old sessions without messages get `messages: []` in the API response.
+
+---
+
+## Pitfalls Specific to This Integration
+
+### Single-process constraint in Docker
+
+If the backend container is accidentally started with `--workers 2` (e.g., via a Gunicorn wrapper), the `asyncio.Queue` streaming registry breaks silently: the WebSocket for `/ws/{id}` may land on a different worker than the `/api/ask` that registered the queue. The Dockerfile `CMD` must use bare `uvicorn` (not `gunicorn`), and the compose file must not set `WORKERS` env vars that a startup script might pick up. Document this constraint in a `# SINGLE WORKER REQUIRED` comment in the Dockerfile.
+
+### anndata wire format gap in Geneformer worker
+
+The same pandas 3.0 StringDtype → anndata 0.10.x incompatibility documented in `annotation/fm_client.py` applies to any `.h5ad` written by the main venv (Python 3.12, anndata 0.13) and read by `geneformer_worker/.venv`. The `ensure_worker_compatible_h5ad()` call must precede every `.write_h5ad()` in the new Geneformer shim, exactly as it does in `annotation/pipeline.py`.
+
+### Census query cell count and memory
+
+`cellxgene_census.get_anndata()` with a tissue filter and no `n_cells` cap can return millions of cells. The census query tool must enforce a hard cap (5,000 cells by default, user-overridable up to a documented limit) and communicate this constraint clearly in the tool description. The existing `annotation/reference.py::_fetch()` uses a contiguous joinid window (not a full scatter) for the same reason.
+
+### Message transcript storage size
+
+`agent/session.py::run_session()` prepends `_recall_preamble()` to every prompt. If message transcripts are stored verbatim and then also replayed on every turn, the preamble grows with session length. The `record_message()` implementation should store only the original user prompt and final assistant response, not the preamble-extended string that was actually sent to the SDK.
+
+---
 
 ## Sources
 
-- [An agentic AI framework for ingestion and standardization of single-cell RNA-seq data analysis (CellAtria/CellExpress) — npj Artificial Intelligence](https://www.nature.com/articles/s44387-025-00064-0) — MEDIUM confidence, abstract/search-summary level detail on the two-component agent+pipeline architecture
-- [CellAgent: LLM-Driven Multi-Agent Framework for Natural Language-Based Single-Cell Analysis — bioRxiv](https://www.biorxiv.org/content/10.1101/2024.05.13.593861v4) — LOW/MEDIUM confidence, full architectural detail not accessible via abstract alone
-- [OmicVerse: An Agent-Enabled Unified Framework for Bulk, Single-Cell, and Spatial Transcriptomics Data Analysis — Stanford Digital Repository](https://purl.stanford.edu/cv694yk7414) — MEDIUM confidence, confirms agent-enabled framework integrating scGPT/Geneformer/CellPLM for embeddings/annotation
-- [Biomni — snap-stanford/Biomni GitHub](https://github.com/snap-stanford/biomni) — MEDIUM confidence, confirms retrieval-augmented planning + code-execution pattern and MCP server support for general biomedical agents
-- [scBench: Evaluating AI Agents on Single-Cell RNA-seq Analysis — arXiv](https://arxiv.org/pdf/2602.09063) — MEDIUM confidence, confirms benchmark-as-separate-harness pattern (task definitions, real-workflow-derived problems, agent interface decoupled from scoring)
-- [Large language model agents for biological intelligence across genomics, proteomics, spatial biology, and biomedicine — Briefings in Bioinformatics](https://academic.oup.com/bib/article/27/2/bbag110/8540361) — MEDIUM confidence, survey-level confirmation of "LLM plans/orchestrates, does not process raw data directly" pattern
-- [ChatSpatial: Schema-Enforced Agentic Orchestration for Reproducible and Cross-Platform Spatial Transcriptomics — bioRxiv](https://www.biorxiv.org/content/10.64898/2026.02.26.708361v3.full) — LOW confidence, search-summary only; supports the "tools with strict typed I/O specifications" pattern
-- [The 2026 Virtual Cell Challenge: predicting perturbation responses in cell contexts a model has never seen — Arc Institute](https://arcinstitute.org/news/virtual-cell-challenge-2026) — HIGH confidence, official source on current-year (zero-shot) task format
-- [Virtual Cell Challenge: Toward a Turing test for the virtual cell — Cell](https://www.cell.com/cell/fulltext/S0092-8674(25)00675-0) — HIGH confidence, official framing paper for the benchmark's design rationale and dataset structure
-- [Virtual Cell Initiative — Arc Institute](https://arcinstitute.org/virtual-cell-initiative) — HIGH confidence, official program page
-- [Model Context Protocol: The unexpected catalyst of a bioinformatics interoperability revolution — PLOS Computational Biology](https://journals.plos.org/ploscompbiol/article?id=10.1371%2Fjournal.pcbi.1014543) — MEDIUM confidence, confirms MCP's client-server architecture as the emerging standard for tool integration in bioinformatics agents
-- scGPT/Geneformer VRAM and deployment sizing — LOW confidence, not independently verified this session; general knowledge that both are single-GPU-class models (scGPT ~tens of millions of parameters, Geneformer 6-12 layer BERT-scale) but exact figures should be re-checked against current model cards before Phase 4 implementation
+All findings in this document are based on direct codebase inspection (September 2026 state) of:
+- `/Users/darren/.openclaw/workspace/bioclaw/agent/` (tools.py, memory.py, session.py)
+- `/Users/darren/.openclaw/workspace/bioclaw/webapp/backend/` (main.py, streaming.py, uploads.py, schemas.py, deps.py)
+- `/Users/darren/.openclaw/workspace/bioclaw/webapp/frontend/` (sessions.js, api.js, chat.js)
+- `/Users/darren/.openclaw/workspace/bioclaw/ingest/` (loaders.py, pipeline.py, store.py)
+- `/Users/darren/.openclaw/workspace/bioclaw/annotation/` (fm_client.py, pipeline.py, reference.py)
+- `/Users/darren/.openclaw/workspace/bioclaw/perturbation/` (pipeline.py, model.py)
+- `/Users/darren/.openclaw/workspace/bioclaw/bio_fm_worker/` (run_scgpt_embed.py, README.md, .venv/pyvenv.cfg)
+- `/Users/darren/.openclaw/workspace/bioclaw/pyproject.toml`
+- Geneformer `setup.py` via HuggingFace (python_requires=">=3.10", no torch version pin, no torchtext dep) — MEDIUM confidence
+- cellxgene-census `get_anndata()` API via official docs — HIGH confidence
 
 ---
-*Architecture research for: Agent-orchestrated bioinformatics (BioClaw)*
-*Researched: 2026-09-03*
+*Architecture research for: BioClaw v1.2 feature integration*
+*Researched: 2026-09-16*
