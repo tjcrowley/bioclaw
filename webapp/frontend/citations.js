@@ -70,22 +70,11 @@ export function showCitationDetail(sha, citations) {
 
 // Delegated click handler — read citations from the containing bubble (not a global)
 // so that old messages stay correct after new messages arrive.
-const _chatThread = document.getElementById('chat-thread');
-if (!_chatThread) {
-    console.error('[citations] #chat-thread not found — click handler not registered');
-} else {
-    _chatThread.addEventListener('click', (e) => {
-        const btn = e.target.closest('.citation-ref');
-        if (!btn) return;
-        console.log('[citations] click on sha:', btn.dataset.sha);
-        const sha = btn.dataset.sha;
-        const bubble = btn.closest('.message-bubble');
-        const cits = (bubble && bubble._bioclawCitations) || window.__lastCitations || [];
-        console.log('[citations] cits length:', cits.length, 'bubble has prop:', !!(bubble && bubble._bioclawCitations));
-        try {
-            showCitationDetail(sha, cits);
-        } catch (err) {
-            console.error('[citations] showCitationDetail threw:', err);
-        }
-    });
-}
+document.getElementById('chat-thread').addEventListener('click', (e) => {
+    const btn = e.target.closest('.citation-ref');
+    if (!btn) return;
+    const sha = btn.dataset.sha;
+    const bubble = btn.closest('.message-bubble');
+    const cits = (bubble && bubble._bioclawCitations) || window.__lastCitations || [];
+    showCitationDetail(sha, cits);
+});
