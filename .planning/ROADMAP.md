@@ -6,6 +6,8 @@ BioClaw goes from raw 10x Genomics files to a Claude-based agent that answers pl
 
 **Milestone v1.1 (Phases 7-10)** takes the shipped v1.0 agent core and wraps it in a self-contained local web front end, styled after OpenClaw's own UX. The backend is built before the frontend (API-first): first the authenticated HTTP/WebSocket foundation that wraps `ask_question()` and streams tool-call activity, then the session-history and dataset-upload endpoints that depend on that foundation. Only once the full API surface exists is the frontend built against it — chat thread, live activity view, citation rendering, session sidebar, upload control, login screen, and OpenClaw-styled visuals — followed by a final packaging and local-verification pass. Deployment to any production/public environment is explicitly out of scope for this milestone; every phase's success criteria are verifiable on a local machine only.
 
+**Milestone v1.2 (Phases 11-14)** replaces synthetic demo data with real public single-cell datasets, wires real bio foundation model inference (replacing stubs), surfaces session conversation history in the chat UI, adds result export (CSV and scanpy script), and ships a Docker compose that lets any researcher run the full stack with one command. Phases are sequenced by dependency: quick wins that are independent of FM and network come first (Phase 11), agent data-access capability second (Phase 12), FM inference in dependency order third (Phase 13), and Docker deployment last once all features are stable (Phase 14).
+
 ## Phases
 
 **Phase Numbering:**
@@ -24,6 +26,10 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 8: Session & Dataset Endpoints** - Backend endpoints expose session list/resume and dataset upload, built on the authenticated Phase 7 foundation (completed 2026-09-12)
 - [x] **Phase 9: Frontend Chat UI** - An OpenClaw-styled chat frontend delivers login, message thread, live tool activity, citation rendering, session sidebar, and dataset upload (completed 2026-09-14)
 - [x] **Phase 10: Packaging & Local Verification** - The webapp ships self-contained, runs via one documented command, and is manually verified end-to-end locally (completed 2026-09-15)
+- [ ] **Phase 11: Quick Wins — History, h5ad Upload, CSV Export** - Session history replays in the UI, .h5ad files upload directly, and CSV export works — all independent of FM and network
+- [ ] **Phase 12: Agent Data Access + Script Export** - The agent fetches real public datasets from cellxgene-census, and researchers can export a reproducible scanpy script from any session
+- [ ] **Phase 13: Real FM Inference — scGPT then Geneformer** - Real scGPT inference replaces the subprocess stub, then Geneformer adds a second perturbation model using the validated subprocess pattern
+- [ ] **Phase 14: Docker Compose Deployment** - The full stack starts with a single `docker compose up` from a clean checkout, hard-coded to single-worker to preserve the in-memory queue registry
 
 ## Phase Details
 
@@ -202,10 +208,53 @@ Plans:
 - [ ] 10-01-PLAN.md — Wave 1: automated no-OpenClaw-dependency test, demo dataset generator script, README + webapp/README.md documentation (PKG-01, PKG-02)
 - [ ] 10-02-PLAN.md — Wave 2: clean-checkout dry run + human-verify checkpoint — combined end-to-end browser walkthrough of all v1.1 capabilities (PKG-02)
 
+---
+
+## Milestone v1.2: Real Data + Bio FM Integration (Phases 11-14)
+
+### Phase 11: Quick Wins — History Replay, h5ad Upload, CSV Export
+**Goal**: Researchers can resume any session and see the full prior conversation, upload `.h5ad` files directly, and download cluster/DE/annotation results as CSV — three capabilities that are independent of each other and independent of FM and network, delivering immediate value with no new infrastructure risk.
+**Depends on**: Phase 10
+**Requirements**: HIST-01, DATA-02, EXPORT-01
+**Success Criteria** (what must be TRUE):
+  1. A researcher who resumes a session via the sidebar sees the complete prior conversation thread (all turns, inline tool activity, citations) — not a "Resuming session..." placeholder — with SQLite WAL mode enabled and per-message stored content capped at 64 KB to prevent database blowup.
+  2. The upload endpoint accepts a single `.h5ad` file (in addition to the existing MTX trio) and routes it through the same ingest pipeline, returning the same ingest result shape.
+  3. A researcher can click a download control for the active dataset and receive a CSV file containing cluster assignments, the DE table, and annotation results from the current session.
+**Plans**: TBD
+
+### Phase 12: Agent Data Access + Script Export
+**Goal**: The agent can fetch real public single-cell datasets from cellxgene-census on demand without a file upload, and researchers can export any session's analysis as a self-contained scanpy script that reproduces the exact analysis run.
+**Depends on**: Phase 11
+**Requirements**: DATA-01, EXPORT-02
+**Success Criteria** (what must be TRUE):
+  1. A researcher can ask the agent for a dataset by tissue, organism, or assay and receive back an ingested, analysis-ready dataset handle — fetched from cellxgene-census, not from an uploaded file — with the census fetch running in `asyncio.to_thread()` so the event loop is not blocked.
+  2. A researcher can request a scanpy script export from any session and receive a `.py` file that, when run from scratch, reproduces every QC threshold, analysis parameter, dataset source reference, and random seed that the session used.
+**Plans**: TBD
+
+### Phase 13: Real FM Inference — scGPT then Geneformer
+**Goal**: Real scGPT inference replaces the subprocess stub for cell-type annotation, and Geneformer is added as a second perturbation-response model option — sequenced so the validated subprocess pattern from scGPT is reused for Geneformer's more complex four-step pipeline.
+**Depends on**: Phase 12
+**Requirements**: FM-01, FM-02
+**Success Criteria** (what must be TRUE):
+  1. The agent invokes real scGPT inference (not a stub) for cell-type annotation, returning per-cell-type predictions with a k-NN vote-fraction confidence proxy, with the `scgpt.tasks.embed_data()` API shape verified against the actual bio_fm_worker before the worker script is written.
+  2. The agent can invoke Geneformer as an alternative perturbation-response model, returning a ranked gene list by cosine shift that is explicitly distinct from the linear model's expression-vector output — with Ensembl IDs validated in `adata.var` before inference runs, since gene symbols produce silent zero-length tokens.
+  3. Both FM inference paths run in isolated Python 3.10 venvs reached via subprocess, reusing the same client pattern established for scGPT in this phase.
+**Plans**: TBD
+
+### Phase 14: Docker Compose Deployment
+**Goal**: The full stack — backend, frontend, and optional GPU worker for bio FM inference — starts from a clean checkout with a single `docker compose up` command, requiring only environment variable configuration, with the single-worker constraint hard-coded to preserve the in-memory queue registry.
+**Depends on**: Phase 13
+**Requirements**: DOCK-01
+**Success Criteria** (what must be TRUE):
+  1. Running `docker compose up` from a clean checkout of the repo, with only environment variables configured, starts a working backend, frontend, and optional GPU worker — no manual setup steps required beyond env vars.
+  2. The compose configuration hard-codes `--workers 1` for the backend service; multi-worker is explicitly blocked since the in-memory queue registry does not survive across workers.
+  3. A researcher can perform the complete workflow (upload or census-fetch a dataset, run analysis, call FM inference, download CSV export, export scanpy script) against the compose stack without any locally-installed Python dependencies.
+**Plans**: TBD
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12 → 13 → 14
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -219,3 +268,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 8. Session & Dataset Endpoints | 3/3 | Complete   | 2026-09-12 |
 | 9. Frontend Chat UI | 5/5 | Complete   | 2026-09-14 |
 | 10. Packaging & Local Verification | 2/2 | Complete   | 2026-09-15 |
+| 11. Quick Wins — History Replay, h5ad Upload, CSV Export | 0/TBD | Not started | - |
+| 12. Agent Data Access + Script Export | 0/TBD | Not started | - |
+| 13. Real FM Inference — scGPT then Geneformer | 0/TBD | Not started | - |
+| 14. Docker Compose Deployment | 0/TBD | Not started | - |

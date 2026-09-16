@@ -50,16 +50,16 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DATA-01 | TBD | Pending |
-| DATA-02 | TBD | Pending |
-| FM-01 | TBD | Pending |
-| FM-02 | TBD | Pending |
-| HIST-01 | TBD | Pending |
-| EXPORT-01 | TBD | Pending |
-| EXPORT-02 | TBD | Pending |
-| DOCK-01 | TBD | Pending |
+| DATA-01 | Phase 12 | Pending |
+| DATA-02 | Phase 11 | Pending |
+| FM-01 | Phase 13 | Pending |
+| FM-02 | Phase 13 | Pending |
+| HIST-01 | Phase 11 | Pending |
+| EXPORT-01 | Phase 11 | Pending |
+| EXPORT-02 | Phase 12 | Pending |
+| DOCK-01 | Phase 14 | Pending |
 
-**Coverage:** 8 total, 0 mapped (roadmap TBD), 8 unmapped ⚠
+**Coverage:** 8 total, 8 mapped (100%) ✓, 0 unmapped ✓
 
 ---
 
@@ -240,4 +240,4 @@
 
 ---
 *Requirements defined: 2026-09-03 (v1.0), 2026-09-11 (v1.1), 2026-09-16 (v1.2)*
-*Last updated: 2026-09-16 after defining v1.2 Real Data + Bio FM Integration requirements*
+*Last updated: 2026-09-16 after creating v1.2 roadmap (Phases 11-14)*
