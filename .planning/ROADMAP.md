@@ -23,7 +23,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 7: Backend API + Streaming Foundation** - A password-gated FastAPI backend wraps `ask_question()` over HTTP and streams live tool-call activity over WebSocket (completed 2026-09-11)
 - [x] **Phase 8: Session & Dataset Endpoints** - Backend endpoints expose session list/resume and dataset upload, built on the authenticated Phase 7 foundation (completed 2026-09-12)
 - [x] **Phase 9: Frontend Chat UI** - An OpenClaw-styled chat frontend delivers login, message thread, live tool activity, citation rendering, session sidebar, and dataset upload (completed 2026-09-14)
-- [ ] **Phase 10: Packaging & Local Verification** - The webapp ships self-contained, runs via one documented command, and is manually verified end-to-end locally
+- [x] **Phase 10: Packaging & Local Verification** - The webapp ships self-contained, runs via one documented command, and is manually verified end-to-end locally (completed 2026-09-15)
 
 ## Phase Details
 
@@ -212,10 +212,10 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 1. Ingest + QC Pipeline | 5/5 | Complete   | 2026-09-04 |
 | 2. Analysis Tool Layer | 5/5 | Complete   | 2026-09-05 |
 | 3. Agent Orchestration Wiring | 5/5 | Complete    | 2026-09-05 |
-| 4. Bio-FM Tool Layer — Cell-Type Annotation | 2/5 | In Progress|  |
+| 4. Bio-FM Tool Layer — Cell-Type Annotation | 5/5 | Complete   | 2026-09-08 |
 | 5. Perturbation-Response Tool + VCC Benchmark | 6/6 | Complete   | 2026-09-10 |
 | 6. Natural-Language Q&A Capstone | 3/3 | Complete   | 2026-09-11 |
 | 7. Backend API + Streaming Foundation | 3/3 | Complete   | 2026-09-12 |
 | 8. Session & Dataset Endpoints | 3/3 | Complete   | 2026-09-12 |
 | 9. Frontend Chat UI | 5/5 | Complete   | 2026-09-14 |
-| 10. Packaging & Local Verification | 1/2 | In Progress|  |
+| 10. Packaging & Local Verification | 2/2 | Complete   | 2026-09-15 |
