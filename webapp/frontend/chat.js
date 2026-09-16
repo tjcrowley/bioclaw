@@ -36,6 +36,7 @@ export function appendMessage({ role, content, citations }) {
 
     if (role === 'assistant' && typeof window.__renderAnswerWithCitations === 'function') {
         bubble.innerHTML = window.__renderAnswerWithCitations(content, citations);
+        bubble._bioclawCitations = citations; // per-bubble storage so old messages stay correct
     } else {
         bubble.textContent = content;
     }

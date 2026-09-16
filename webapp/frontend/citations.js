@@ -62,15 +62,19 @@ export function showCitationDetail(sha, citations) {
     if (!found || found[2] == null) {
         citationDetail.textContent = `Citation [${sha}] not found in audit log for this response.`;
     } else {
-        citationDetail.textContent = JSON.stringify(found[2], null, 2);
+        const header = `# ${found[0]}  sha:${found[1]}\n\n`;
+        citationDetail.textContent = header + JSON.stringify(found[2], null, 2);
     }
     citationModal.hidden = false;
 }
 
-// Delegated click handler for citation buttons rendered in the chat thread
+// Delegated click handler — read citations from the containing bubble (not a global)
+// so that old messages stay correct after new messages arrive.
 document.getElementById('chat-thread').addEventListener('click', (e) => {
     const btn = e.target.closest('.citation-ref');
     if (!btn) return;
     const sha = btn.dataset.sha;
-    showCitationDetail(sha, window.__lastCitations || []);
+    const bubble = btn.closest('.message-bubble');
+    const cits = (bubble && bubble._bioclawCitations) || window.__lastCitations || [];
+    showCitationDetail(sha, cits);
 });
