@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Real Data + Bio FM Integration
 status: planning
-stopped_at: Completed 11-03-PLAN.md (Phase 11 fully complete)
-last_updated: "2026-09-17T02:52:55.037Z"
+stopped_at: Completed 12-01-PLAN.md (Phase 12 Wave 0 scaffold)
+last_updated: "2026-09-17T06:29:27.895Z"
 last_activity: 2026-09-16 — v1.2 roadmap created (4 phases, 8 requirements, 100% coverage)
 progress:
   total_phases: 14
   completed_phases: 11
-  total_plans: 46
-  completed_plans: 46
+  total_plans: 49
+  completed_plans: 47
 ---
 
 # Project State
@@ -69,6 +69,9 @@ Key v1.2 roadmap decisions:
 - [Phase 11]: Used anchor-click pattern for CSV download so session cookie is sent automatically on browser navigation
 - [Phase 11-quick-wins-history-replay-h5ad-upload-csv-export]: annotation/pipeline.py annotate() does not persist results back to store; annotations.csv uses placeholder row for current datasets
 - [Phase 11-quick-wins-history-replay-h5ad-upload-csv-export]: Used anchor-click pattern for CSV download so session cookie is sent automatically on browser navigation
+- [Phase 12-01]: ingest_from_anndata() keeps census AnnData in memory (no write+read round-trip), mirrors ingest_10x() exactly minus loaders.load()
+- [Phase 12-01]: format_census_source() is census-source-agnostic (no cellxgene_census import) — pure string function for provenance round-trip in EXPORT-02
+- [Phase 12-01]: census_data marker + CENSUS_DATA env-var double gate on smoke test prevents accidental CI network calls
 
 ### Critical Pitfalls to Encode in Plans
 
@@ -90,6 +93,6 @@ Key v1.2 roadmap decisions:
 
 ## Session Continuity
 
-Last session: 2026-09-17T01:55:44.928Z
-Stopped at: Completed 11-03-PLAN.md (Phase 11 fully complete)
+Last session: 2026-09-17T06:29:27.892Z
+Stopped at: Completed 12-01-PLAN.md (Phase 12 Wave 0 scaffold)
 Resume file: None

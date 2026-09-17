@@ -9,7 +9,7 @@
 
 ### Data Access
 
-- [ ] **DATA-01**: Researcher can ask the agent to fetch a real public single-cell dataset by tissue/organism/assay from cellxgene-census without uploading a file — the agent returns a dataset handle the existing ingest pipeline loads
+- [x] **DATA-01**: Researcher can ask the agent to fetch a real public single-cell dataset by tissue/organism/assay from cellxgene-census without uploading a file — the agent returns a dataset handle the existing ingest pipeline loads
 - [x] **DATA-02**: The upload endpoint accepts direct `.h5ad` files (the standard single-cell format) alongside the existing MTX trio, routing to the same ingest pipeline
 
 ### Foundation Models
@@ -24,7 +24,7 @@
 ### Export
 
 - [x] **EXPORT-01**: Researcher can download cluster assignments, DE table, and annotation results for the active dataset as a CSV file from a backend endpoint
-- [ ] **EXPORT-02**: Researcher can export the current session's analysis as a reproducible scanpy script that captures all QC thresholds, analysis parameters, dataset source, and random seeds used during the session
+- [x] **EXPORT-02**: Researcher can export the current session's analysis as a reproducible scanpy script that captures all QC thresholds, analysis parameters, dataset source, and random seeds used during the session
 
 ### Docker
 
@@ -50,13 +50,13 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DATA-01 | Phase 12 | Pending |
+| DATA-01 | Phase 12 | Complete |
 | DATA-02 | Phase 11 | Complete |
 | FM-01 | Phase 13 | Pending |
 | FM-02 | Phase 13 | Pending |
 | HIST-01 | Phase 11 | Complete |
 | EXPORT-01 | Phase 11 | Complete |
-| EXPORT-02 | Phase 12 | Pending |
+| EXPORT-02 | Phase 12 | Complete |
 | DOCK-01 | Phase 14 | Pending |
 
 **Coverage:** 8 total, 8 mapped (100%) ✓, 0 unmapped ✓
