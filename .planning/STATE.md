@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Real Data + Bio FM Integration
 status: executing
-stopped_at: Completed 13-02-PLAN.md (Geneformer output dataclasses, Ensembl-ID validator, isolated geneformer_worker/ env) — Phase 13 in progress (13-01 also in progress in parallel)
-last_updated: "2026-09-17T19:10:00.000Z"
-last_activity: 2026-09-17 — Completed 13-02-PLAN.md (Geneformer foundation: dataclasses, validate_ensembl_ids, geneformer_smoke marker, geneformer_worker/ env)
+stopped_at: Completed 13-01-PLAN.md (k-NN vote-fraction confidence in _match_and_aggregate, real scGPT smoke test re-verified) — Phase 13 in progress
+last_updated: "2026-09-17T19:15:00.000Z"
+last_activity: 2026-09-17 — Completed 13-01-PLAN.md (k-NN vote-fraction confidence for scGPT annotation, FM-01 complete)
 progress:
   total_phases: 14
   completed_phases: 12
   total_plans: 53
-  completed_plans: 50
+  completed_plans: 51
 ---
 
 # Project State
@@ -26,13 +26,13 @@ See: .planning/PROJECT.md (updated 2026-09-15)
 
 Milestone: v1.2 Real Data + Bio FM Integration — Phase 13 in progress
 Phase: Phase 13 (in progress)
-Plan: 13-02 complete (2 of 4 plans; 13-01 in progress/checkpoint in parallel, 13-03/13-04 pending)
-Status: 13-02 complete — FM-02 foundation laid (Geneformer dataclasses, Ensembl validator, geneformer_smoke marker, geneformer_worker/ env verified working); 13-03/13-04 build the actual inference pipeline on top of this
-Last activity: 2026-09-17 — Completed 13-02-PLAN.md (Geneformer foundation: dataclasses, validate_ensembl_ids, geneformer_smoke marker, geneformer_worker/ env)
+Plan: 13-01 and 13-02 complete (2 of 4 plans in Phase 13; 13-03/13-04 pending)
+Status: 13-01 complete — FM-01 done (real scGPT inference with k-NN vote-fraction confidence, verified end-to-end against the real checkpoint); 13-02 complete — FM-02 foundation laid (Geneformer dataclasses, Ensembl validator, geneformer_smoke marker, geneformer_worker/ env verified working); 13-03/13-04 build the actual Geneformer inference pipeline on top of this
+Last activity: 2026-09-17 — Completed 13-01-PLAN.md (k-NN vote-fraction confidence for scGPT annotation, FM-01 complete)
 
 ```
-v1.2 Progress [######----] 62% (2.5/4 phases)
-Overall     [###########] 87% (12.5/14 phases)
+v1.2 Progress [######----] 63% (2.5/4 phases)
+Overall     [#########-] 89% (12.5/14 phases)
 ```
 
 ## Performance Metrics
@@ -79,12 +79,13 @@ Key v1.2 roadmap decisions:
 - [Phase 13-02]: validate_ensembl_ids() resolution order is gene_ids -> feature_id -> Ensembl-shaped var_names -> ValueError; presence/shape check only, real vocabulary match rate deferred to geneformer_worker/run_geneformer_perturb.py (Plan 13-03), which alone can import the geneformer package
 - [Phase 13-02]: New Geneformer dataclasses (GeneShift, GeneformerPerturbationCall, GeneformerPerturbationSummary) are additive/parallel to PerturbationCall/PerturbationSummary, not a replacement — Geneformer's ranked-gene-list output is structurally distinct from an expression vector
 - [Phase 13-02]: geneformer_worker/.venv requires repinning transformers==4.46 (Geneformer's own requirements.txt pin) immediately after pip install -e, since the unconstrained setup.py resolves an incompatible latest transformers that breaks import geneformer (SpecialTokensMixin removed)
+- [Phase 13-01]: _match_and_aggregate()'s confidence changed from top-1 cosine similarity to a k-NN (k=15) vote fraction — count of majority-label neighbors among each query cell's k nearest reference neighbors, divided by k; k is clamped to min(k, reference embedding count); no change to AnnotationCall schema or main()'s call site since k has a default
 
 ### Critical Pitfalls to Encode in Plans
 
 - **HIST-01**: SQLite WAL mode must be set on the messages table; stored content must be capped at 64 KB per entry to prevent database blowup
 - **DATA-01**: Census fetch must run in `asyncio.to_thread()` — TileDB-SOMA is synchronous and blocks the event loop otherwise
-- **FM-01**: Verify `scgpt.tasks.embed_data()` API shape in bio_fm_worker before writing the worker script; torch/torchtext ABI mismatch was present in Phase 4 and must be confirmed fixed (ABI confirmed fixed per research guidance)
+- **FM-01**: RESOLVED (Phase 13-01) — `scgpt.tasks.embed_data()` API shape verified with no drift, torch/torchtext ABI confirmed fixed, k-NN vote-fraction confidence verified end-to-end against the real checkpoint
 - **FM-02**: Geneformer requires Ensembl IDs in `adata.var` — gene symbols produce silent zero-length tokens and must be validated before inference runs; Geneformer needs a separate Python 3.10 venv
 - **DOCK-01**: docker compose must hard-code `--workers 1`; the in-memory queue registry breaks under multi-worker
 
@@ -96,11 +97,10 @@ Key v1.2 roadmap decisions:
 
 ### Blockers/Concerns
 
-- Real scGPT inference: torch/torchtext ABI mismatch was present in Phase 4 `bio_fm_worker/`. Research guidance indicates this is confirmed fixed; Phase 13 plan must verify `scgpt.tasks.embed_data()` API shape before writing worker script.
 - VCC real dataset download (Phase 5 Task 3) was deferred due to no GCP billing — still pending, non-blocking for v1.2.
 
 ## Session Continuity
 
-Last session: 2026-09-17T19:10:00.000Z
-Stopped at: Completed 13-02-PLAN.md (Geneformer output dataclasses, Ensembl-ID validator, isolated geneformer_worker/ env) — Phase 13 in progress (13-01 also in progress in parallel)
+Last session: 2026-09-17T19:06:46.384Z
+Stopped at: Completed 13-01-PLAN.md
 Resume file: None
