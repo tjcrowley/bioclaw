@@ -4,7 +4,7 @@
 import { renderAnswerWithCitations, showCitationDetail } from './citations.js';
 import { clearChatThread, appendMessage } from './chat.js';
 import { loadSessionList, resumeSession, addOrRefreshSession } from './sessions.js';
-import { uploadDataset, exportCsv, getSession } from './api.js';
+import { uploadDataset, exportCsv, exportScript, getSession } from './api.js';
 
 // ─── Window hooks (read by chat.js, citations.js, sessions.js) ───────────────
 window.__renderAnswerWithCitations = renderAnswerWithCitations;
@@ -14,9 +14,11 @@ window.__currentDatasetId = null;
 
 function _showDownloadBtn() {
     document.getElementById('download-btn').removeAttribute('hidden');
+    document.getElementById('export-script-btn').removeAttribute('hidden');
 }
 function _hideDownloadBtn() {
     document.getElementById('download-btn').setAttribute('hidden', '');
+    document.getElementById('export-script-btn').setAttribute('hidden', '');
 }
 
 window.__onNewSessionId = (sessionId) => {
@@ -141,6 +143,11 @@ window.addEventListener('bioclaw:unauthorized', showLogin);
 document.getElementById('download-btn').addEventListener('click', () => {
     if (window.__currentDatasetId) {
         exportCsv(window.__currentDatasetId);
+    }
+});
+document.getElementById('export-script-btn').addEventListener('click', () => {
+    if (window.__currentDatasetId) {
+        exportScript(window.__currentDatasetId);
     }
 });
 
