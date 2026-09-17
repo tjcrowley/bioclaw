@@ -7,6 +7,7 @@ node_modules/
 *.scgpt_emb.npy
 data/
 bio_fm_worker/checkpoints/
+geneformer_worker/src/
 agent/logs/
 agent/memory.sqlite
 tool_calls.jsonl
