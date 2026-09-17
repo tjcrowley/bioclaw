@@ -151,3 +151,109 @@ def test_session_exists(tmp_path):
     assert mem.session_exists("nope") is False
     mem.touch("sess-1")
     assert mem.session_exists("sess-1") is True
+
+
+# ---------------------------------------------------------------------------
+# HIST-01 gap closure: citations and tool_events storage/retrieval tests
+# ---------------------------------------------------------------------------
+
+def test_add_message_stores_citations(tmp_path):
+    """citations list round-trips through add_message/get_messages correctly."""
+    mem = SessionMemory(root=tmp_path / "m.sqlite")
+    mem.touch("s1")
+    citations = [["tool", "abc123", {"k": "v"}]]
+    mem.add_message("s1", "assistant", "answer", citations=citations)
+    msgs = mem.get_messages("s1")
+    assert len(msgs) == 1
+    assert msgs[0]["citations"] == citations
+
+
+def test_add_message_stores_tool_events(tmp_path):
+    """tool_events list round-trips through add_message/get_messages correctly."""
+    mem = SessionMemory(root=tmp_path / "m.sqlite")
+    mem.touch("s1")
+    tool_events = [{"tool_name": "leiden", "is_error": False}]
+    mem.add_message("s1", "assistant", "answer", tool_events=tool_events)
+    msgs = mem.get_messages("s1")
+    assert len(msgs) == 1
+    assert msgs[0]["tool_events"] == tool_events
+
+
+def test_add_message_citations_default_none(tmp_path):
+    """Calling add_message without citations returns citations=None, not an error."""
+    mem = SessionMemory(root=tmp_path / "m.sqlite")
+    mem.touch("s1")
+    mem.add_message("s1", "user", "q")
+    msgs = mem.get_messages("s1")
+    assert len(msgs) == 1
+    assert msgs[0]["citations"] is None
+
+
+def test_add_message_tool_events_default_none(tmp_path):
+    """Calling add_message without tool_events returns tool_events=None, not an error."""
+    mem = SessionMemory(root=tmp_path / "m.sqlite")
+    mem.touch("s1")
+    mem.add_message("s1", "user", "q")
+    msgs = mem.get_messages("s1")
+    assert len(msgs) == 1
+    assert msgs[0]["tool_events"] is None
+
+
+def test_get_messages_parses_citations_json(tmp_path):
+    """Citations stored as JSON string round-trip correctly to Python list."""
+    mem = SessionMemory(root=tmp_path / "m.sqlite")
+    mem.touch("s1")
+    citations = [["tool_a", "sha1", {"gene": "BRCA1"}], ["tool_b", "sha2", None]]
+    mem.add_message("s1", "assistant", "result", citations=citations)
+    msgs = mem.get_messages("s1")
+    assert msgs[0]["citations"] == citations
+
+
+def test_get_messages_existing_rows_without_citations_json_column_return_none(tmp_path):
+    """Backward compat: rows with NULL citations_json/tool_events_json return None without error."""
+    import sqlite3
+    db_path = tmp_path / "m.sqlite"
+    # Create legacy-style table without citations_json/tool_events_json
+    conn = sqlite3.connect(str(db_path))
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS sessions (
+            session_id TEXT PRIMARY KEY,
+            created_at TEXT NOT NULL,
+            last_active_at TEXT NOT NULL
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS session_memory (
+            session_id TEXT NOT NULL,
+            dataset_id TEXT NOT NULL,
+            note TEXT,
+            created_at TEXT NOT NULL
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS messages (
+            session_id TEXT NOT NULL,
+            role TEXT NOT NULL,
+            content TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        )
+    """)
+    conn.execute(
+        "INSERT INTO sessions VALUES (?, ?, ?)",
+        ("legacy-sess", "2024-01-01T00:00:00+00:00", "2024-01-01T00:00:00+00:00"),
+    )
+    conn.execute(
+        "INSERT INTO messages VALUES (?, ?, ?, ?)",
+        ("legacy-sess", "user", "old message", "2024-01-01T00:00:00+00:00"),
+    )
+    conn.commit()
+    conn.close()
+
+    # Now open with the new SessionMemory — migration should add columns idempotently
+    mem = SessionMemory(root=db_path)
+    msgs = mem.get_messages("legacy-sess")
+    assert len(msgs) == 1
+    assert msgs[0]["content"] == "old message"
+    assert msgs[0]["citations"] is None
+    assert msgs[0]["tool_events"] is None

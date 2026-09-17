@@ -14,6 +14,7 @@ ingest/store.py::DatasetStore's already-proven connection/table pattern.
 
 from __future__ import annotations
 
+import json
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
@@ -46,6 +47,13 @@ CREATE TABLE IF NOT EXISTS messages (
 
 _CONTENT_CAP = 64 * 1024  # character cap (Python string length, not bytes)
 
+_MIGRATE_MESSAGES_CITATIONS_SQL = (
+    "ALTER TABLE messages ADD COLUMN citations_json TEXT"
+)
+_MIGRATE_MESSAGES_TOOL_EVENTS_SQL = (
+    "ALTER TABLE messages ADD COLUMN tool_events_json TEXT"
+)
+
 
 class SessionMemory:
     """SQLite-backed dataset-reference/finding store, keyed by session_id.
@@ -58,6 +66,11 @@ class SessionMemory:
             conn.execute(_CREATE_TABLE_SQL)
             conn.execute(_CREATE_SESSIONS_TABLE_SQL)
             conn.execute(_CREATE_MESSAGES_TABLE_SQL)
+            for sql in (_MIGRATE_MESSAGES_CITATIONS_SQL, _MIGRATE_MESSAGES_TOOL_EVENTS_SQL):
+                try:
+                    conn.execute(sql)
+                except sqlite3.OperationalError:
+                    pass  # column already exists — idempotent
 
     def _connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect(self.path)
@@ -126,24 +139,55 @@ class SessionMemory:
             ).fetchone()
         return row is not None
 
-    def add_message(self, session_id: str, role: str, content: str) -> None:
+    def add_message(
+        self,
+        session_id: str,
+        role: str,
+        content: str,
+        citations: list | None = None,
+        tool_events: list | None = None,
+    ) -> None:
         """Stores one message turn. Content capped at 64 KB (character count)
-        to prevent database blowup (HIST-01 success criteria)."""
+        to prevent database blowup (HIST-01 success criteria).
+
+        citations: optional list of [tool_name, sha_prefix, record_or_null] 3-tuples
+                   from AskResponse.citations. Serialized to JSON for storage.
+        tool_events: optional list of {"tool_name": str, "is_error": bool} dicts
+                     captured during the ask call. Serialized to JSON for storage.
+        """
         capped = content[:_CONTENT_CAP]
         now = datetime.now(timezone.utc).isoformat()
+        citations_json = json.dumps(citations) if citations is not None else None
+        tool_events_json = json.dumps(tool_events) if tool_events is not None else None
         with self._connect() as conn:
             conn.execute(
-                "INSERT INTO messages (session_id, role, content, created_at) VALUES (?, ?, ?, ?)",
-                (session_id, role, capped, now),
+                "INSERT INTO messages "
+                "(session_id, role, content, created_at, citations_json, tool_events_json) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (session_id, role, capped, now, citations_json, tool_events_json),
             )
             conn.commit()
 
     def get_messages(self, session_id: str) -> list[dict]:
-        """Returns all messages for session_id, oldest first (rowid order)."""
+        """Returns all messages for session_id, oldest first (rowid order).
+        Each dict includes: role, content, created_at, citations (list|None),
+        tool_events (list|None).
+        """
         with self._connect() as conn:
             rows = conn.execute(
-                "SELECT role, content, created_at FROM messages "
-                "WHERE session_id = ? ORDER BY rowid ASC",
+                "SELECT role, content, created_at, citations_json, tool_events_json "
+                "FROM messages WHERE session_id = ? ORDER BY rowid ASC",
                 (session_id,),
             ).fetchall()
-        return [{"role": r[0], "content": r[1], "created_at": r[2]} for r in rows]
+        result = []
+        for r in rows:
+            citations = json.loads(r[3]) if r[3] is not None else None
+            tool_events = json.loads(r[4]) if r[4] is not None else None
+            result.append({
+                "role": r[0],
+                "content": r[1],
+                "created_at": r[2],
+                "citations": citations,
+                "tool_events": tool_events,
+            })
+        return result
