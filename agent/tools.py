@@ -35,6 +35,7 @@ from claude_agent_sdk import tool
 
 from analysis.pipeline import AnalysisConfig, analyze
 from annotation.pipeline import annotate
+from ingest.census import fetch_census_dataset
 from ingest.pipeline import ingest_10x
 from perturbation.pipeline import predict as predict_perturbation
 
@@ -122,6 +123,37 @@ async def annotate_cell_type_tool(args: dict[str, Any]) -> dict[str, Any]:
         "content": [
             {"type": "text", "text": json.dumps({"dataset_id": dataset_id, **summary})}
         ],
+        "is_error": False,
+    }
+
+
+@tool(
+    "fetch_census_dataset",
+    "Fetch a real public single-cell dataset from cellxgene-census by "
+    "organism + obs_value_filter (no file upload); ingests it into the "
+    "versioned dataset store and returns a dataset_id the other tools can "
+    "analyze. 'organism' is passed separately, e.g. 'Homo sapiens' or "
+    "'Mus musculus'. 'obs_value_filter' is a TileDB-SOMA filter expression "
+    "over obs columns tissue_general, assay, cell_type, disease, and "
+    "is_primary_data, e.g. \"tissue_general == 'lung' and is_primary_data "
+    "== True\". Always require is_primary_data == True and a specific "
+    "tissue in the filter to keep the result small.",
+    {"organism": str, "obs_value_filter": str, "name": str},
+    # 'census_version' intentionally omitted -- optional, see Pitfall 2
+)
+async def fetch_census_dataset_tool(args: dict[str, Any]) -> dict[str, Any]:
+    try:
+        dataset_id = await fetch_census_dataset(
+            args["organism"],
+            args["obs_value_filter"],
+            args["name"],
+            census_version=args.get("census_version", "stable"),
+            store_root=STORE_ROOT,
+        )
+    except Exception as exc:
+        return {"content": [{"type": "text", "text": str(exc)}], "is_error": True}
+    return {
+        "content": [{"type": "text", "text": json.dumps({"dataset_id": dataset_id})}],
         "is_error": False,
     }
 

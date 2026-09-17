@@ -80,8 +80,8 @@ def test_census_fetch_returns_dataset_id(store_root, mocked_census_adata, monkey
 
     # Patch the blocking fetch helper that plan 02 places in ingest.census
     with patch("ingest.census._census_fetch_blocking", return_value=mocked_census_adata):
-        result = asyncio.get_event_loop().run_until_complete(
-            fetch_census_dataset_tool(
+        result = asyncio.run(
+            fetch_census_dataset_tool.handler(
                 {
                     "organism": "Homo sapiens",
                     "obs_value_filter": "tissue_general == 'lung'",
@@ -118,8 +118,8 @@ def test_census_fetch_runs_in_thread(store_root, mocked_census_adata, monkeypatc
 
     with patch("ingest.census._census_fetch_blocking", return_value=mocked_census_adata):
         monkeypatch.setattr(asyncio, "to_thread", tracking_to_thread)
-        asyncio.get_event_loop().run_until_complete(
-            fetch_census_dataset_tool(
+        asyncio.run(
+            fetch_census_dataset_tool.handler(
                 {
                     "organism": "Homo sapiens",
                     "obs_value_filter": "tissue_general == 'blood'",
@@ -141,8 +141,8 @@ def test_fetched_dataset_loadable(store_root, mocked_census_adata):
     from agent.tools import fetch_census_dataset_tool  # noqa: PLC0415
 
     with patch("ingest.census._census_fetch_blocking", return_value=mocked_census_adata):
-        result = asyncio.get_event_loop().run_until_complete(
-            fetch_census_dataset_tool(
+        result = asyncio.run(
+            fetch_census_dataset_tool.handler(
                 {
                     "organism": "Homo sapiens",
                     "obs_value_filter": "tissue_general == 'lung'",

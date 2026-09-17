@@ -39,8 +39,8 @@ def test_census_real_fetch_returns_cells(tmp_path, monkeypatch):
     monkeypatch.setattr(agent_tools, "STORE_ROOT", str(store_root))
     monkeypatch.setenv("BIOCLAW_WEB_PASSWORD", "testpass")
 
-    result = asyncio.get_event_loop().run_until_complete(
-        fetch_census_dataset_tool(
+    result = asyncio.run(
+        fetch_census_dataset_tool.handler(
             {
                 "organism": "Homo sapiens",
                 "obs_value_filter": "tissue_general == 'blood' and is_primary_data == True",

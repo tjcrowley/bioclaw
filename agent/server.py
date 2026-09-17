@@ -8,6 +8,7 @@ from claude_agent_sdk import create_sdk_mcp_server
 from agent.tools import (
     analyze_dataset_tool,
     annotate_cell_type_tool,
+    fetch_census_dataset_tool,
     ingest_10x_tool,
     predict_perturbation_tool,
 )
@@ -20,5 +21,6 @@ bioclaw_server = create_sdk_mcp_server(
         analyze_dataset_tool,
         annotate_cell_type_tool,
         predict_perturbation_tool,
+        fetch_census_dataset_tool,
     ],
 )
