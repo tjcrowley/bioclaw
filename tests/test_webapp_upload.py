@@ -183,3 +183,40 @@ def test_upload_rejected_without_password(monkeypatch, tiny_h5_file):
             data={"name": "noauth"},
         )
     assert resp.status_code == 401
+
+
+def test_upload_h5ad_returns_dataset_id(monkeypatch, tmp_path, tiny_h5ad_file):
+    """DATA-02: POST /api/upload with a .h5ad file routes through ingest_10x()
+    and returns the same UploadResponse shape as .h5 and MTX uploads."""
+    monkeypatch.setenv("BIOCLAW_WEB_PASSWORD", "testpass")
+    monkeypatch.setattr(agent_tools, "STORE_ROOT", str(tmp_path / "store"))
+    app.dependency_overrides[deps.get_session_memory] = lambda: SessionMemory(root=tmp_path / "m.sqlite")
+    try:
+        client = TestClient(app)
+        with open(tiny_h5ad_file, "rb") as f:
+            resp = client.post(
+                "/api/upload",
+                files={"files": ("sample.h5ad", f, "application/octet-stream")},
+                data={"name": "h5ad-upload-test"},
+                headers={"Authorization": "Bearer testpass"},
+            )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["status"] == "success", f"expected success, got: {body}"
+        assert body["dataset_id"] is not None
+        assert body["dataset_id"].startswith("h5ad-upload-test@")
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_upload_h5ad_rejected_without_password(monkeypatch, tiny_h5ad_file):
+    """DATA-02: .h5ad upload is gated by the same auth check as other uploads."""
+    monkeypatch.setenv("BIOCLAW_WEB_PASSWORD", "testpass")
+    client = TestClient(app)
+    with open(tiny_h5ad_file, "rb") as f:
+        resp = client.post(
+            "/api/upload",
+            files={"files": ("sample.h5ad", f, "application/octet-stream")},
+            data={"name": "noauth-h5ad"},
+        )
+    assert resp.status_code == 401
