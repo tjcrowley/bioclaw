@@ -23,7 +23,7 @@
 
 ### Export
 
-- [ ] **EXPORT-01**: Researcher can download cluster assignments, DE table, and annotation results for the active dataset as a CSV file from a backend endpoint
+- [x] **EXPORT-01**: Researcher can download cluster assignments, DE table, and annotation results for the active dataset as a CSV file from a backend endpoint
 - [ ] **EXPORT-02**: Researcher can export the current session's analysis as a reproducible scanpy script that captures all QC thresholds, analysis parameters, dataset source, and random seeds used during the session
 
 ### Docker
@@ -55,7 +55,7 @@
 | FM-01 | Phase 13 | Pending |
 | FM-02 | Phase 13 | Pending |
 | HIST-01 | Phase 11 | Complete |
-| EXPORT-01 | Phase 11 | Pending |
+| EXPORT-01 | Phase 11 | Complete |
 | EXPORT-02 | Phase 12 | Pending |
 | DOCK-01 | Phase 14 | Pending |
 
