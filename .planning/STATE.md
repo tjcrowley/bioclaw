@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Real Data + Bio FM Integration
-status: completed
-stopped_at: Completed 12-03-PLAN.md (Script export endpoint + frontend wiring)
-last_updated: "2026-09-17T14:06:00.562Z"
-last_activity: 2026-09-17 — Completed 12-03-PLAN.md (Script export endpoint + frontend wiring)
+status: planning
+stopped_at: Completed 12-02-PLAN.md (fetch_census_dataset tool) — Phase 12 fully complete (12-01 + 12-02 + 12-03)
+last_updated: "2026-09-17T14:10:03.454Z"
+last_activity: 2026-09-17 — Completed 12-02-PLAN.md (fetch_census_dataset tool); Phase 12 fully complete (12-01/12-02/12-03)
 progress:
   total_phases: 14
   completed_phases: 12
@@ -20,7 +20,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-15)
 
 **Core value:** A Biopunk Labs researcher can ask a plain-language question about a single-cell dataset and get back a QC'd, annotated, interpreted answer without writing a scanpy script by hand.
-**Current focus:** v1.2 — Real Data + Bio FM Integration (phases 11-14); roadmap defined, ready to plan Phase 11.
+**Current focus:** v1.2 — Real Data + Bio FM Integration (phases 11-14); Phases 11-12 complete, ready to plan Phase 13.
 
 ## Current Position
 
@@ -28,7 +28,7 @@ Milestone: v1.2 Real Data + Bio FM Integration — Phase 12 complete
 Phase: Phase 13 (next)
 Plan: —
 Status: Phase 12 complete (DATA-01 + EXPORT-02 satisfied) — ready to plan Phase 13
-Last activity: 2026-09-17 — Completed 12-03-PLAN.md (Script export endpoint + frontend wiring)
+Last activity: 2026-09-17 — Completed 12-02-PLAN.md (fetch_census_dataset tool); Phase 12 fully complete (12-01/12-02/12-03)
 
 ```
 v1.2 Progress [#####-----] 50% (2/4 phases)
@@ -74,6 +74,8 @@ Key v1.2 roadmap decisions:
 - [Phase 12-01]: census_data marker + CENSUS_DATA env-var double gate on smoke test prevents accidental CI network calls
 - [Phase 12-03]: webapp/backend/export_script.py verified against spec rather than rewritten (found pre-existing from interrupted run, matched exactly)
 - [Phase 12-03]: Export Script button reuses _showDownloadBtn/_hideDownloadBtn helpers so CSV and Script export buttons always show/hide together
+- [Phase 12-02]: _census_fetch_blocking() keeps the entire open_soma with-block + get_anndata call inside one closure passed wholesale to asyncio.to_thread(), per RESEARCH Pattern 2/Pitfall 1 (both must run in the same worker thread)
+- [Phase 12-02]: Fixed pre-existing 12-01 test scaffold bugs (SdkMcpTool.handler(...) invocation, asyncio.run() instead of deprecated get_event_loop().run_until_complete()) rather than reverting to the buggy pattern
 
 ### Critical Pitfalls to Encode in Plans
 
@@ -85,7 +87,7 @@ Key v1.2 roadmap decisions:
 
 ### Pending Todos
 
-- Plan Phase 11 (`/gsd:plan-phase 11`)
+- Plan Phase 13 (`/gsd:plan-phase 13`)
 - VCC real dataset download (Phase 5 Task 3) still pending — non-blocking for v1.2
 
 ### Blockers/Concerns
@@ -95,6 +97,6 @@ Key v1.2 roadmap decisions:
 
 ## Session Continuity
 
-Last session: 2026-09-17T14:05:40.086Z
-Stopped at: Completed 12-03-PLAN.md (Script export endpoint + frontend wiring)
+Last session: 2026-09-17T14:10:03.451Z
+Stopped at: Completed 12-02-PLAN.md (fetch_census_dataset tool) — Phase 12 fully complete (12-01 + 12-02 + 12-03)
 Resume file: None
