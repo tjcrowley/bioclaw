@@ -1,11 +1,16 @@
 """FastAPI app: POST /api/ask (API-01) + WS /ws/{stream_id} (API-02) +
-POST /api/upload (API-04), all password-gated (API-05). Single Uvicorn
-worker only -- see webapp/backend/streaming.py's module docstring.
+POST /api/upload (API-04), GET /api/export/csv (EXPORT-01), all
+password-gated (API-05). Single Uvicorn worker only -- see
+webapp/backend/streaming.py's module docstring.
 """
+import io
 import os as _os
 import uuid
+import zipfile
 from typing import Annotated
 
+import pandas as pd
+import scanpy as sc
 from fastapi import (
     Depends,
     FastAPI,
@@ -17,10 +22,12 @@ from fastapi import (
     WebSocket,
     WebSocketDisconnect,
 )
+from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 import agent.tools as agent_tools
 from ingest.pipeline import ingest_10x
+from ingest.store import DatasetStore
 from webapp.backend import deps, streaming, uploads
 from webapp.backend.auth import _valid, require_password, require_password_ws
 from webapp.backend.schemas import (
@@ -109,6 +116,94 @@ async def upload_dataset(
     session_memory.record(resolved_session_id, dataset_id, note=f"uploaded via /api/upload: {name}")
     return UploadResponse(
         status="success", dataset_id=dataset_id, detail=None, session_id=resolved_session_id
+    )
+
+
+@app.get("/api/export/csv", dependencies=[Depends(require_password)])
+async def export_csv(dataset_id: str) -> StreamingResponse:
+    """EXPORT-01: Download cluster assignments, DE table, and annotation results
+    for the named dataset as a ZIP of three CSV files.
+
+    dataset_id format: "name@version" where version is an integer (e.g. mydata@1).
+    Returns a ZIP with clusters.csv, de_genes.csv, and annotations.csv.
+    Gracefully handles missing leiden clustering or DE results with placeholder rows.
+    """
+    # Parse dataset_id format: "name@version"
+    parts = dataset_id.split("@", 1)
+    if len(parts) != 2:
+        raise HTTPException(
+            status_code=422,
+            detail="dataset_id must be name@version (e.g. mydata@1)",
+        )
+    name, version_str = parts
+    version = int(version_str) if version_str.isdigit() else None
+
+    store = DatasetStore(root=agent_tools.STORE_ROOT)
+    try:
+        adata = store.load(name, version)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        # 1. Cluster assignments (leiden)
+        if "leiden" in adata.obs.columns:
+            clusters_df = adata.obs[["leiden"]].reset_index()
+            clusters_df.columns = ["cell_barcode", "cluster"]
+            zf.writestr("clusters.csv", clusters_df.to_csv(index=False))
+        else:
+            zf.writestr("clusters.csv", "cell_barcode,cluster\n(no cluster data)\n")
+
+        # 2. DE table (rank_genes_groups)
+        if "rank_genes_groups" in adata.uns:
+            groups = list(adata.uns["rank_genes_groups"]["names"].dtype.names)
+            de_frames = []
+            for g in groups:
+                df = sc.get.rank_genes_groups_df(adata, group=g)
+                df.insert(0, "cluster", g)
+                de_frames.append(df)
+            de_csv = pd.concat(de_frames, ignore_index=True) if de_frames else pd.DataFrame()
+            zf.writestr("de_genes.csv", de_csv.to_csv(index=False))
+        else:
+            zf.writestr(
+                "de_genes.csv",
+                "cluster,names,scores,pvals,pvals_adj,logfoldchanges\n(no DE data)\n",
+            )
+
+        # 3. Annotations (from adata.uns — populated when annotate() has been called)
+        # NOTE: annotation/pipeline.py's annotate() returns results as a dict but does
+        # NOT persist them back to the store. So adata.uns.get("annotation", {}) will
+        # typically be empty. The placeholder row is the expected output for un-annotated
+        # datasets. If annotation data is ever stored back to the AnnData in future, the
+        # expected uns key is "annotation" with sub-keys "fm_calls" and "baseline_calls".
+        ann_lines = ["cluster,method,label,confidence,ontology_term_id"]
+        ann_data = adata.uns.get("annotation", {})
+        for call in ann_data.get("fm_calls", []):
+            ann_lines.append(
+                f"{call.get('cluster', '')},fm,"
+                f"{call.get('label', '')},"
+                f"{call.get('confidence', '')},"
+                f"{call.get('ontology_term_id', '')}"
+            )
+        for call in ann_data.get("baseline_calls", []):
+            ann_lines.append(
+                f"{call.get('cluster', '')},baseline,"
+                f"{call.get('label', '')},"
+                f"{call.get('confidence', '')},"
+                f"{call.get('ontology_term_id', '')}"
+            )
+        if len(ann_lines) == 1:
+            ann_lines.append("(no annotation data)")
+        zf.writestr("annotations.csv", "\n".join(ann_lines) + "\n")
+
+    buf.seek(0)
+    safe_name = name.replace("/", "_").replace(" ", "_")
+    return StreamingResponse(
+        buf,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="{safe_name}_export.zip"'
+        },
     )
 
 
