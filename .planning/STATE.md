@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Real Data + Bio FM Integration
 status: planning
-stopped_at: Completed 11-02-PLAN.md
-last_updated: "2026-09-17T00:57:49.007Z"
+stopped_at: Completed 11-quick-wins-history-replay-h5ad-upload-csv-export-11-01-PLAN.md
+last_updated: "2026-09-17T00:58:32.129Z"
 last_activity: 2026-09-16 — v1.2 roadmap created (4 phases, 8 requirements, 100% coverage)
 progress:
   total_phases: 14
   completed_phases: 10
   total_plans: 45
-  completed_plans: 43
+  completed_plans: 44
 ---
 
 # Project State
@@ -63,6 +63,8 @@ Key v1.2 roadmap decisions:
 - Phase 13 sequences FM-01 (scGPT) before FM-02 (Geneformer) so the validated subprocess pattern is reused for Geneformer's more complex four-step pipeline
 - Phase 14 (DOCK-01) is last — Docker depends on all features being stable
 - [Phase 11-02]: Use ingest.loaders.load() (not scanpy directly) to build tiny_h5ad_file fixture — guarantees AnnData structure matches production ingest pipeline output
+- [Phase 11-quick-wins-history-replay-h5ad-upload-csv-export]: WAL mode set in _connect() — idempotent PRAGMA applies to every SessionMemory connection automatically
+- [Phase 11-quick-wins-history-replay-h5ad-upload-csv-export]: Content cap at 64 KB character count (not bytes); touch() called before add_message() in ask() for ask-only sessions; citations omitted from history replay
 
 ### Critical Pitfalls to Encode in Plans
 
@@ -84,6 +86,6 @@ Key v1.2 roadmap decisions:
 
 ## Session Continuity
 
-Last session: 2026-09-17T00:57:49.004Z
-Stopped at: Completed 11-02-PLAN.md
+Last session: 2026-09-17T00:58:32.124Z
+Stopped at: Completed 11-quick-wins-history-replay-h5ad-upload-csv-export-11-01-PLAN.md
 Resume file: None

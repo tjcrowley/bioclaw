@@ -19,7 +19,7 @@
 
 ### Session UX
 
-- [ ] **HIST-01**: Resuming a session in the sidebar renders the full prior conversation thread (all turns, inline tool activity, citations) — not just a "Resuming session…" placeholder message
+- [x] **HIST-01**: Resuming a session in the sidebar renders the full prior conversation thread (all turns, inline tool activity, citations) — not just a "Resuming session…" placeholder message
 
 ### Export
 
@@ -54,7 +54,7 @@
 | DATA-02 | Phase 11 | Complete |
 | FM-01 | Phase 13 | Pending |
 | FM-02 | Phase 13 | Pending |
-| HIST-01 | Phase 11 | Pending |
+| HIST-01 | Phase 11 | Complete |
 | EXPORT-01 | Phase 11 | Pending |
 | EXPORT-02 | Phase 12 | Pending |
 | DOCK-01 | Phase 14 | Pending |
