@@ -27,3 +27,11 @@ gives 248 passed / 0 failed, i.e. no regression from 12-03's changes
 **Action:** Not fixed by 12-03. Flagging for 12-02's own verification pass —
 its own plan's `<verify>` step should catch this if it re-runs the full
 suite after 12-02 finishes and files stabilize.
+
+**Resolution (2026-09-17, post-12-02 landing):** Re-ran the full fast suite
+after plan 12-02 committed (`feat(12-02): implement census fetch
+orchestration in ingest/census.py`, `feat(12-02): add
+fetch_census_dataset_tool and register in bioclaw_server`) — all 252 tests
+now pass with 0 failures. Confirms this was transient flakiness from
+concurrent file edits mid-execution, not a real defect. No further action
+needed.
