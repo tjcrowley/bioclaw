@@ -249,7 +249,13 @@ Plans:
   1. The agent invokes real scGPT inference (not a stub) for cell-type annotation, returning per-cell-type predictions with a k-NN vote-fraction confidence proxy, with the `scgpt.tasks.embed_data()` API shape verified against the actual bio_fm_worker before the worker script is written.
   2. The agent can invoke Geneformer as an alternative perturbation-response model, returning a ranked gene list by cosine shift that is explicitly distinct from the linear model's expression-vector output — with Ensembl IDs validated in `adata.var` before inference runs, since gene symbols produce silent zero-length tokens.
   3. Both FM inference paths run in isolated Python 3.10 venvs reached via subprocess, reusing the same client pattern established for scGPT in this phase.
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 13-01-PLAN.md — FM-01: k-NN vote-fraction confidence in run_scgpt_embed.py::_match_and_aggregate(), real bio_fm_smoke re-verification checkpoint
+- [ ] 13-02-PLAN.md — FM-02: Geneformer output dataclasses, perturbation/ensembl.py validator, geneformer_smoke marker, isolated geneformer_worker/ venv setup
+- [ ] 13-03-PLAN.md — FM-02: geneformer_worker/run_geneformer_perturb.py four-step pipeline CLI + perturbation/geneformer_client.py subprocess shim
+- [ ] 13-04-PLAN.md — FM-02: predict_geneformer() composition + predict_perturbation_geneformer_tool + real end-to-end smoke test checkpoint
 
 ### Phase 14: Docker Compose Deployment
 **Goal**: The full stack — backend, frontend, and optional GPU worker for bio FM inference — starts from a clean checkout with a single `docker compose up` command, requiring only environment variable configuration, with the single-worker constraint hard-coded to preserve the in-memory queue registry.
