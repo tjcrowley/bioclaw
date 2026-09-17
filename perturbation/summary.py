@@ -45,3 +45,46 @@ class PerturbationSummary:
     gene_names: list[str]
     model_call: PerturbationCall
     baseline_call: PerturbationCall
+
+
+# ---------------------------------------------------------------------------
+# Geneformer (FM-02) output-shape contract -- Phase 13.
+#
+# Design note -- structurally distinct from PerturbationCall/PerturbationSummary:
+# Per 13-RESEARCH.md Pitfall 4, Geneformer's in-silico-perturbation output is a
+# ranked gene list by cosine shift (InSilicoPerturberStats.get_stats()'s native
+# shape), not a per-gene expression vector aligned to a shared gene order. Do
+# NOT shoehorn this into PerturbationCall.predicted_expression -- these three
+# dataclasses are additive, parallel contracts that Plans 13-03/13-04
+# implement against, and the existing PerturbationCall/PerturbationSummary
+# above are left untouched.
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class GeneShift:
+    """One gene's ranked cosine-similarity shift from an in-silico perturbation."""
+
+    gene: str
+    ensembl_id: str
+    cosine_shift: float
+
+
+@dataclass
+class GeneformerPerturbationCall:
+    """Geneformer's prediction for one target gene -- ranked gene list, not a vector."""
+
+    method: str  # always "geneformer"
+    target_gene: str
+    target_ensembl_id: str
+    match_rate: float  # fraction of adata.var Ensembl IDs found in Geneformer's vocab
+    ranked_genes: list[GeneShift]  # sorted by |cosine_shift| descending
+
+
+@dataclass
+class GeneformerPerturbationSummary:
+    """Full result for one Geneformer predict() invocation (one target gene)."""
+
+    dataset_id: str | None
+    target_gene: str
+    call: GeneformerPerturbationCall
