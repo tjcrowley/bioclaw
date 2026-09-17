@@ -29,6 +29,8 @@ class MessageRecord(BaseModel):
     role: str
     content: str
     created_at: str
+    citations: list | None = None      # [tool_name, sha_prefix, record_or_null] 3-tuples; None for user messages
+    tool_events: list | None = None    # [{"tool_name": str, "is_error": bool}, ...]; None for user messages
 
 
 class SessionSummary(BaseModel):

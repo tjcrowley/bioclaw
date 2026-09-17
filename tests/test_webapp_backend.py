@@ -301,6 +301,125 @@ def test_ask_stores_user_and_assistant_messages(monkeypatch, tmp_path):
         app.dependency_overrides.clear()
 
 
+# ---------------------------------------------------------------------------
+# HIST-01 gap closure: citations and tool_events round-trip through API
+# ---------------------------------------------------------------------------
+
+async def _fake_ask_with_citations(question, session_memory=None, session_id=None, extra_hooks=None, log_path=None):
+    """Fake ask_question that returns citations and fires tool events through hooks."""
+    for hook in extra_hooks or []:
+        await hook(
+            {
+                "tool_name": "mcp__bioclaw__analyze_dataset",
+                "tool_input": {"name": "x"},
+                "tool_response": [{"type": "text", "text": "{}"}],
+            },
+            "tool-use-1",
+            {},
+        )
+    resolved_session_id = session_id or "sess-citations"
+    if session_memory is not None:
+        session_memory.touch(resolved_session_id)
+    return "fake answer", resolved_session_id, [["tool", "abc", {"k": "v"}]]
+
+
+def test_ask_stores_citations_with_assistant_message(monkeypatch, tmp_path):
+    """After POST /api/ask, the assistant message has citations from the ask response."""
+    monkeypatch.setenv("BIOCLAW_WEB_PASSWORD", "testpass")
+    mem = SessionMemory(root=tmp_path / "m.sqlite")
+    app.dependency_overrides[deps.get_session_memory] = lambda: mem
+    app.dependency_overrides[deps.get_ask_question] = lambda: _fake_ask_with_citations
+    try:
+        client = TestClient(app)
+        resp = client.post(
+            "/api/ask",
+            json={"question": "q", "session_id": "sess-citations"},
+            headers={"Authorization": "Bearer testpass"},
+        )
+        assert resp.status_code == 200
+        msgs = mem.get_messages("sess-citations")
+        assistant_msgs = [m for m in msgs if m["role"] == "assistant"]
+        assert len(assistant_msgs) == 1
+        assert assistant_msgs[0]["citations"] == [["tool", "abc", {"k": "v"}]]
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_ask_stores_tool_events_with_assistant_message(monkeypatch, tmp_path):
+    """After POST /api/ask, the assistant message has tool_events as a list."""
+    monkeypatch.setenv("BIOCLAW_WEB_PASSWORD", "testpass")
+    mem = SessionMemory(root=tmp_path / "m.sqlite")
+    app.dependency_overrides[deps.get_session_memory] = lambda: mem
+    app.dependency_overrides[deps.get_ask_question] = lambda: _fake_ask_with_citations
+    try:
+        client = TestClient(app)
+        resp = client.post(
+            "/api/ask",
+            json={"question": "q", "session_id": "sess-te"},
+            headers={"Authorization": "Bearer testpass"},
+        )
+        assert resp.status_code == 200
+        msgs = mem.get_messages("sess-te")
+        assistant_msgs = [m for m in msgs if m["role"] == "assistant"]
+        assert len(assistant_msgs) == 1
+        assert isinstance(assistant_msgs[0]["tool_events"], list)
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_get_session_returns_citations_in_messages(monkeypatch, tmp_path):
+    """GET /api/sessions/{id} — assistant message with citations returns them in the response."""
+    monkeypatch.setenv("BIOCLAW_WEB_PASSWORD", "testpass")
+    mem = SessionMemory(root=tmp_path / "m.sqlite")
+    mem.touch("sess-cit")
+    mem.add_message("sess-cit", "user", "q")
+    mem.add_message("sess-cit", "assistant", "answer", citations=[["tool", "sha", {"k": "v"}]])
+    app.dependency_overrides[deps.get_session_memory] = lambda: mem
+    try:
+        client = TestClient(app)
+        resp = client.get("/api/sessions/sess-cit", headers={"Authorization": "Bearer testpass"})
+        assert resp.status_code == 200
+        body = resp.json()
+        msgs = body["messages"]
+        assistant = next(m for m in msgs if m["role"] == "assistant")
+        assert assistant["citations"] == [["tool", "sha", {"k": "v"}]]
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_get_session_returns_tool_events_in_messages(monkeypatch, tmp_path):
+    """GET /api/sessions/{id} — assistant message with tool_events returns them in the response."""
+    monkeypatch.setenv("BIOCLAW_WEB_PASSWORD", "testpass")
+    mem = SessionMemory(root=tmp_path / "m.sqlite")
+    mem.touch("sess-te")
+    mem.add_message("sess-te", "user", "q")
+    mem.add_message("sess-te", "assistant", "answer", tool_events=[{"tool_name": "leiden", "is_error": False}])
+    app.dependency_overrides[deps.get_session_memory] = lambda: mem
+    try:
+        client = TestClient(app)
+        resp = client.get("/api/sessions/sess-te", headers={"Authorization": "Bearer testpass"})
+        assert resp.status_code == 200
+        body = resp.json()
+        msgs = body["messages"]
+        assistant = next(m for m in msgs if m["role"] == "assistant")
+        assert assistant["tool_events"] == [{"tool_name": "leiden", "is_error": False}]
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_message_record_schema_has_citations_field(monkeypatch):
+    """schemas.MessageRecord can be constructed with citations and tool_events without error."""
+    record = schemas.MessageRecord(
+        role="assistant",
+        content="answer",
+        created_at="2024-01-01T00:00:00+00:00",
+        citations=[["tool", "sha", {"k": "v"}]],
+        tool_events=[{"tool_name": "leiden", "is_error": False}],
+    )
+    assert record.citations == [["tool", "sha", {"k": "v"}]]
+    assert record.tool_events == [{"tool_name": "leiden", "is_error": False}]
+
+
 def test_resume_recalls_prior_dataset_reference(monkeypatch, tmp_path):
     monkeypatch.setenv("BIOCLAW_WEB_PASSWORD", "testpass")
     mem = SessionMemory(root=tmp_path / "m.sqlite")
