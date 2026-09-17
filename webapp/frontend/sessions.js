@@ -55,14 +55,22 @@ export function resumeSession(sessionId) {
 
     clearChatThread();
 
-    // Show recent datasets as context (no full history replay — see RESEARCH.md Pattern 6)
+    // Replay full message history (HIST-01); fall back to dataset hint for pre-HIST-01 sessions
     getSession(sessionId).then((summary) => {
         if (!summary) return;
-        const datasets = summary.recent_datasets || [];
-        const context = datasets.length > 0
-            ? `Resuming session — last used: ${datasets.join(', ')}`
-            : `Resuming session ${sessionId.slice(0, 8)}…`;
-        appendMessage({ role: 'system', content: context });
+        const msgs = summary.messages || [];
+        if (msgs.length === 0) {
+            // No stored turns yet: fall back to dataset context hint
+            const datasets = summary.recent_datasets || [];
+            const ctx = datasets.length > 0
+                ? `Resuming session — last used: ${datasets.join(', ')}`
+                : `Resuming session ${sessionId.slice(0, 8)}…`;
+            appendMessage({ role: 'system', content: ctx });
+        } else {
+            for (const msg of msgs) {
+                appendMessage({ role: msg.role, content: msg.content });
+            }
+        }
     }).catch(() => {});
 }
 
