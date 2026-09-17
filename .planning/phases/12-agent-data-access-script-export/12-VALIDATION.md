@@ -1,8 +1,8 @@
 ---
 phase: 12
 slug: agent-data-access-script-export
-status: draft
-nyquist_compliant: false
+status: approved
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-09-16
 ---
@@ -43,12 +43,12 @@ created: 2026-09-16
 | 12-01-03 | 01 | 1 | DATA-01 | unit | `uv run pytest tests/test_census_tool.py::test_fetched_dataset_loadable -x` | ❌ W0 | ⬜ pending |
 | 12-01-04 | 01 | 1 | DATA-01 | unit | `uv run pytest tests/test_census_tool.py::test_tool_registered -x` | ❌ W0 | ⬜ pending |
 | 12-01-05 | 01 | 1 | DATA-01 | census_data (network) | `uv run pytest tests/test_census_smoke.py -m census_data -x` | ❌ W0 | ⬜ pending |
-| 12-02-01 | 02 | 2 | EXPORT-02 | unit | `uv run pytest tests/test_webapp_script_export.py::test_export_script_returns_py -x` | ❌ W0 | ⬜ pending |
-| 12-02-02 | 02 | 2 | EXPORT-02 | unit | `uv run pytest tests/test_webapp_script_export.py::test_script_contains_qc_thresholds -x` | ❌ W0 | ⬜ pending |
-| 12-02-03 | 02 | 2 | EXPORT-02 | unit | `uv run pytest tests/test_webapp_script_export.py::test_script_contains_random_state -x` | ❌ W0 | ⬜ pending |
-| 12-02-04 | 02 | 2 | EXPORT-02 | unit | `uv run pytest tests/test_webapp_script_export.py::test_script_census_source -x` | ❌ W0 | ⬜ pending |
-| 12-02-05 | 02 | 2 | EXPORT-02 | unit | `uv run pytest tests/test_webapp_script_export.py::test_script_export_requires_auth -x` | ❌ W0 | ⬜ pending |
-| 12-02-06 | 02 | 2 | EXPORT-02 | unit | `uv run pytest tests/test_webapp_script_export.py::test_script_no_analysis_graceful -x` | ❌ W0 | ⬜ pending |
+| 12-03-01 | 03 | 2 | EXPORT-02 | unit | `uv run pytest tests/test_webapp_script_export.py::test_export_script_returns_py -x` | ❌ W0 | ⬜ pending |
+| 12-03-02 | 03 | 2 | EXPORT-02 | unit | `uv run pytest tests/test_webapp_script_export.py::test_script_contains_qc_thresholds -x` | ❌ W0 | ⬜ pending |
+| 12-03-03 | 03 | 2 | EXPORT-02 | unit | `uv run pytest tests/test_webapp_script_export.py::test_script_contains_random_state -x` | ❌ W0 | ⬜ pending |
+| 12-03-04 | 03 | 2 | EXPORT-02 | unit | `uv run pytest tests/test_webapp_script_export.py::test_script_census_source -x` | ❌ W0 | ⬜ pending |
+| 12-03-05 | 03 | 2 | EXPORT-02 | unit | `uv run pytest tests/test_webapp_script_export.py::test_script_export_requires_auth -x` | ❌ W0 | ⬜ pending |
+| 12-03-06 | 03 | 2 | EXPORT-02 | unit | `uv run pytest tests/test_webapp_script_export.py::test_script_no_analysis_graceful -x` | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
