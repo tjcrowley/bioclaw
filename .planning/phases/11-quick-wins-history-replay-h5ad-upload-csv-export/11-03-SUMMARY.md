@@ -62,7 +62,7 @@ completed: 2026-09-17
 - **Duration:** ~5 min
 - **Started:** 2026-09-17T00:54:45Z
 - **Completed:** 2026-09-17T00:59:30Z
-- **Tasks:** 2 of 3 complete (task 3 is human-verify checkpoint)
+- **Tasks:** 3 of 3 complete
 - **Files modified:** 6
 
 ## Accomplishments
@@ -81,8 +81,9 @@ Each task was committed atomically:
 1. **Task 1: RED tests for GET /api/export/csv** - `bc48751` (test)
 2. **Task 1: Implement GET /api/export/csv endpoint** - `b4bcd8e` (feat)
 3. **Task 2: Add export download button to frontend** - `626024b` (feat)
+4. **Task 3: Human verify — ZIP export confirmed in browser** - `74784e3` (docs)
 
-Note: Task 3 is a human-verify checkpoint — awaiting browser UI verification.
+**Plan metadata:** `74784e3` (docs: human-verify checkpoint approved)
 
 ## Files Created/Modified
 - `tests/test_webapp_export.py` - 9 unit tests covering ZIP contents, missing data, auth, 404, 422
@@ -122,10 +123,11 @@ None beyond the fixture argument order fix above.
 None - no external service configuration required.
 
 ## Next Phase Readiness
-- CSV export backend and frontend are complete; pending human browser verification (Task 3 checkpoint)
-- After checkpoint approval, Phase 11 Plan 03 is complete
+- CSV export backend and frontend are complete; browser verification passed (Task 3 checkpoint approved)
+- Phase 11 Plan 03 is fully complete
 - EXPORT-01 requirement is satisfied
+- All three Phase 11 plans (HIST-01, DATA-02, EXPORT-01) are complete — Phase 11 is done
 
 ---
 *Phase: 11-quick-wins-history-replay-h5ad-upload-csv-export*
-*Completed: 2026-09-17 (pending checkpoint approval)*
+*Completed: 2026-09-17*

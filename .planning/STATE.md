@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Real Data + Bio FM Integration
 status: planning
-stopped_at: "Completed 11-03-PLAN.md (checkpoint: awaiting human verify of browser ZIP download)"
-last_updated: "2026-09-17T01:00:34.352Z"
+stopped_at: Completed 11-03-PLAN.md (Phase 11 fully complete)
+last_updated: "2026-09-17T01:55:44.936Z"
 last_activity: 2026-09-16 — v1.2 roadmap created (4 phases, 8 requirements, 100% coverage)
 progress:
   total_phases: 14
@@ -67,6 +67,8 @@ Key v1.2 roadmap decisions:
 - [Phase 11-quick-wins-history-replay-h5ad-upload-csv-export]: Content cap at 64 KB character count (not bytes); touch() called before add_message() in ask() for ask-only sessions; citations omitted from history replay
 - [Phase 11]: annotation/pipeline.py annotate() does not persist results back to store; annotations.csv uses placeholder row for current datasets
 - [Phase 11]: Used anchor-click pattern for CSV download so session cookie is sent automatically on browser navigation
+- [Phase 11-quick-wins-history-replay-h5ad-upload-csv-export]: annotation/pipeline.py annotate() does not persist results back to store; annotations.csv uses placeholder row for current datasets
+- [Phase 11-quick-wins-history-replay-h5ad-upload-csv-export]: Used anchor-click pattern for CSV download so session cookie is sent automatically on browser navigation
 
 ### Critical Pitfalls to Encode in Plans
 
@@ -88,6 +90,6 @@ Key v1.2 roadmap decisions:
 
 ## Session Continuity
 
-Last session: 2026-09-17T01:00:34.349Z
-Stopped at: Completed 11-03-PLAN.md (checkpoint: awaiting human verify of browser ZIP download)
+Last session: 2026-09-17T01:55:44.928Z
+Stopped at: Completed 11-03-PLAN.md (Phase 11 fully complete)
 Resume file: None
