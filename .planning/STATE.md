@@ -2,17 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Real Data + Bio FM Integration
-current_plan: —
-status: Roadmap defined — ready for Phase 11 planning
-stopped_at: —
-last_updated: "2026-09-16T00:00:00.000Z"
-last_activity: 2026-09-16 — v1.2 roadmap created (Phases 11-14, 8 requirements, 100% coverage)
+status: planning
+stopped_at: Completed 11-02-PLAN.md
+last_updated: "2026-09-17T00:57:49.007Z"
+last_activity: 2026-09-16 — v1.2 roadmap created (4 phases, 8 requirements, 100% coverage)
 progress:
   total_phases: 14
   completed_phases: 10
-  total_plans: 42
-  completed_plans: 42
-  percent: 71
+  total_plans: 45
+  completed_plans: 43
 ---
 
 # Project State
@@ -64,6 +62,7 @@ Key v1.2 roadmap decisions:
 - Phase 12 (DATA-01, EXPORT-02) requires network (census) and DATA-01's messages table exists after HIST-01
 - Phase 13 sequences FM-01 (scGPT) before FM-02 (Geneformer) so the validated subprocess pattern is reused for Geneformer's more complex four-step pipeline
 - Phase 14 (DOCK-01) is last — Docker depends on all features being stable
+- [Phase 11-02]: Use ingest.loaders.load() (not scanpy directly) to build tiny_h5ad_file fixture — guarantees AnnData structure matches production ingest pipeline output
 
 ### Critical Pitfalls to Encode in Plans
 
@@ -85,6 +84,6 @@ Key v1.2 roadmap decisions:
 
 ## Session Continuity
 
-Last session: 2026-09-16
-Stopped at: v1.2 roadmap creation complete
+Last session: 2026-09-17T00:57:49.004Z
+Stopped at: Completed 11-02-PLAN.md
 Resume file: None

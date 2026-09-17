@@ -10,7 +10,7 @@
 ### Data Access
 
 - [ ] **DATA-01**: Researcher can ask the agent to fetch a real public single-cell dataset by tissue/organism/assay from cellxgene-census without uploading a file — the agent returns a dataset handle the existing ingest pipeline loads
-- [ ] **DATA-02**: The upload endpoint accepts direct `.h5ad` files (the standard single-cell format) alongside the existing MTX trio, routing to the same ingest pipeline
+- [x] **DATA-02**: The upload endpoint accepts direct `.h5ad` files (the standard single-cell format) alongside the existing MTX trio, routing to the same ingest pipeline
 
 ### Foundation Models
 
@@ -51,7 +51,7 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | DATA-01 | Phase 12 | Pending |
-| DATA-02 | Phase 11 | Pending |
+| DATA-02 | Phase 11 | Complete |
 | FM-01 | Phase 13 | Pending |
 | FM-02 | Phase 13 | Pending |
 | HIST-01 | Phase 11 | Pending |

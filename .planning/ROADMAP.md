@@ -273,7 +273,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 8. Session & Dataset Endpoints | 3/3 | Complete   | 2026-09-12 |
 | 9. Frontend Chat UI | 5/5 | Complete   | 2026-09-14 |
 | 10. Packaging & Local Verification | 2/2 | Complete   | 2026-09-15 |
-| 11. Quick Wins — History Replay, h5ad Upload, CSV Export | 0/TBD | Not started | - |
+| 11. Quick Wins — History Replay, h5ad Upload, CSV Export | 1/3 | In Progress|  |
 | 12. Agent Data Access + Script Export | 0/TBD | Not started | - |
 | 13. Real FM Inference — scGPT then Geneformer | 0/TBD | Not started | - |
 | 14. Docker Compose Deployment | 0/TBD | Not started | - |
