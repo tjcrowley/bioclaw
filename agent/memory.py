@@ -35,6 +35,17 @@ CREATE TABLE IF NOT EXISTS sessions (
 )
 """
 
+_CREATE_MESSAGES_TABLE_SQL = """
+CREATE TABLE IF NOT EXISTS messages (
+    session_id TEXT NOT NULL,
+    role TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at TEXT NOT NULL
+)
+"""
+
+_CONTENT_CAP = 64 * 1024  # character cap (Python string length, not bytes)
+
 
 class SessionMemory:
     """SQLite-backed dataset-reference/finding store, keyed by session_id.
@@ -46,9 +57,12 @@ class SessionMemory:
         with self._connect() as conn:
             conn.execute(_CREATE_TABLE_SQL)
             conn.execute(_CREATE_SESSIONS_TABLE_SQL)
+            conn.execute(_CREATE_MESSAGES_TABLE_SQL)
 
     def _connect(self) -> sqlite3.Connection:
-        return sqlite3.connect(self.path)
+        conn = sqlite3.connect(self.path)
+        conn.execute("PRAGMA journal_mode=WAL")
+        return conn
 
     def record(self, session_id: str, dataset_id: str, note: str | None = None) -> None:
         with self._connect() as conn:
@@ -111,3 +125,25 @@ class SessionMemory:
                 "SELECT 1 FROM sessions WHERE session_id = ?", (session_id,)
             ).fetchone()
         return row is not None
+
+    def add_message(self, session_id: str, role: str, content: str) -> None:
+        """Stores one message turn. Content capped at 64 KB (character count)
+        to prevent database blowup (HIST-01 success criteria)."""
+        capped = content[:_CONTENT_CAP]
+        now = datetime.now(timezone.utc).isoformat()
+        with self._connect() as conn:
+            conn.execute(
+                "INSERT INTO messages (session_id, role, content, created_at) VALUES (?, ?, ?, ?)",
+                (session_id, role, capped, now),
+            )
+            conn.commit()
+
+    def get_messages(self, session_id: str) -> list[dict]:
+        """Returns all messages for session_id, oldest first (rowid order)."""
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT role, content, created_at FROM messages "
+                "WHERE session_id = ? ORDER BY rowid ASC",
+                (session_id,),
+            ).fetchall()
+        return [{"role": r[0], "content": r[1], "created_at": r[2]} for r in rows]

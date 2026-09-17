@@ -1,7 +1,72 @@
 """Tests for agent/memory.py: SessionMemory record/recall store."""
 
+import sqlite3
+
 from agent.memory import SessionMemory
 
+
+# ---------------------------------------------------------------------------
+# HIST-01: messages table, WAL mode, content cap tests
+# ---------------------------------------------------------------------------
+
+def test_wal_mode_enabled(tmp_path):
+    """After SessionMemory init, WAL mode must be active on any new connection."""
+    SessionMemory(root=tmp_path / "m.sqlite")
+    conn = sqlite3.connect(str(tmp_path / "m.sqlite"))
+    row = conn.execute("PRAGMA journal_mode").fetchone()
+    conn.close()
+    assert row[0] == "wal"
+
+
+def test_add_message_stores_and_retrieves(tmp_path):
+    mem = SessionMemory(root=tmp_path / "m.sqlite")
+    mem.touch("s1")
+    mem.add_message("s1", "user", "hello")
+    msgs = mem.get_messages("s1")
+    assert len(msgs) == 1
+    assert msgs[0]["role"] == "user"
+    assert msgs[0]["content"] == "hello"
+    assert "created_at" in msgs[0]
+
+
+def test_add_message_caps_at_64kb(tmp_path):
+    mem = SessionMemory(root=tmp_path / "m.sqlite")
+    mem.touch("s1")
+    big = "x" * (65 * 1024)
+    mem.add_message("s1", "user", big)
+    msgs = mem.get_messages("s1")
+    assert len(msgs[0]["content"]) == 64 * 1024
+
+
+def test_get_messages_returns_oldest_first(tmp_path):
+    mem = SessionMemory(root=tmp_path / "m.sqlite")
+    mem.touch("s1")
+    mem.add_message("s1", "user", "question")
+    mem.add_message("s1", "assistant", "answer")
+    msgs = mem.get_messages("s1")
+    assert msgs[0]["role"] == "user"
+    assert msgs[1]["role"] == "assistant"
+
+
+def test_get_messages_empty_for_unknown_session(tmp_path):
+    mem = SessionMemory(root=tmp_path / "m.sqlite")
+    assert mem.get_messages("no-such") == []
+
+
+def test_messages_isolated_by_session(tmp_path):
+    mem = SessionMemory(root=tmp_path / "m.sqlite")
+    mem.touch("sess-1")
+    mem.touch("sess-2")
+    mem.add_message("sess-1", "user", "hello from 1")
+    msgs_1 = mem.get_messages("sess-1")
+    msgs_2 = mem.get_messages("sess-2")
+    assert len(msgs_1) == 1
+    assert len(msgs_2) == 0
+
+
+# ---------------------------------------------------------------------------
+# Existing tests
+# ---------------------------------------------------------------------------
 
 def test_record_and_recall_most_recent_first(tmp_path):
     mem = SessionMemory(root=tmp_path / "memory.sqlite")
