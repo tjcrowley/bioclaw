@@ -108,6 +108,21 @@ body {
   overflow: hidden;
 }
 
+/* ─── Panel toolbar (download button, etc.) ─────── */
+.panel-toolbar {
+  display: flex; justify-content: flex-end; padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel);
+  min-height: 0;
+}
+.panel-toolbar:empty,
+.panel-toolbar:not(:has(button:not([hidden]))) {
+  display: none;
+}
+.toolbar-btn {
+  width: auto; padding: 4px 12px; font-size: 13px;
+}
+
 /* ─── Chat thread ────────────────────────────────── */
 .chat-thread {
   flex: 1; overflow-y: auto; padding: 24px 32px;

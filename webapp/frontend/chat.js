@@ -125,8 +125,14 @@ composerForm.addEventListener('submit', async (e) => {
     const question = questionInput.value.trim();
     if (!question) return;
     const newSessionId = await sendMessage(question, window.__currentSessionId || null);
-    if (newSessionId && typeof window.__onNewSessionId === 'function') {
-        window.__onNewSessionId(newSessionId);
+    if (newSessionId) {
+        if (typeof window.__onNewSessionId === 'function') {
+            window.__onNewSessionId(newSessionId);
+        }
+        // Refresh session to detect newly associated datasets (shows export button)
+        if (typeof window.__onAskResponse === 'function') {
+            window.__onAskResponse(newSessionId);
+        }
     }
 });
 

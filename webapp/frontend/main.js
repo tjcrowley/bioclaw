@@ -4,10 +4,20 @@
 import { renderAnswerWithCitations, showCitationDetail } from './citations.js';
 import { clearChatThread, appendMessage } from './chat.js';
 import { loadSessionList, resumeSession, addOrRefreshSession } from './sessions.js';
-import { uploadDataset } from './api.js';
+import { uploadDataset, exportCsv, getSession } from './api.js';
 
 // ─── Window hooks (read by chat.js, citations.js, sessions.js) ───────────────
 window.__renderAnswerWithCitations = renderAnswerWithCitations;
+
+// Track currently active dataset for export button
+window.__currentDatasetId = null;
+
+function _showDownloadBtn() {
+    document.getElementById('download-btn').removeAttribute('hidden');
+}
+function _hideDownloadBtn() {
+    document.getElementById('download-btn').setAttribute('hidden', '');
+}
 
 window.__onNewSessionId = (sessionId) => {
     addOrRefreshSession(sessionId);
@@ -15,6 +25,8 @@ window.__onNewSessionId = (sessionId) => {
 
 window.__newSession = () => {
     window.__currentSessionId = null;
+    window.__currentDatasetId = null;
+    _hideDownloadBtn();
     clearChatThread();
     loadSessionList().catch(() => {});
     document.getElementById('question-input').focus();
@@ -34,6 +46,11 @@ window.__onFilesSelected = async (files, name) => {
                 window.__currentSessionId = result.session_id;
                 addOrRefreshSession(result.session_id);
             }
+            // Track dataset for export button
+            if (result.dataset_id) {
+                window.__currentDatasetId = result.dataset_id;
+                _showDownloadBtn();
+            }
             appendMessage({
                 role: 'system',
                 content: `Dataset "${name}" ingested as ${result.dataset_id}. ` +
@@ -50,6 +67,21 @@ window.__onFilesSelected = async (files, name) => {
 window.__bootApp = async () => {
     await loadSessionList();
     document.getElementById('question-input').focus();
+};
+
+// After a successful ask response, refresh the session's recent_datasets to pick
+// up any dataset set during the conversation (e.g., analysis run on an uploaded file).
+window.__onAskResponse = async (sessionId) => {
+    if (!sessionId) return;
+    try {
+        const session = await getSession(sessionId);
+        if (session && session.recent_datasets && session.recent_datasets.length > 0) {
+            window.__currentDatasetId = session.recent_datasets[0];
+            _showDownloadBtn();
+        }
+    } catch {
+        // best-effort — don't surface errors from a secondary call
+    }
 };
 
 // ─── Auth flow ────────────────────────────────────────────────────────────────
@@ -104,6 +136,13 @@ loginForm.addEventListener('submit', async (e) => {
 });
 
 window.addEventListener('bioclaw:unauthorized', showLogin);
+
+// ─── Download button wiring ───────────────────────────────────────────────────
+document.getElementById('download-btn').addEventListener('click', () => {
+    if (window.__currentDatasetId) {
+        exportCsv(window.__currentDatasetId);
+    }
+});
 
 // ─── Modal wiring ─────────────────────────────────────────────────────────────
 document.getElementById('modal-backdrop').addEventListener('click', () => {

@@ -87,3 +87,15 @@ export async function uploadDataset(formData) {
     if (!resp.ok) throw new Error(`upload failed: ${resp.status}`);
     return resp.json();
 }
+
+export function exportCsv(datasetId) {
+    // Use anchor-click pattern for browser-native file download (RESEARCH.md Pitfall 5).
+    // Session cookie is sent automatically on navigation — do NOT use fetch() here.
+    const url = `/api/export/csv?dataset_id=${encodeURIComponent(datasetId)}`;
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '';  // filename comes from Content-Disposition header
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
