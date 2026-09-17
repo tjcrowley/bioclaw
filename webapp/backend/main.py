@@ -28,6 +28,7 @@ from webapp.backend.schemas import (
     AskResponse,
     LoginRequest,
     LoginResponse,
+    MessageRecord,
     SessionListResponse,
     SessionSummary,
     UploadResponse,
@@ -53,6 +54,10 @@ async def ask(
         session_id=req.session_id,  # was previously ignored
         extra_hooks=extra_hooks,
     )
+    # Store conversation turns for HIST-01 history replay
+    session_memory.touch(session_id)
+    session_memory.add_message(session_id, "user", req.question)
+    session_memory.add_message(session_id, "assistant", answer)
     return AskResponse(answer=answer, session_id=session_id, citations=citations)
 
 
@@ -67,9 +72,11 @@ async def get_session(
 ) -> SessionSummary:
     if not session_memory.session_exists(session_id):
         raise HTTPException(status_code=404, detail="unknown session_id")
+    msgs = session_memory.get_messages(session_id)
     return SessionSummary(
         session_id=session_id,
         recent_datasets=session_memory.recent_datasets(session_id),
+        messages=[MessageRecord(**m) for m in msgs],
     )
 
 

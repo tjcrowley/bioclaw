@@ -233,6 +233,74 @@ def test_get_session_returns_404_for_unknown_session(monkeypatch, tmp_path):
         app.dependency_overrides.clear()
 
 
+# ---------------------------------------------------------------------------
+# HIST-01: GET /api/sessions/{id} returns messages; POST /api/ask stores turns
+# ---------------------------------------------------------------------------
+
+def test_get_session_returns_messages(monkeypatch, tmp_path):
+    """GET /api/sessions/{id} must include a messages array with role/content/created_at."""
+    monkeypatch.setenv("BIOCLAW_WEB_PASSWORD", "testpass")
+    mem = SessionMemory(root=tmp_path / "m.sqlite")
+    mem.touch("sess-hist")
+    mem.add_message("sess-hist", "user", "what clusters?")
+    mem.add_message("sess-hist", "assistant", "three clusters")
+    app.dependency_overrides[deps.get_session_memory] = lambda: mem
+    try:
+        client = TestClient(app)
+        resp = client.get("/api/sessions/sess-hist", headers={"Authorization": "Bearer testpass"})
+        assert resp.status_code == 200
+        body = resp.json()
+        assert "messages" in body
+        msgs = body["messages"]
+        assert len(msgs) == 2
+        assert msgs[0]["role"] == "user"
+        assert msgs[0]["content"] == "what clusters?"
+        assert "created_at" in msgs[0]
+        assert msgs[1]["role"] == "assistant"
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_get_session_messages_empty_for_new_session(monkeypatch, tmp_path):
+    """GET /api/sessions/{id} for a session with no messages returns messages: []."""
+    monkeypatch.setenv("BIOCLAW_WEB_PASSWORD", "testpass")
+    mem = SessionMemory(root=tmp_path / "m.sqlite")
+    mem.touch("sess-empty")
+    app.dependency_overrides[deps.get_session_memory] = lambda: mem
+    try:
+        client = TestClient(app)
+        resp = client.get("/api/sessions/sess-empty", headers={"Authorization": "Bearer testpass"})
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["messages"] == []
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_ask_stores_user_and_assistant_messages(monkeypatch, tmp_path):
+    """After POST /api/ask, session_memory must have one user and one assistant record."""
+    monkeypatch.setenv("BIOCLAW_WEB_PASSWORD", "testpass")
+    mem = SessionMemory(root=tmp_path / "m.sqlite")
+    app.dependency_overrides[deps.get_session_memory] = lambda: mem
+    app.dependency_overrides[deps.get_ask_question] = lambda: _fake_ask_question
+    try:
+        client = TestClient(app)
+        resp = client.post(
+            "/api/ask",
+            json={"question": "how many clusters?", "session_id": "sess-1"},
+            headers={"Authorization": "Bearer testpass"},
+        )
+        assert resp.status_code == 200
+        msgs = mem.get_messages("sess-1")
+        roles = [m["role"] for m in msgs]
+        assert "user" in roles
+        assert "assistant" in roles
+        user_msg = next(m for m in msgs if m["role"] == "user")
+        assert user_msg["content"] == "how many clusters?"
+    finally:
+        app.dependency_overrides.clear()
+
+
 def test_resume_recalls_prior_dataset_reference(monkeypatch, tmp_path):
     monkeypatch.setenv("BIOCLAW_WEB_PASSWORD", "testpass")
     mem = SessionMemory(root=tmp_path / "m.sqlite")

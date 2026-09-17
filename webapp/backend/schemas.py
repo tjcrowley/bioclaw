@@ -25,11 +25,18 @@ class AskResponse(BaseModel):
     citations: list = []
 
 
+class MessageRecord(BaseModel):
+    role: str
+    content: str
+    created_at: str
+
+
 class SessionSummary(BaseModel):
     session_id: str
     created_at: str | None = None
     last_active_at: str | None = None
     recent_datasets: list[str] = []
+    messages: list[MessageRecord] = []  # HIST-01
 
 
 class SessionListResponse(BaseModel):
