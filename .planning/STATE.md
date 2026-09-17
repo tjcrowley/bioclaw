@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Real Data + Bio FM Integration
-status: planning
-stopped_at: Completed 12-02-PLAN.md (fetch_census_dataset tool) — Phase 12 fully complete (12-01 + 12-02 + 12-03)
-last_updated: "2026-09-17T14:15:01.384Z"
-last_activity: 2026-09-17 — Completed 12-02-PLAN.md (fetch_census_dataset tool); Phase 12 fully complete (12-01/12-02/12-03)
+status: executing
+stopped_at: Completed 13-02-PLAN.md (Geneformer output dataclasses, Ensembl-ID validator, isolated geneformer_worker/ env) — Phase 13 in progress (13-01 also in progress in parallel)
+last_updated: "2026-09-17T19:10:00.000Z"
+last_activity: 2026-09-17 — Completed 13-02-PLAN.md (Geneformer foundation: dataclasses, validate_ensembl_ids, geneformer_smoke marker, geneformer_worker/ env)
 progress:
   total_phases: 14
   completed_phases: 12
-  total_plans: 49
-  completed_plans: 49
+  total_plans: 53
+  completed_plans: 50
 ---
 
 # Project State
@@ -24,15 +24,15 @@ See: .planning/PROJECT.md (updated 2026-09-15)
 
 ## Current Position
 
-Milestone: v1.2 Real Data + Bio FM Integration — Phase 12 complete
-Phase: Phase 13 (next)
-Plan: —
-Status: Phase 12 complete (DATA-01 + EXPORT-02 satisfied) — ready to plan Phase 13
-Last activity: 2026-09-17 — Completed 12-02-PLAN.md (fetch_census_dataset tool); Phase 12 fully complete (12-01/12-02/12-03)
+Milestone: v1.2 Real Data + Bio FM Integration — Phase 13 in progress
+Phase: Phase 13 (in progress)
+Plan: 13-02 complete (2 of 4 plans; 13-01 in progress/checkpoint in parallel, 13-03/13-04 pending)
+Status: 13-02 complete — FM-02 foundation laid (Geneformer dataclasses, Ensembl validator, geneformer_smoke marker, geneformer_worker/ env verified working); 13-03/13-04 build the actual inference pipeline on top of this
+Last activity: 2026-09-17 — Completed 13-02-PLAN.md (Geneformer foundation: dataclasses, validate_ensembl_ids, geneformer_smoke marker, geneformer_worker/ env)
 
 ```
-v1.2 Progress [#####-----] 50% (2/4 phases)
-Overall     [###########] 86% (12/14 phases)
+v1.2 Progress [######----] 62% (2.5/4 phases)
+Overall     [###########] 87% (12.5/14 phases)
 ```
 
 ## Performance Metrics
@@ -76,6 +76,9 @@ Key v1.2 roadmap decisions:
 - [Phase 12-03]: Export Script button reuses _showDownloadBtn/_hideDownloadBtn helpers so CSV and Script export buttons always show/hide together
 - [Phase 12-02]: _census_fetch_blocking() keeps the entire open_soma with-block + get_anndata call inside one closure passed wholesale to asyncio.to_thread(), per RESEARCH Pattern 2/Pitfall 1 (both must run in the same worker thread)
 - [Phase 12-02]: Fixed pre-existing 12-01 test scaffold bugs (SdkMcpTool.handler(...) invocation, asyncio.run() instead of deprecated get_event_loop().run_until_complete()) rather than reverting to the buggy pattern
+- [Phase 13-02]: validate_ensembl_ids() resolution order is gene_ids -> feature_id -> Ensembl-shaped var_names -> ValueError; presence/shape check only, real vocabulary match rate deferred to geneformer_worker/run_geneformer_perturb.py (Plan 13-03), which alone can import the geneformer package
+- [Phase 13-02]: New Geneformer dataclasses (GeneShift, GeneformerPerturbationCall, GeneformerPerturbationSummary) are additive/parallel to PerturbationCall/PerturbationSummary, not a replacement — Geneformer's ranked-gene-list output is structurally distinct from an expression vector
+- [Phase 13-02]: geneformer_worker/.venv requires repinning transformers==4.46 (Geneformer's own requirements.txt pin) immediately after pip install -e, since the unconstrained setup.py resolves an incompatible latest transformers that breaks import geneformer (SpecialTokensMixin removed)
 
 ### Critical Pitfalls to Encode in Plans
 
@@ -87,7 +90,8 @@ Key v1.2 roadmap decisions:
 
 ### Pending Todos
 
-- Plan Phase 13 (`/gsd:plan-phase 13`)
+- Execute 13-03-PLAN.md (geneformer_worker/run_geneformer_perturb.py four-step pipeline CLI + perturbation/geneformer_client.py subprocess shim)
+- Execute 13-04-PLAN.md (predict_geneformer() composition + predict_perturbation_geneformer_tool + real end-to-end smoke test checkpoint)
 - VCC real dataset download (Phase 5 Task 3) still pending — non-blocking for v1.2
 
 ### Blockers/Concerns
@@ -97,6 +101,6 @@ Key v1.2 roadmap decisions:
 
 ## Session Continuity
 
-Last session: 2026-09-17T14:10:03.451Z
-Stopped at: Completed 12-02-PLAN.md (fetch_census_dataset tool) — Phase 12 fully complete (12-01 + 12-02 + 12-03)
+Last session: 2026-09-17T19:10:00.000Z
+Stopped at: Completed 13-02-PLAN.md (Geneformer output dataclasses, Ensembl-ID validator, isolated geneformer_worker/ env) — Phase 13 in progress (13-01 also in progress in parallel)
 Resume file: None
