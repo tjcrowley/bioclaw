@@ -30,4 +30,5 @@ markers = [
     "live_llm: requires a live Anthropic API key (ANTHROPIC_API_KEY), excluded from fast/CI runs",
     "bio_fm_smoke: requires a real pretrained scGPT checkpoint in the isolated bio_fm_worker/ environment, excluded from fast/CI runs",
     "vcc_data: requires the downloaded VCC public dataset, excluded from fast/CI runs",
+    "census_data: requires real network access to cellxgene-census S3; excluded from fast/CI runs",
 ]
