@@ -255,6 +255,24 @@ def structured_adata() -> AnnData:
 
 
 @pytest.fixture
+def tiny_h5ad_file(tmp_path, analyzable_mtx_dir) -> Path:
+    """A minimal .h5ad file at analyzable_mtx_dir scale (300 genes x 60 cells)
+    that survives default QC (min_genes_per_cell=200). Used for DATA-02
+    h5ad-upload integration tests.
+
+    Built by loading analyzable_mtx_dir through the real ingest loader and
+    writing the result to .h5ad — guarantees the fixture matches exactly what
+    ingest_10x() would produce from MTX input.
+    """
+    from ingest.loaders import load
+
+    adata = load(analyzable_mtx_dir)
+    h5ad_path = tmp_path / "sample.h5ad"
+    adata.write_h5ad(h5ad_path)
+    return h5ad_path
+
+
+@pytest.fixture
 def perturbation_adata() -> AnnData:
     """Returns an in-memory AnnData (raw integer counts, sparse csr_matrix
     in .X) for Phase 5 (perturbation-response) tests.

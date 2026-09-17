@@ -79,3 +79,12 @@ def test_structured_adata_structure(structured_adata):
         "expected genes 0-14 to be meaningfully elevated in population A "
         "vs. population B, proving the fixture has separable structure"
     )
+
+
+def test_tiny_h5ad_file_is_readable(tmp_path, tiny_h5ad_file):
+    """DATA-02: tiny_h5ad_file fixture produces a valid .h5ad file readable
+    by sc.read_h5ad() with sufficient obs/vars to survive default QC
+    (min_genes_per_cell=200)."""
+    adata = sc.read_h5ad(tiny_h5ad_file)
+    assert adata.n_obs >= 50, f"expected >= 50 cells, got {adata.n_obs}"
+    assert adata.n_vars >= 200, f"expected >= 200 genes, got {adata.n_vars}"
