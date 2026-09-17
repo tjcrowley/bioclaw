@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Real Data + Bio FM Integration
-status: planning
-stopped_at: Completed 12-01-PLAN.md (Phase 12 Wave 0 scaffold)
-last_updated: "2026-09-17T06:29:27.895Z"
-last_activity: 2026-09-16 — v1.2 roadmap created (4 phases, 8 requirements, 100% coverage)
+status: completed
+stopped_at: Completed 12-03-PLAN.md (Script export endpoint + frontend wiring)
+last_updated: "2026-09-17T14:06:00.562Z"
+last_activity: 2026-09-17 — Completed 12-03-PLAN.md (Script export endpoint + frontend wiring)
 progress:
   total_phases: 14
-  completed_phases: 11
+  completed_phases: 12
   total_plans: 49
-  completed_plans: 47
+  completed_plans: 49
 ---
 
 # Project State
@@ -24,15 +24,15 @@ See: .planning/PROJECT.md (updated 2026-09-15)
 
 ## Current Position
 
-Milestone: v1.2 Real Data + Bio FM Integration — roadmap defined, not started
-Phase: Phase 11 (next)
+Milestone: v1.2 Real Data + Bio FM Integration — Phase 12 complete
+Phase: Phase 13 (next)
 Plan: —
-Status: Roadmap defined — ready for Phase 11 planning
-Last activity: 2026-09-16 — v1.2 roadmap created (4 phases, 8 requirements, 100% coverage)
+Status: Phase 12 complete (DATA-01 + EXPORT-02 satisfied) — ready to plan Phase 13
+Last activity: 2026-09-17 — Completed 12-03-PLAN.md (Script export endpoint + frontend wiring)
 
 ```
-v1.2 Progress [----------] 0% (0/4 phases)
-Overall     [##########] 71% (10/14 phases)
+v1.2 Progress [#####-----] 50% (2/4 phases)
+Overall     [###########] 86% (12/14 phases)
 ```
 
 ## Performance Metrics
@@ -72,6 +72,8 @@ Key v1.2 roadmap decisions:
 - [Phase 12-01]: ingest_from_anndata() keeps census AnnData in memory (no write+read round-trip), mirrors ingest_10x() exactly minus loaders.load()
 - [Phase 12-01]: format_census_source() is census-source-agnostic (no cellxgene_census import) — pure string function for provenance round-trip in EXPORT-02
 - [Phase 12-01]: census_data marker + CENSUS_DATA env-var double gate on smoke test prevents accidental CI network calls
+- [Phase 12-03]: webapp/backend/export_script.py verified against spec rather than rewritten (found pre-existing from interrupted run, matched exactly)
+- [Phase 12-03]: Export Script button reuses _showDownloadBtn/_hideDownloadBtn helpers so CSV and Script export buttons always show/hide together
 
 ### Critical Pitfalls to Encode in Plans
 
@@ -93,6 +95,6 @@ Key v1.2 roadmap decisions:
 
 ## Session Continuity
 
-Last session: 2026-09-17T06:29:27.892Z
-Stopped at: Completed 12-01-PLAN.md (Phase 12 Wave 0 scaffold)
+Last session: 2026-09-17T14:05:40.086Z
+Stopped at: Completed 12-03-PLAN.md (Script export endpoint + frontend wiring)
 Resume file: None
