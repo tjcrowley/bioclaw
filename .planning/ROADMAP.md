@@ -234,7 +234,12 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. A researcher can ask the agent for a dataset by tissue, organism, or assay and receive back an ingested, analysis-ready dataset handle — fetched from cellxgene-census, not from an uploaded file — with the census fetch running in `asyncio.to_thread()` so the event loop is not blocked.
   2. A researcher can request a scanpy script export from any session and receive a `.py` file that, when run from scratch, reproduces every QC threshold, analysis parameter, dataset source reference, and random seed that the session used.
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 12-01-PLAN.md — Wave 0: census_data marker + ingest/census.py (ingest_from_anndata + census source format) + DATA-01/EXPORT-02 test scaffolds (DATA-01, EXPORT-02)
+- [ ] 12-02-PLAN.md — DATA-01: fetch_census_dataset tool (asyncio.to_thread census fetch) + bioclaw_server registration
+- [ ] 12-03-PLAN.md — EXPORT-02: generate_analysis_script + GET /api/export/script + frontend Export Script button
 
 ### Phase 13: Real FM Inference — scGPT then Geneformer
 **Goal**: Real scGPT inference replaces the subprocess stub for cell-type annotation, and Geneformer is added as a second perturbation-response model option — sequenced so the validated subprocess pattern from scGPT is reused for Geneformer's more complex four-step pipeline.
@@ -274,6 +279,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 9. Frontend Chat UI | 5/5 | Complete   | 2026-09-14 |
 | 10. Packaging & Local Verification | 2/2 | Complete   | 2026-09-15 |
 | 11. Quick Wins — History Replay, h5ad Upload, CSV Export | 3/4 | Complete    | 2026-09-17 |
-| 12. Agent Data Access + Script Export | 0/TBD | Not started | - |
+| 12. Agent Data Access + Script Export | 0/3 | Planned | - |
 | 13. Real FM Inference — scGPT then Geneformer | 0/TBD | Not started | - |
 | 14. Docker Compose Deployment | 0/TBD | Not started | - |
