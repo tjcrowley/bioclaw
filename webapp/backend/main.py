@@ -30,6 +30,7 @@ from ingest.pipeline import ingest_10x
 from ingest.store import DatasetStore
 from webapp.backend import deps, streaming, uploads
 from webapp.backend.auth import _valid, require_password, require_password_ws
+from webapp.backend.export_script import generate_analysis_script
 from webapp.backend.schemas import (
     AskRequest,
     AskResponse,
@@ -225,6 +226,54 @@ async def export_csv(dataset_id: str) -> StreamingResponse:
         media_type="application/zip",
         headers={
             "Content-Disposition": f'attachment; filename="{safe_name}_export.zip"'
+        },
+    )
+
+
+@app.get("/api/export/script", dependencies=[Depends(require_password)])
+async def export_script(dataset_id: str) -> StreamingResponse:
+    """EXPORT-02: Render a self-contained, reproducible scanpy .py script for the
+    named dataset that recreates the QC thresholds, analysis parameters, random
+    seed, and dataset source used in the BioClaw session.
+
+    dataset_id format: "name@version" where version is an integer (e.g. mydata@1).
+    """
+    # Parse dataset_id format: "name@version"
+    parts = dataset_id.split("@", 1)
+    if len(parts) != 2:
+        raise HTTPException(
+            status_code=422,
+            detail="dataset_id must be name@version (e.g. mydata@1)",
+        )
+    name, version_str = parts
+    version = int(version_str) if version_str.isdigit() else None
+
+    store = DatasetStore(root=agent_tools.STORE_ROOT)
+    try:
+        adata = store.load(name, version)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    # Look up the source_path provenance from the registry record matching the
+    # loaded version (or the latest record if no explicit version was requested).
+    records = store.list(name)
+    source_path = None
+    if records:
+        if version is not None:
+            matches = [r for r in records if r["version"] == version]
+            record = matches[0] if matches else records[-1]
+        else:
+            record = records[-1]
+        source_path = record.get("source_path")
+
+    script = generate_analysis_script(adata, source_path, dataset_id)
+
+    safe_name = name.replace("/", "_").replace(" ", "_")
+    return StreamingResponse(
+        io.BytesIO(script.encode()),
+        media_type="text/x-python",
+        headers={
+            "Content-Disposition": f'attachment; filename="{safe_name}_analysis.py"'
         },
     )
 
