@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Real Data + Bio FM Integration
 status: executing
-stopped_at: Completed 13-01-PLAN.md (k-NN vote-fraction confidence in _match_and_aggregate, real scGPT smoke test re-verified) — Phase 13 in progress
-last_updated: "2026-09-17T19:15:00.000Z"
-last_activity: 2026-09-17 — Completed 13-01-PLAN.md (k-NN vote-fraction confidence for scGPT annotation, FM-01 complete)
+stopped_at: Completed 13-03-PLAN.md
+last_updated: "2026-09-17T21:55:47.991Z"
+last_activity: 2026-09-17 — Completed 13-03-PLAN.md (geneformer_worker/run_geneformer_perturb.py four-step pipeline CLI + perturbation/geneformer_client.py subprocess shim, FM-02 pipeline complete)
 progress:
   total_phases: 14
   completed_phases: 12
   total_plans: 53
-  completed_plans: 51
+  completed_plans: 52
 ---
 
 # Project State
@@ -26,13 +26,13 @@ See: .planning/PROJECT.md (updated 2026-09-15)
 
 Milestone: v1.2 Real Data + Bio FM Integration — Phase 13 in progress
 Phase: Phase 13 (in progress)
-Plan: 13-01 and 13-02 complete (2 of 4 plans in Phase 13; 13-03/13-04 pending)
-Status: 13-01 complete — FM-01 done (real scGPT inference with k-NN vote-fraction confidence, verified end-to-end against the real checkpoint); 13-02 complete — FM-02 foundation laid (Geneformer dataclasses, Ensembl validator, geneformer_smoke marker, geneformer_worker/ env verified working); 13-03/13-04 build the actual Geneformer inference pipeline on top of this
-Last activity: 2026-09-17 — Completed 13-01-PLAN.md (k-NN vote-fraction confidence for scGPT annotation, FM-01 complete)
+Plan: 13-01, 13-02, and 13-03 complete (3 of 4 plans in Phase 13; 13-04 pending)
+Status: 13-01 complete (FM-01, real scGPT inference with k-NN vote-fraction confidence); 13-02 complete (FM-02 foundation: Geneformer dataclasses, Ensembl validator, geneformer_smoke marker, geneformer_worker/ env); 13-03 complete (FM-02 real Geneformer four-step pipeline worker + subprocess client, TDD-tested); 13-04 remains to wire predict_geneformer() into the agent tool layer with an end-to-end human-review checkpoint
+Last activity: 2026-09-17 — Completed 13-03-PLAN.md (geneformer_worker/run_geneformer_perturb.py four-step pipeline CLI + perturbation/geneformer_client.py subprocess shim, FM-02 pipeline complete)
 
 ```
-v1.2 Progress [######----] 63% (2.5/4 phases)
-Overall     [#########-] 89% (12.5/14 phases)
+v1.2 Progress [#######---] 69% (2.75/4 phases)
+Overall     [#########-] 91% (12.75/14 phases)
 ```
 
 ## Performance Metrics
@@ -80,18 +80,20 @@ Key v1.2 roadmap decisions:
 - [Phase 13-02]: New Geneformer dataclasses (GeneShift, GeneformerPerturbationCall, GeneformerPerturbationSummary) are additive/parallel to PerturbationCall/PerturbationSummary, not a replacement — Geneformer's ranked-gene-list output is structurally distinct from an expression vector
 - [Phase 13-02]: geneformer_worker/.venv requires repinning transformers==4.46 (Geneformer's own requirements.txt pin) immediately after pip install -e, since the unconstrained setup.py resolves an incompatible latest transformers that breaks import geneformer (SpecialTokensMixin removed)
 - [Phase 13-01]: _match_and_aggregate()'s confidence changed from top-1 cosine similarity to a k-NN (k=15) vote fraction — count of majority-label neighbors among each query cell's k nearest reference neighbors, divided by k; k is clamped to min(k, reference embedding count); no change to AnnotationCall schema or main()'s call site since k has a default
+- [Phase 13-03]: run_geneformer_perturb.py's TranscriptomeTokenizer call uses model_input_size=2048 (not Pattern 3's 4096) — live inspect.getsource() on the installed geneformer package confirmed model_version="V1" unconditionally overrides model_input_size to 2048 and special_token to False inside __init__, making 4096/True the V2-only defaults
+- [Phase 13-03]: ranked_genes built from InSilicoPerturberStats.get_stats()'s Affected_gene_name/Affected_Ensembl_ID columns (not Gene_name/Ensembl_ID, which describe the single perturbed gene and are constant across every row) — real column names verified via inspect.getsource() on isp_aggregate_gene_shifts, a drift from 13-RESEARCH.md Pattern 3's documented column list
+- [Phase 13-03]: call_geneformer_perturb() timeout defaults to 7200s (2h), double call_scgpt_annotate()'s 3600s, per Pitfall 3's four-step-pipeline wall-clock warning; query h5ad is symlinked into a dedicated work_dir/data_input/ directory before tokenize_data() since TranscriptomeTokenizer.tokenize_files() globs an entire directory rather than accepting a single file path
 
 ### Critical Pitfalls to Encode in Plans
 
 - **HIST-01**: SQLite WAL mode must be set on the messages table; stored content must be capped at 64 KB per entry to prevent database blowup
 - **DATA-01**: Census fetch must run in `asyncio.to_thread()` — TileDB-SOMA is synchronous and blocks the event loop otherwise
 - **FM-01**: RESOLVED (Phase 13-01) — `scgpt.tasks.embed_data()` API shape verified with no drift, torch/torchtext ABI confirmed fixed, k-NN vote-fraction confidence verified end-to-end against the real checkpoint
-- **FM-02**: Geneformer requires Ensembl IDs in `adata.var` — gene symbols produce silent zero-length tokens and must be validated before inference runs; Geneformer needs a separate Python 3.10 venv
+- **FM-02**: Geneformer requires Ensembl IDs in `adata.var` — gene symbols produce silent zero-length tokens and must be validated before inference runs; Geneformer needs a separate Python 3.10 venv. Pipeline worker built (Phase 13-03): `geneformer_worker/run_geneformer_perturb.py` computes the real vocabulary match_rate independently (hard-fails below 50%) and ranks genes by `Affected_gene_name`/`Affected_Ensembl_ID`/`Cosine_sim_mean` from `InSilicoPerturberStats`, not the `Gene_name`/`Ensembl_ID` columns Pattern 3 originally documented. Not yet run end-to-end against the real checkpoint — that verification is Plan 13-04's `checkpoint:human-verify`.
 - **DOCK-01**: docker compose must hard-code `--workers 1`; the in-memory queue registry breaks under multi-worker
 
 ### Pending Todos
 
-- Execute 13-03-PLAN.md (geneformer_worker/run_geneformer_perturb.py four-step pipeline CLI + perturbation/geneformer_client.py subprocess shim)
 - Execute 13-04-PLAN.md (predict_geneformer() composition + predict_perturbation_geneformer_tool + real end-to-end smoke test checkpoint)
 - VCC real dataset download (Phase 5 Task 3) still pending — non-blocking for v1.2
 
@@ -101,6 +103,6 @@ Key v1.2 roadmap decisions:
 
 ## Session Continuity
 
-Last session: 2026-09-17T19:06:46.384Z
-Stopped at: Completed 13-01-PLAN.md
+Last session: 2026-09-17T21:53:00.000Z
+Stopped at: Completed 13-03-PLAN.md
 Resume file: None

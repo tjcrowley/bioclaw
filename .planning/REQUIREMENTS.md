@@ -53,7 +53,7 @@
 | DATA-01 | Phase 12 | Complete |
 | DATA-02 | Phase 11 | Complete |
 | FM-01 | Phase 13 | Complete |
-| FM-02 | Phase 13 | Pending — foundation (13-02) landed, inference lands in 13-03/13-04 |
+| FM-02 | Phase 13 | Pending — foundation (13-02) and real inference pipeline (13-03) landed, agent tool wiring + human-verify checkpoint lands in 13-04 |
 | HIST-01 | Phase 11 | Complete |
 | EXPORT-01 | Phase 11 | Complete |
 | EXPORT-02 | Phase 12 | Complete |
