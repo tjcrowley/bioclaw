@@ -68,7 +68,12 @@ export function resumeSession(sessionId) {
             appendMessage({ role: 'system', content: ctx });
         } else {
             for (const msg of msgs) {
-                appendMessage({ role: msg.role, content: msg.content });
+                appendMessage({ role: msg.role, content: msg.content, citations: msg.citations || undefined });
+                // Render tool activity inline after assistant bubbles that had tool calls
+                if (msg.role === 'assistant' && Array.isArray(msg.tool_events) && msg.tool_events.length > 0) {
+                    const toolNames = msg.tool_events.map(e => e.tool_name.replace(/^mcp__bioclaw__/, '')).join(', ');
+                    appendMessage({ role: 'system', content: `[Tools used: ${toolNames}]` });
+                }
             }
         }
     }).catch(() => {});

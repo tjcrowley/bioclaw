@@ -50,7 +50,23 @@ async def ask(
     ask_question=Depends(deps.get_ask_question),
     session_memory=Depends(deps.get_session_memory),
 ) -> AskResponse:
-    extra_hooks = []
+    tool_events_collector: list[dict] = []
+
+    async def _collect_tool_event(input_data, tool_use_id, context):
+        """Captures tool events for history replay (HIST-01 gap closure)."""
+        try:
+            tool_events_collector.append({
+                "tool_name": input_data.get("tool_name", ""),
+                "is_error": bool(
+                    isinstance(input_data.get("tool_response"), dict)
+                    and input_data.get("tool_response", {}).get("is_error")
+                ),
+            })
+        except Exception:
+            pass
+        return {}
+
+    extra_hooks = [_collect_tool_event]
     if req.stream_id:
         queue = streaming.get_or_create_queue(req.stream_id)
         extra_hooks.append(streaming.make_stream_hook(queue))
@@ -61,10 +77,16 @@ async def ask(
         session_id=req.session_id,  # was previously ignored
         extra_hooks=extra_hooks,
     )
-    # Store conversation turns for HIST-01 history replay
+    # Store conversation turns for HIST-01 history replay (with citations and tool events)
     session_memory.touch(session_id)
     session_memory.add_message(session_id, "user", req.question)
-    session_memory.add_message(session_id, "assistant", answer)
+    session_memory.add_message(
+        session_id,
+        "assistant",
+        answer,
+        citations=citations if citations else None,
+        tool_events=tool_events_collector if tool_events_collector else None,
+    )
     return AskResponse(answer=answer, session_id=session_id, citations=citations)
 
 
