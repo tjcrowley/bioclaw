@@ -117,17 +117,52 @@ def _cosine_similarity_matrix(a, b):
     return a_norm @ b_norm.T
 
 
-def _match_and_aggregate(query, query_embed, reference, reference_embed, reference_dataset):
-    """Top-1 cosine match per query cell, aggregated to one call per leiden group."""
+def _match_and_aggregate(
+    query, query_embed, reference, reference_embed, reference_dataset, k: int = 15
+):
+    """k-NN vote-fraction match per query cell, aggregated to one call per leiden group.
+
+    For each query cell, finds its `k` nearest reference neighbors by cosine
+    similarity, takes the majority label among those `k` neighbors, and sets
+    that cell's confidence to the vote fraction (count of majority-label
+    neighbors / k) -- the same technique scArches' WKNN label-transfer
+    classifier and popV's consensus voting use. This replaces a prior top-1
+    cosine-similarity confidence, which gave no sense of neighborhood
+    consistency (a single, possibly noisy, nearest neighbor could disagree
+    with the broader local consensus). Per-cluster aggregation (majority
+    label across the group's cells, mean confidence among cells agreeing
+    with the group majority, majority label's ontology id) is unchanged.
+    """
     sims = _cosine_similarity_matrix(query_embed, reference_embed)
-    best_idx = sims.argmax(axis=1)
-    best_sim = sims[np.arange(sims.shape[0]), best_idx]
+    k = min(k, sims.shape[1])
 
     ref_cell_type = reference.obs["cell_type"].to_numpy()
     ref_ontology_id = reference.obs["cell_type_ontology_term_id"].to_numpy()
 
-    matched_labels = ref_cell_type[best_idx]
-    matched_ontology_ids = ref_ontology_id[best_idx]
+    # Per-query-cell k-NN vote fraction: for each row, find the k nearest
+    # reference neighbors (argpartition is O(n) vs argsort's O(n log n), and
+    # we don't need the within-k order, only membership), then take the
+    # majority label among those k neighbors and the fraction of neighbors
+    # agreeing with it.
+    topk_idx = np.argpartition(-sims, kth=k - 1, axis=1)[:, :k]
+    topk_labels = ref_cell_type[topk_idx]
+
+    matched_labels = np.empty(sims.shape[0], dtype=object)
+    matched_ontology_ids = np.empty(sims.shape[0], dtype=object)
+    cell_confidence = np.empty(sims.shape[0], dtype=float)
+    for i in range(sims.shape[0]):
+        values, counts = np.unique(topk_labels[i], return_counts=True)
+        majority_label = values[counts.argmax()]
+        vote_fraction = float(counts.max()) / k
+        # ontology id for this cell's vote: first neighbor among its k that
+        # carries the majority label.
+        neighbor_labels = ref_cell_type[topk_idx[i]]
+        neighbor_ontology_ids = ref_ontology_id[topk_idx[i]]
+        ontology_term_id = neighbor_ontology_ids[neighbor_labels == majority_label][0]
+
+        matched_labels[i] = majority_label
+        matched_ontology_ids[i] = ontology_term_id
+        cell_confidence[i] = vote_fraction
 
     calls = []
     for cluster in sorted(query.obs["leiden"].unique(), key=str):
@@ -137,12 +172,12 @@ def _match_and_aggregate(query, query_embed, reference, reference_embed, referen
 
         group_labels = matched_labels[mask]
         group_ontology_ids = matched_ontology_ids[mask]
-        group_sims = best_sim[mask]
+        group_confidence = cell_confidence[mask]
 
         values, counts = np.unique(group_labels, return_counts=True)
         majority_label = values[counts.argmax()]
         majority_mask = group_labels == majority_label
-        confidence = float(group_sims[majority_mask].mean())
+        confidence = float(group_confidence[majority_mask].mean())
         ontology_term_id = group_ontology_ids[majority_mask][0]
 
         calls.append(
