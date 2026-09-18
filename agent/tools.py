@@ -38,6 +38,7 @@ from annotation.pipeline import annotate
 from ingest.census import fetch_census_dataset
 from ingest.pipeline import ingest_10x
 from perturbation.pipeline import predict as predict_perturbation
+from perturbation.pipeline import predict_geneformer
 
 # Module-level constant, set once at import time (overridable via the
 # BIOCLAW_STORE_ROOT env var, or directly in tests via
@@ -175,6 +176,33 @@ async def predict_perturbation_tool(args: dict[str, Any]) -> dict[str, Any]:
             args["target_gene"],
             version=version,
             store_root=STORE_ROOT,
+        )
+    except Exception as exc:
+        return {"content": [{"type": "text", "text": str(exc)}], "is_error": True}
+    return {
+        "content": [
+            {"type": "text", "text": json.dumps({"dataset_id": dataset_id, **summary})}
+        ],
+        "is_error": False,
+    }
+
+
+@tool(
+    "predict_perturbation_geneformer",
+    "Predict post-perturbation effects for a named dataset and target gene using "
+    "Geneformer's in-silico perturbation (four-step pipeline: tokenize, embed, perturb, "
+    "aggregate). Returns a ranked list of genes by cosine-shift magnitude -- distinct from "
+    "predict_perturbation's expression-vector output. Requires Ensembl-ID-mapped gene "
+    "identifiers in the dataset (validated automatically; raises a clear error if absent). "
+    "Can take a long time on CPU -- this is a separate, explicitly-invoked tool, not run "
+    "unconditionally alongside predict_perturbation. Optionally pass 'version' (int).",
+    {"name": str, "target_gene": str},  # 'version' intentionally omitted -- optional
+)
+async def predict_perturbation_geneformer_tool(args: dict[str, Any]) -> dict[str, Any]:
+    version = args.get("version")
+    try:
+        dataset_id, summary = await predict_geneformer(
+            args["name"], args["target_gene"], version=version, store_root=STORE_ROOT
         )
     except Exception as exc:
         return {"content": [{"type": "text", "text": str(exc)}], "is_error": True}

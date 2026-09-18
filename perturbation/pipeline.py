@@ -23,14 +23,23 @@ Downstream plans (05-04/05-05) import this module by path:
 
 from __future__ import annotations
 
+import asyncio
+import tempfile
 from dataclasses import asdict
 from pathlib import Path
 
+from annotation.fm_client import ensure_worker_compatible_h5ad
 from ingest.store import DatasetStore
 
 from perturbation.baseline import naive_baseline_predict
+from perturbation.ensembl import validate_ensembl_ids
+from perturbation.geneformer_client import call_geneformer_perturb
 from perturbation.model import fit_from_adata
-from perturbation.summary import PerturbationCall, PerturbationSummary
+from perturbation.summary import (
+    GeneformerPerturbationSummary,
+    PerturbationCall,
+    PerturbationSummary,
+)
 
 
 def predict(
@@ -110,5 +119,83 @@ def predict(
         gene_names=list(adata.var_names),
         model_call=model_call,
         baseline_call=baseline_call,
+    )
+    return dataset_id, asdict(summary)
+
+
+async def predict_geneformer(
+    name: str,
+    target_gene: str,
+    version: int | None = None,
+    store_root: str | Path = "data",
+) -> tuple[str, dict]:
+    """Load dataset, run Geneformer's real four-step in-silico-perturbation
+    pipeline against the isolated `geneformer_worker/` environment, and
+    return a ranked-by-cosine-shift gene list (FM-02).
+
+    Mirrors `predict()`'s store-load entrypoint shape, but:
+    - Validates Ensembl IDs (`validate_ensembl_ids()`) unconditionally,
+      before anything else touches the worker boundary; its `ValueError` is
+      propagated uncaught (matches `predict()`'s existing
+      propagate-don't-swallow convention).
+    - Resolves the target gene's Ensembl ID server-side (never asked of the
+      LLM/user directly) via `adata.var["ensembl_id"]`.
+    - Dispatches the blocking, potentially multi-hour subprocess call via
+      `asyncio.to_thread()` (Pitfall 3), mirroring `ingest/census.py`'s
+      existing `asyncio.to_thread()` precedent for blocking I/O in this
+      codebase, so a long-running Geneformer call never blocks the agent
+      session's event loop.
+
+    Args:
+        name: Dataset name as registered in the DatasetStore.
+        target_gene: The perturbation target gene to predict (must be
+            present in `adata.var_names`).
+        version: Dataset version to load (int), or None for the latest
+            version.
+        store_root: Root directory of the DatasetStore (overridable for
+            tests).
+
+    Returns:
+        (dataset_id, summary_dict) where summary_dict is the
+        `dataclasses.asdict()` of a `GeneformerPerturbationSummary`.
+
+    Raises:
+        KeyError: if name/version is not found in the store (propagated
+            from DatasetStore.load), or if target_gene is not present in
+            adata.var_names.
+        ValueError: if no Ensembl-ID-shaped gene identifier column is found
+            (propagated from validate_ensembl_ids).
+        RuntimeError: if the Geneformer worker subprocess fails or times
+            out (propagated from call_geneformer_perturb).
+    """
+    store = DatasetStore(root=store_root)
+    adata = store.load(name, version)
+    dataset_id = f"{name}@{version if version is not None else '(latest)'}"
+
+    # Validate (and alias into adata.var["ensembl_id"]) unconditionally,
+    # before anything else touches the worker boundary -- per the roadmap's
+    # explicit "validated... before inference runs" wording.
+    validate_ensembl_ids(adata)
+
+    # Resolve the target gene's Ensembl ID server-side -- never exposed as
+    # an LLM-facing parameter the agent could get wrong.
+    if target_gene not in adata.var_names:
+        raise KeyError(f"target_gene {target_gene!r} not found in dataset")
+    target_ensembl_id = str(adata.var.loc[target_gene, "ensembl_id"])
+
+    ensure_worker_compatible_h5ad(adata)
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        h5ad_path = Path(tmp_dir) / "query.h5ad"
+        adata.write_h5ad(h5ad_path)
+
+        # Dispatch the blocking, potentially multi-hour subprocess call off
+        # the event loop (Pitfall 3).
+        call = await asyncio.to_thread(
+            call_geneformer_perturb, h5ad_path, target_gene, target_ensembl_id
+        )
+
+    summary = GeneformerPerturbationSummary(
+        dataset_id=dataset_id, target_gene=target_gene, call=call
     )
     return dataset_id, asdict(summary)

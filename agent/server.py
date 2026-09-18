@@ -10,6 +10,7 @@ from agent.tools import (
     annotate_cell_type_tool,
     fetch_census_dataset_tool,
     ingest_10x_tool,
+    predict_perturbation_geneformer_tool,
     predict_perturbation_tool,
 )
 
@@ -21,6 +22,7 @@ bioclaw_server = create_sdk_mcp_server(
         analyze_dataset_tool,
         annotate_cell_type_tool,
         predict_perturbation_tool,
+        predict_perturbation_geneformer_tool,
         fetch_census_dataset_tool,
     ],
 )
