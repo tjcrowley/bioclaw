@@ -13,8 +13,13 @@ from fastapi import Cookie, Header, HTTPException, Query, WebSocket, WebSocketEx
 
 
 def _valid(password: str | None) -> bool:
+    # `not expected` rather than `expected is None`: a blank BIOCLAW_WEB_PASSWORD
+    # would otherwise make compare_digest("", "") succeed, and an empty `session`
+    # cookie reaches here as "" (the `candidate or password or session` chain
+    # below returns its last operand when every candidate is falsy). Reject the
+    # empty candidate symmetrically so neither side can ever match on "".
     expected = os.environ.get("BIOCLAW_WEB_PASSWORD")
-    if expected is None or password is None:
+    if not expected or not password:
         return False
     return secrets.compare_digest(password, expected)
 

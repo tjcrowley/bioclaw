@@ -31,7 +31,21 @@ unset or empty. That closes the Docker path — which mattered, because
 `.env.example` ships the value blank and the documented flow is "copy and fill
 in". It does not fix the underlying function.
 
-**Action:** Not fixed — `webapp/backend/auth.py` is not in 14-04's
-`files_modified`. A follow-up plan should change the guard to
-`if not expected or password is None:` and add a regression test asserting that
-an empty expected password rejects every candidate, including `""`.
+**Action:** RESOLVED 2026-09-18, immediately after 14-04, at Darren's direction.
+Guard changed to `if not expected or not password:` in `webapp/backend/auth.py`,
+with `tests/test_auth_blank_password.py` (15 tests) covering both
+`require_password` and `require_password_ws` across every empty-credential
+combination, plus a normal-path regression check.
+
+**Correction to the writeup above.** The vector originally named — an empty
+`?password=` query param, as stated in 14-04-SUMMARY.md and commit 9920b5a — is
+NOT reachable. `candidate = candidate or password or session` returns its LAST
+operand when all are falsy, so an empty `?password=` collapses to `None` and was
+already rejected. The genuinely reachable vector is an empty **`session` cookie**
+(`Cookie: session=`), which survives as `""` (the chain's last operand) and
+reached `_valid`. The WebSocket path, `_valid(password or session)`, was
+exploitable the same way. Both were confirmed live before the fix and are now
+covered by parametrized tests. Severity and remedy unchanged; only the vector
+name was wrong. The error came from testing `_valid()` in isolation rather than
+through its callers — isolation proved the flaw existed, not that it was
+reachable.
