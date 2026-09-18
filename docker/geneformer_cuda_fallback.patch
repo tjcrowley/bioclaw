@@ -1,0 +1,170 @@
+diff --git a/geneformer/emb_extractor.py b/geneformer/emb_extractor.py
+index d46ad46..48d661e 100644
+--- a/geneformer/emb_extractor.py
++++ b/geneformer/emb_extractor.py
+@@ -91,6 +91,7 @@ def get_embs(
+             )
+ 
+     overall_max_len = 0
++    _device = "cuda" if torch.cuda.is_available() else "cpu"
+ 
+     for i in trange(0, total_batch_length, forward_batch_size, leave=(not silent)):
+         max_range = min(i + forward_batch_size, total_batch_length)
+@@ -98,7 +99,7 @@ def get_embs(
+         minibatch = filtered_input_data.select([i for i in range(i, max_range)])
+ 
+         max_len = int(max(minibatch["length"]))
+-        original_lens = torch.tensor(minibatch["length"], device="cuda")
++        original_lens = torch.tensor(minibatch["length"], device=_device)
+         minibatch.set_format(type="torch")
+ 
+         input_data_minibatch = minibatch["input_ids"]
+@@ -108,7 +109,7 @@ def get_embs(
+ 
+         with torch.no_grad():
+             outputs = model(
+-                input_ids=input_data_minibatch.to("cuda"),
++                input_ids=input_data_minibatch.to(_device),
+                 attention_mask=pu.gen_attention_mask(minibatch),
+             )
+ 
+@@ -164,7 +165,8 @@ def get_embs(
+         del input_data_minibatch
+         del embs_i
+ 
+-        torch.cuda.empty_cache()
++        if torch.cuda.is_available():
++            torch.cuda.empty_cache()
+ 
+     if summary_stat is None:
+         if (emb_mode == "cell") or (emb_mode == "cls"):
+diff --git a/geneformer/in_silico_perturber.py b/geneformer/in_silico_perturber.py
+index 35244c2..28fba38 100644
+--- a/geneformer/in_silico_perturber.py
++++ b/geneformer/in_silico_perturber.py
+@@ -683,14 +683,15 @@ class InSilicoPerturber:
+ 
+                 # if there are goal states, the cosine similarities are the cell cosine similarities
+                 if self.cell_states_to_model is not None:
++                    _device = "cuda" if torch.cuda.is_available() else "cpu"
+                     original_cell_emb = pu.mean_nonpadding_embs(
+                         full_original_emb,
+-                        torch.tensor(minibatch["length"], device="cuda"),
++                        torch.tensor(minibatch["length"], device=_device),
+                         dim=1,
+                     )
+                     perturbation_cell_emb = pu.mean_nonpadding_embs(
+                         full_perturbation_emb,
+-                        torch.tensor(perturbation_batch["length"], device="cuda"),
++                        torch.tensor(perturbation_batch["length"], device=_device),
+                         dim=1,
+                     )
+                     cell_cos_sims = pu.quant_cos_sims(
+@@ -745,7 +746,11 @@ class InSilicoPerturber:
+                 else:
+                     nonpadding_lens = perturbation_batch["length"]
+                 cos_sims_data = pu.mean_nonpadding_embs(
+-                    gene_cos_sims, torch.tensor(nonpadding_lens, device="cuda")
++                    gene_cos_sims,
++                    torch.tensor(
++                        nonpadding_lens,
++                        device="cuda" if torch.cuda.is_available() else "cpu",
++                    ),
+                 )
+                 cos_sims_dict = self.update_perturbation_dictionary(
+                     cos_sims_dict,
+@@ -766,7 +771,8 @@ class InSilicoPerturber:
+             del perturbation_emb
+             del cos_sims_data
+ 
+-            torch.cuda.empty_cache()
++            if torch.cuda.is_available():
++                torch.cuda.empty_cache()
+ 
+         pu.write_perturbation_dictionary(
+             cos_sims_dict,
+@@ -1044,7 +1050,8 @@ class InSilicoPerturber:
+             del minibatch
+             del perturbation_batch
+ 
+-            torch.cuda.empty_cache()
++            if torch.cuda.is_available():
++                torch.cuda.empty_cache()
+ 
+         pu.write_perturbation_dictionary(
+             cos_sims_dict,
+@@ -1246,7 +1253,8 @@ class InSilicoPerturber:
+                     if self.emb_mode == "cell_and_gene":
+                         stored_gene_embs_dict = defaultdict(list)
+ 
+-                    torch.cuda.empty_cache()
++                    if torch.cuda.is_available():
++                        torch.cuda.empty_cache()
+ 
+             pu.write_perturbation_dictionary(
+                 cos_sims_dict,
+@@ -1276,7 +1284,8 @@ class InSilicoPerturber:
+             del full_original_emb
+             if self.cell_states_to_model is not None:
+                 del original_cell_emb
+-            torch.cuda.empty_cache()
++            if torch.cuda.is_available():
++                torch.cuda.empty_cache()
+ 
+     def isp_perturb_all_special(
+         self,
+@@ -1530,7 +1539,8 @@ class InSilicoPerturber:
+                     if self.emb_mode == "cls_and_gene":
+                         stored_gene_embs_dict = defaultdict(list)
+ 
+-                    torch.cuda.empty_cache()
++                    if torch.cuda.is_available():
++                        torch.cuda.empty_cache()
+ 
+             pu.write_perturbation_dictionary(
+                 cos_sims_dict,
+@@ -1560,7 +1570,8 @@ class InSilicoPerturber:
+             del original_cls_emb
+             if self.emb_mode == "cls_and_gene":
+                 del full_original_emb
+-            torch.cuda.empty_cache()
++            if torch.cuda.is_available():
++                torch.cuda.empty_cache()
+ 
+     def update_perturbation_dictionary(
+         self,
+diff --git a/geneformer/perturber_utils.py b/geneformer/perturber_utils.py
+index ad89ce6..0472d12 100644
+--- a/geneformer/perturber_utils.py
++++ b/geneformer/perturber_utils.py
+@@ -267,8 +267,9 @@ def get_possible_states(cell_states_to_model):
+ def forward_pass_single_cell(model, example_cell, layer_to_quant):
+     example_cell.set_format(type="torch")
+     input_data = example_cell["input_ids"]
++    _device = "cuda" if torch.cuda.is_available() else "cpu"
+     with torch.no_grad():
+-        outputs = model(input_ids=input_data.to("cuda"))
++        outputs = model(input_ids=input_data.to(_device))
+     emb = torch.squeeze(outputs.hidden_states[layer_to_quant])
+     del outputs
+     return emb
+@@ -789,8 +790,9 @@ def quant_cos_sims(
+ 
+     # if emb_mode == "gene", can only calculate gene cos sims
+     # against original cell
++    _device = "cuda" if torch.cuda.is_available() else "cpu"
+     if cell_states_to_model is None or emb_mode == "gene":
+-        cos_sims = cos(perturbation_emb, original_emb).to("cuda")
++        cos_sims = cos(perturbation_emb, original_emb).to(_device)
+ 
+     elif cell_states_to_model is not None and emb_mode == "cell":
+         possible_states = get_possible_states(cell_states_to_model)
+@@ -799,7 +801,7 @@ def quant_cos_sims(
+             cos_sims[state] = cos_sim_shift(
+                 original_emb,
+                 perturbation_emb,
+-                state_embs_dict[state].to("cuda"),  # required to move to cuda here
++                state_embs_dict[state].to(_device),  # moved to model device
+                 cos,
+             )
+ 
