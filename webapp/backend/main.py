@@ -7,6 +7,7 @@ import io
 import os as _os
 import uuid
 import zipfile
+from pathlib import Path
 from typing import Annotated
 
 import pandas as pd
@@ -85,6 +86,7 @@ async def ask(
         req.question,
         session_memory=session_memory,
         session_id=req.session_id,  # was previously ignored
+        log_path=Path(_os.environ.get("BIOCLAW_LOG_PATH", "tool_calls.jsonl")),
         extra_hooks=extra_hooks,
     )
     # Store conversation turns for HIST-01 history replay (with citations and tool events)

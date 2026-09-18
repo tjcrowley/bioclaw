@@ -7,6 +7,8 @@ here -- that lands in Plan 07-02 alongside main.py.
 """
 
 import asyncio
+import importlib
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -143,6 +145,54 @@ def test_ask_returns_answer(monkeypatch):
         assert resp.json() == {"answer": "fake answer", "session_id": "sess-1", "citations": []}
     finally:
         app.dependency_overrides.clear()
+
+
+def test_session_memory_honors_memory_db_env_var(tmp_path, monkeypatch):
+    custom_path = tmp_path / "custom" / "memory.sqlite"
+    monkeypatch.setenv("BIOCLAW_MEMORY_DB", str(custom_path))
+    from webapp.backend import deps
+    # main.app's routes captured these provider objects at import time and use
+    # them as dependency_overrides keys. importlib.reload(deps) rebinds them to
+    # fresh function objects, so we must restore the originals afterward or every
+    # later test that does app.dependency_overrides[deps.get_ask_question] = ...
+    # would key on a stale object and silently be ignored.
+    orig_get_ask_question = deps.get_ask_question
+    orig_get_session_memory = deps.get_session_memory
+    importlib.reload(deps)
+    try:
+        assert deps._session_memory.path == custom_path
+    finally:
+        monkeypatch.delenv("BIOCLAW_MEMORY_DB", raising=False)
+        importlib.reload(deps)  # restore default singleton for later tests
+        deps.get_ask_question = orig_get_ask_question
+        deps.get_session_memory = orig_get_session_memory
+
+
+def test_ask_uses_env_configured_log_path(monkeypatch, tmp_path):
+    monkeypatch.setenv("BIOCLAW_WEB_PASSWORD", "testpass")
+    custom_log = tmp_path / "custom_tool_calls.jsonl"
+    monkeypatch.setenv("BIOCLAW_LOG_PATH", str(custom_log))
+    captured = {}
+
+    async def _capturing_ask_question(question, session_memory=None, session_id=None, extra_hooks=None, log_path=None):
+        captured["log_path"] = log_path
+        return await _fake_ask_question(
+            question, session_memory=session_memory, session_id=session_id,
+            extra_hooks=extra_hooks, log_path=log_path,
+        )
+
+    app.dependency_overrides[deps.get_ask_question] = lambda: _capturing_ask_question
+    try:
+        client = TestClient(app)
+        resp = client.post(
+            "/api/ask", json={"question": "q"},
+            headers={"Authorization": "Bearer testpass"},
+        )
+        assert resp.status_code == 200
+        assert captured["log_path"] == Path(str(custom_log))
+    finally:
+        app.dependency_overrides.clear()
+        monkeypatch.delenv("BIOCLAW_LOG_PATH", raising=False)
 
 
 def test_ask_streams_tool_events(monkeypatch):
