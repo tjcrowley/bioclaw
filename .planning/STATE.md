@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Real Data + Bio FM Integration
 status: completed
-stopped_at: Completed 13-03-PLAN.md
-last_updated: "2026-09-18T00:51:14.455Z"
-last_activity: 2026-09-17 — Completed 13-03-PLAN.md (geneformer_worker/run_geneformer_perturb.py four-step pipeline CLI + perturbation/geneformer_client.py subprocess shim, FM-02 pipeline complete)
+stopped_at: Completed Phase 13; Phase 14 researched and planned, not executed
+last_updated: "2026-09-18T03:50:00.000Z"
+last_activity: 2026-09-17 — Completed Phase 13 (13-04-PLAN.md wired predict_perturbation_geneformer_tool into the agent server with a real end-to-end smoke test); 13-VERIFICATION.md passed 8/8; Phase 14 research + validation strategy + plans 14-01..14-05 drafted
 progress:
   total_phases: 14
   completed_phases: 13
@@ -20,19 +20,19 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-15)
 
 **Core value:** A Biopunk Labs researcher can ask a plain-language question about a single-cell dataset and get back a QC'd, annotated, interpreted answer without writing a scanpy script by hand.
-**Current focus:** v1.2 — Real Data + Bio FM Integration (phases 11-14); Phases 11-12 complete, ready to plan Phase 13.
+**Current focus:** v1.2 — Real Data + Bio FM Integration (phases 11-14); Phases 11-13 complete, Phase 14 planned and ready to execute.
 
 ## Current Position
 
-Milestone: v1.2 Real Data + Bio FM Integration — Phase 13 in progress
-Phase: Phase 13 (in progress)
-Plan: 13-01, 13-02, and 13-03 complete (3 of 4 plans in Phase 13; 13-04 pending)
-Status: 13-01 complete (FM-01, real scGPT inference with k-NN vote-fraction confidence); 13-02 complete (FM-02 foundation: Geneformer dataclasses, Ensembl validator, geneformer_smoke marker, geneformer_worker/ env); 13-03 complete (FM-02 real Geneformer four-step pipeline worker + subprocess client, TDD-tested); 13-04 remains to wire predict_geneformer() into the agent tool layer with an end-to-end human-review checkpoint
-Last activity: 2026-09-17 — Completed 13-03-PLAN.md (geneformer_worker/run_geneformer_perturb.py four-step pipeline CLI + perturbation/geneformer_client.py subprocess shim, FM-02 pipeline complete)
+Milestone: v1.2 Real Data + Bio FM Integration — Phase 14 ready to execute
+Phase: Phase 13 complete (verified 8/8 must-haves); Phase 14 planned, no plans executed yet
+Plan: Next action is 14-01-PLAN.md (wave 1)
+Status: Phase 13 fully complete — 13-01 (FM-01, real scGPT inference with k-NN vote-fraction confidence), 13-02 (FM-02 foundation: Geneformer dataclasses, Ensembl validator, geneformer_smoke marker, geneformer_worker/ env), 13-03 (real Geneformer four-step pipeline worker + subprocess client), 13-04 (predict_geneformer() composition + predict_perturbation_geneformer_tool registered in agent/server.py, real end-to-end smoke test human-verified at 15.0s latency). Phase 14 has 14-RESEARCH.md, 14-VALIDATION.md, and five plans across four waves: 14-01 health endpoint + env-configurable state paths (wave 1), 14-02 Dockerfile + entrypoint (wave 2), 14-03 FM worker venvs/checkpoints baked into the image and 14-04 compose files + GPU overlay (wave 3, parallel), 14-05 docs (wave 4, autonomous: false — needs human review).
+Last activity: 2026-09-17 — Completed Phase 13 and drafted the full Phase 14 plan set.
 
 ```
-v1.2 Progress [#######---] 69% (2.75/4 phases)
-Overall     [#########-] 91% (12.75/14 phases)
+v1.2 Progress [########--] 75% (3/4 phases)
+Overall     [#########-] 93% (13/14 phases)
 ```
 
 ## Performance Metrics
@@ -89,12 +89,13 @@ Key v1.2 roadmap decisions:
 - **HIST-01**: SQLite WAL mode must be set on the messages table; stored content must be capped at 64 KB per entry to prevent database blowup
 - **DATA-01**: Census fetch must run in `asyncio.to_thread()` — TileDB-SOMA is synchronous and blocks the event loop otherwise
 - **FM-01**: RESOLVED (Phase 13-01) — `scgpt.tasks.embed_data()` API shape verified with no drift, torch/torchtext ABI confirmed fixed, k-NN vote-fraction confidence verified end-to-end against the real checkpoint
-- **FM-02**: Geneformer requires Ensembl IDs in `adata.var` — gene symbols produce silent zero-length tokens and must be validated before inference runs; Geneformer needs a separate Python 3.10 venv. Pipeline worker built (Phase 13-03): `geneformer_worker/run_geneformer_perturb.py` computes the real vocabulary match_rate independently (hard-fails below 50%) and ranks genes by `Affected_gene_name`/`Affected_Ensembl_ID`/`Cosine_sim_mean` from `InSilicoPerturberStats`, not the `Gene_name`/`Ensembl_ID` columns Pattern 3 originally documented. Not yet run end-to-end against the real checkpoint — that verification is Plan 13-04's `checkpoint:human-verify`.
-- **DOCK-01**: docker compose must hard-code `--workers 1`; the in-memory queue registry breaks under multi-worker
+- **FM-02**: Geneformer requires Ensembl IDs in `adata.var` — gene symbols produce silent zero-length tokens and must be validated before inference runs; Geneformer needs a separate Python 3.10 venv. Pipeline worker built (Phase 13-03): `geneformer_worker/run_geneformer_perturb.py` computes the real vocabulary match_rate independently (hard-fails below 50%) and ranks genes by `Affected_gene_name`/`Affected_Ensembl_ID`/`Cosine_sim_mean` from `InSilicoPerturberStats`, not the `Gene_name`/`Ensembl_ID` columns Pattern 3 originally documented. RESOLVED (Phase 13-04) — run end-to-end against the real V1-10M checkpoint, 15.0s latency, non-empty `ranked_genes` with non-zero cosine shifts.
+- **DOCK-01**: docker compose must hard-code `--workers 1`; the in-memory queue registry breaks under multi-worker. The image's own ENTRYPOINT must own this flag (Plan 14-02) so a compose `command:`/`entrypoint:` override cannot silently reintroduce multi-worker.
 
 ### Pending Todos
 
-- Execute 13-04-PLAN.md (predict_geneformer() composition + predict_perturbation_geneformer_tool + real end-to-end smoke test checkpoint)
+- Execute 14-01-PLAN.md (unauthenticated GET /api/health probe + env-configurable SQLite/JSONL state paths) — scheduled to kick off after 22:00 PT on 2026-09-17
+- Full-suite test-isolation bug: 14 failures in `tests/test_vcc_eval.py` / `tests/test_vcc_report.py`, all 25 pass in isolation. Root cause isolated during 13-03 — leaked global thread-count state makes `pdex` size numba's threadpool at 0, so `cell_eval.MetricsEvaluator.__init__` raises `ValueError: The number of threads must be between 1 and 10`. See phase 13 `deferred-items.md`; needs a cleanup plan.
 - VCC real dataset download (Phase 5 Task 3) still pending — non-blocking for v1.2
 
 ### Blockers/Concerns
@@ -103,6 +104,6 @@ Key v1.2 roadmap decisions:
 
 ## Session Continuity
 
-Last session: 2026-09-17T21:53:00.000Z
-Stopped at: Completed 13-03-PLAN.md
-Resume file: None
+Last session: 2026-09-18T03:50:00.000Z
+Stopped at: Completed Phase 13 (verified 8/8); Phase 14 researched and planned, no Phase 14 plans executed
+Resume file: .planning/phases/14-docker-compose-deployment/14-01-PLAN.md

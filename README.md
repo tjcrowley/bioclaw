@@ -23,7 +23,18 @@ Example target interaction: researcher uploads raw 10x output → agent QCs (mit
 
 ## Status
 
-v1.1 — web UI complete (login, chat, live tool-activity streaming, citation resolution, session sidebar, dataset upload). See [CONCEPT.md](CONCEPT.md) for architecture detail and `.planning/` for the phased build history.
+v1.2 — **real foundation-model inference is live.** Both models run for real against their own checkpoints, each isolated in its own Python environment behind a subprocess boundary:
+
+- **scGPT** (whole-human checkpoint) for cell-type annotation, with confidence reported as a k-NN vote fraction (k=15) over reference embeddings rather than a top-1 cosine similarity
+- **Geneformer** (V1-10M) for perturbation response, running the full four-step pipeline (tokenize → embed → in-silico perturb → stats) and returning a ranked gene list
+
+Also in v1.2: chat history replay, `.h5ad` upload, CSV + scanpy-script export, and `cellxgene-census` dataset fetch.
+
+Remaining for v1.2: Phase 14, a single-service Docker Compose deployment.
+
+Earlier — v1.1: web UI complete (login, chat, live tool-activity streaming, citation resolution, session sidebar, dataset upload).
+
+See [CONCEPT.md](CONCEPT.md) for architecture detail and `.planning/` for the phased build history.
 
 ## Web UI (v1.1)
 
