@@ -49,3 +49,75 @@ covered by parametrized tests. Severity and remedy unchanged; only the vector
 name was wrong. The error came from testing `_valid()` in isolation rather than
 through its callers — isolation proved the flaw existed, not that it was
 reachable.
+
+## 14-03: Geneformer stage installs torch unconstrained, pulling ~3GB of CUDA 13
+
+**Found during:** Task 2, watching the first full `docker build` of the
+geneformer-builder stage.
+
+**Symptom:** `Dockerfile:125` installs the vendored Geneformer checkout with no
+torch constraint:
+
+```dockerfile
+RUN --mount=type=cache,target=/root/.cache/pip \
+    /opt/geneformer_worker_venv/bin/pip install -e /opt/geneformer_src \
+ && /opt/geneformer_worker_venv/bin/pip install "transformers==4.46"
+```
+
+Geneformer declares a bare `torch` dependency, so pip resolves the newest
+release — **torch 2.14.0** — and with it the entire CUDA 13 runtime as separate
+wheels. Measured from the build log:
+
+| Component | Size |
+|---|---|
+| `nvidia_cudnn_cu13` | 553.1 MB |
+| `nvidia_cublas` | 423.1 MB |
+| `torch` 2.14.0 | 554.6 MB |
+| `triton` | 247.8 MB |
+| `nvidia_nccl_cu13` | 216.0 MB |
+| `nvidia_cufft` | 214.1 MB |
+| `nvidia_cusolver` | 200.9 MB |
+| `nvidia_cusparselt_cu13` | 170.1 MB |
+| `nvidia_cusparse` | 145.9 MB |
+| `nvidia_cuda_nvrtc` | 90.2 MB |
+| 6 smaller `nvidia_*` + `cuda_bindings` | ~181 MB |
+| `bitsandbytes` | 43.1 MB |
+| **Total** | **~3.04 GB of wheels** |
+
+Unpacked into the venv this is substantially larger again, and the runtime stage
+then `COPY --from=geneformer-builder`s all of it into the final image.
+
+**Why this is waste, not caution.** Nothing in the deployed configuration uses
+it. `docker-compose.yml` reserves no GPU; only the optional
+`docker-compose.gpu.yml` overlay does. The x86_64 CUDA 13 wheels are useless
+on the default CPU path, and Plan 14-01 already had to patch ~15 hardcoded
+`device="cuda"` call sites specifically so Geneformer runs on CPU
+(`docker/geneformer_cuda_fallback.patch`). We are shipping a 3GB GPU stack into
+an image whose Geneformer worker we deliberately taught to avoid the GPU.
+
+**Contrast with the scGPT stage,** which already solves exactly this problem for
+exactly this reason — `Dockerfile:24-40` pre-installs `torch==2.3.0` so the
+resolver never fetches the newer build, and the comment there explains the
+double-download cost in detail. The geneformer stage simply never got the same
+treatment.
+
+**Not fixed here.** Out of 14-03's scope: the plan's Task 2 interface says to
+install from the README's documented commands, and the README's command is the
+unconstrained one. Changing the resolved torch version is a behaviour change to
+the Geneformer worker that deserves its own verification (the CPU-fallback patch
+was authored against whatever torch resolved at the time, and
+`transformers==4.46` is pinned against it downstream).
+
+**Suggested fix when picked up:** mirror the scGPT stage — pre-install a
+CPU-only torch from the PyTorch CPU index before `pip install -e`, e.g.
+`pip install torch --index-url https://download.pytorch.org/whl/cpu`, then
+re-assert it after, and let `docker-compose.gpu.yml` users opt into a CUDA build
+separately. Verify `geneformer_worker/`'s real-run path still passes afterward.
+
+**Direct input to Phase 15 (Jetson).** This is not merely a size problem there,
+it is a correctness one. The Jetson Orin Nano needs NVIDIA's L4T-specific
+aarch64 cp310 wheels built against JetPack 6.2's CUDA 12.6; the generic
+`nvidia_*_cu13` x86_64 wheels resolved here do not exist for that platform and
+would not work if they did. Phase 15 must constrain this install explicitly
+rather than inherit whatever PyPI resolves — see
+`.planning/research/JETSON-ORIN-NANO.md`.
