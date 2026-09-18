@@ -36,6 +36,27 @@ Earlier — v1.1: web UI complete (login, chat, live tool-activity streaming, ci
 
 See [CONCEPT.md](CONCEPT.md) for architecture detail and `.planning/` for the phased build history.
 
+## Docker
+
+CPU-only (always works, no GPU required):
+```bash
+docker compose up
+```
+
+GPU-enabled (adds NVIDIA device passthrough to the same backend service):
+```bash
+docker compose -f docker-compose.yml -f docker-compose.gpu.yml up
+```
+
+Configure `.env` from `.env.example` first (`ANTHROPIC_API_KEY`, `BIOCLAW_WEB_PASSWORD`).
+The backend serves both the API and the built frontend at http://localhost:8000.
+
+Both foundation-model checkpoints and the `cellxgene-census` reference index are
+baked into the image at build time — there is no first-run download step. See
+[docker/README.md](docker/README.md) for what the build automates, why the image
+carries three isolated Python interpreters, and the manual fallback if an
+upstream artifact fetch fails.
+
 ## Web UI (v1.1)
 
 A self-contained local web front end wraps the agent in a chat interface. See
