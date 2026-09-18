@@ -24,15 +24,15 @@ See: .planning/PROJECT.md (updated 2026-09-15)
 
 ## Current Position
 
-Milestone: v1.2 Real Data + Bio FM Integration — Phase 14 ready to execute
-Phase: Phase 13 complete (verified 8/8 must-haves); Phase 14 planned, no plans executed yet
-Plan: Next action is 14-01-PLAN.md (wave 1)
-Status: Phase 13 fully complete — 13-01 (FM-01, real scGPT inference with k-NN vote-fraction confidence), 13-02 (FM-02 foundation: Geneformer dataclasses, Ensembl validator, geneformer_smoke marker, geneformer_worker/ env), 13-03 (real Geneformer four-step pipeline worker + subprocess client), 13-04 (predict_geneformer() composition + predict_perturbation_geneformer_tool registered in agent/server.py, real end-to-end smoke test human-verified at 15.0s latency). Phase 14 has 14-RESEARCH.md, 14-VALIDATION.md, and five plans across four waves: 14-01 health endpoint + env-configurable state paths (wave 1), 14-02 Dockerfile + entrypoint (wave 2), 14-03 FM worker venvs/checkpoints baked into the image and 14-04 compose files + GPU overlay (wave 3, parallel), 14-05 docs (wave 4, autonomous: false — needs human review).
-Last activity: 2026-09-17 — Completed Phase 13 and drafted the full Phase 14 plan set.
+Milestone: v1.2 Real Data + Bio FM Integration — Phase 14 in progress (waves 1-2 done)
+Phase: Phase 14 Docker Compose deployment — 2 of 5 plans complete
+Plan: Next action is 14-03-PLAN.md and 14-04-PLAN.md (wave 3, both depend only on 14-02 and can run in parallel)
+Status: 14-01 complete (unauthenticated GET /api/health, BIOCLAW_MEMORY_DB / BIOCLAW_LOG_PATH env overrides, committed Geneformer CUDA-fallback patch artifact). 14-02 complete (multi-stage Dockerfile → python:3.13-slim at WORKDIR /app, .dockerignore, .env.example, docker/entrypoint.sh). Base image builds and serves: GET /api/health → 200 and GET /app/ → 200 inside the container. Single-worker constraint hard-proven — `docker run ... --workers 8` still yields /proc/1/cmdline ending in `--workers 1`. Remaining: 14-03 bakes the scGPT + Geneformer venvs/checkpoints and the census reference index into the image, 14-04 adds docker-compose.yml + GPU overlay + smoke script, 14-05 docs (autonomous: false, needs human review).
+Last activity: 2026-09-17 — Completed 14-02 interactively (base Docker image + non-overridable single-worker ENTRYPOINT verified live against Docker Engine 29.3.1).
 
 ```
-v1.2 Progress [########--] 75% (3/4 phases)
-Overall     [#########-] 93% (13/14 phases)
+v1.2 Progress [########--] 85% (3.4/4 phases)
+Overall     [#########-] 96% (13.4/14 phases)
 ```
 
 ## Performance Metrics
@@ -94,7 +94,10 @@ Key v1.2 roadmap decisions:
 
 ### Pending Todos
 
-- ~~Execute 14-01-PLAN.md~~ DONE 2026-09-17 (commits 849a7e7/aff4a33/4490085/b843a01; see 14-01-SUMMARY.md). Kickoff automation timed out headless; finished interactively. Next: execute 14-02 (Dockerfile).
+- ~~Execute 14-01-PLAN.md~~ DONE 2026-09-17 (commits 849a7e7/aff4a33/4490085/b843a01; see 14-01-SUMMARY.md). Kickoff automation timed out headless; finished interactively.
+- ~~Execute 14-02-PLAN.md~~ DONE 2026-09-17 (see 14-02-SUMMARY.md). Base image builds and serves; `--workers 1` proven non-overridable. Next: 14-03 + 14-04 (wave 3, parallelizable).
+- Do NOT run GSD plan execution as a headless automation — plan execution has interactive gates and the 14-01 kickoff stalled on one mid-run, leaving a half-finished tree. Run plans interactively.
+- 14-03 will need real network + disk: it fetches the scGPT whole-human checkpoint, clones Geneformer, and builds a census-derived reference index inside the image build. Base image is already 1.61GB before any of that.
 - Full-suite test-isolation bug: 14 failures in `tests/test_vcc_eval.py` / `tests/test_vcc_report.py`, all 25 pass in isolation. Root cause isolated during 13-03 — leaked global thread-count state makes `pdex` size numba's threadpool at 0, so `cell_eval.MetricsEvaluator.__init__` raises `ValueError: The number of threads must be between 1 and 10`. See phase 13 `deferred-items.md`; needs a cleanup plan.
 - VCC real dataset download (Phase 5 Task 3) still pending — non-blocking for v1.2
 
