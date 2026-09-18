@@ -1,0 +1,30 @@
+services:
+  backend:
+    build: .
+    image: bioclaw:latest
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      # `:?` (not bare `${VAR}`) is deliberate and load-bearing. Compose turns an
+      # unset var into an EMPTY STRING, and webapp/backend/auth.py::_valid only
+      # rejects `expected is None` -- with an empty-string password set,
+      # `secrets.compare_digest("", "")` succeeds and `?password=` authenticates.
+      # Since .env.example ships `BIOCLAW_WEB_PASSWORD=` blank, copying it without
+      # filling it in would otherwise start a wide-open instance. `:?` makes
+      # Compose refuse to start when the var is unset OR empty.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:?set ANTHROPIC_API_KEY in .env (copy .env.example)}
+      BIOCLAW_WEB_PASSWORD: ${BIOCLAW_WEB_PASSWORD:?set BIOCLAW_WEB_PASSWORD in .env to a non-empty value (copy .env.example)}
+    volumes:
+      - bioclaw-state:/app/state
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+volumes:
+  bioclaw-state:

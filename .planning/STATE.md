@@ -25,8 +25,8 @@ See: .planning/PROJECT.md (updated 2026-09-15)
 ## Current Position
 
 Milestone: v1.2 Real Data + Bio FM Integration — Phase 14 in progress (waves 1-2 done)
-Phase: Phase 14 Docker Compose deployment — 2 of 5 plans complete
-Plan: Next action is 14-03-PLAN.md and 14-04-PLAN.md (wave 3, both depend only on 14-02 and can run in parallel)
+Phase: Phase 14 Docker Compose deployment — 3 of 5 plans complete
+Plan: Next action is 14-03-PLAN.md (the expensive one: bakes scGPT + Geneformer venvs/checkpoints and the census reference index into the image), then 14-05 docs
 Status: 14-01 complete (unauthenticated GET /api/health, BIOCLAW_MEMORY_DB / BIOCLAW_LOG_PATH env overrides, committed Geneformer CUDA-fallback patch artifact). 14-02 complete (multi-stage Dockerfile → python:3.13-slim at WORKDIR /app, .dockerignore, .env.example, docker/entrypoint.sh). Base image builds and serves: GET /api/health → 200 and GET /app/ → 200 inside the container. Single-worker constraint hard-proven — `docker run ... --workers 8` still yields /proc/1/cmdline ending in `--workers 1`. Remaining: 14-03 bakes the scGPT + Geneformer venvs/checkpoints and the census reference index into the image, 14-04 adds docker-compose.yml + GPU overlay + smoke script, 14-05 docs (autonomous: false, needs human review).
 Last activity: 2026-09-17 — Completed 14-02 interactively (base Docker image + non-overridable single-worker ENTRYPOINT verified live against Docker Engine 29.3.1).
 
@@ -95,7 +95,9 @@ Key v1.2 roadmap decisions:
 ### Pending Todos
 
 - ~~Execute 14-01-PLAN.md~~ DONE 2026-09-17 (commits 849a7e7/aff4a33/4490085/b843a01; see 14-01-SUMMARY.md). Kickoff automation timed out headless; finished interactively.
-- ~~Execute 14-02-PLAN.md~~ DONE 2026-09-17 (see 14-02-SUMMARY.md). Base image builds and serves; `--workers 1` proven non-overridable. Next: 14-03 + 14-04 (wave 3, parallelizable).
+- ~~Execute 14-02-PLAN.md~~ DONE 2026-09-17 (see 14-02-SUMMARY.md). Base image builds and serves; `--workers 1` proven non-overridable.
+- ~~Execute 14-04-PLAN.md~~ DONE 2026-09-18 (see 14-04-SUMMARY.md). Compose stack up/health/down verified, GPU overlay merges onto the same service, state persists across down/up.
+- **SECURITY follow-up (from 14-04):** `webapp/backend/auth.py::_valid()` treats an empty-string `BIOCLAW_WEB_PASSWORD` as valid, so `?password=` authenticates. Mitigated for Docker via `${VAR:?}` in docker-compose.yml, but still live for non-Docker runs. Fix the guard to `if not expected or password is None:` + regression test. See phase 14 `deferred-items.md`.
 - Do NOT run GSD plan execution as a headless automation — plan execution has interactive gates and the 14-01 kickoff stalled on one mid-run, leaving a half-finished tree. Run plans interactively.
 - 14-03 will need real network + disk: it fetches the scGPT whole-human checkpoint, clones Geneformer, and builds a census-derived reference index inside the image build. Base image is already 1.61GB before any of that.
 - Full-suite test-isolation bug: 14 failures in `tests/test_vcc_eval.py` / `tests/test_vcc_report.py`, all 25 pass in isolation. Root cause isolated during 13-03 — leaked global thread-count state makes `pdex` size numba's threadpool at 0, so `cell_eval.MetricsEvaluator.__init__` raises `ValueError: The number of threads must be between 1 and 10`. See phase 13 `deferred-items.md`; needs a cleanup plan.

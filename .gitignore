@@ -13,3 +13,4 @@ agent/memory.sqlite
 tool_calls.jsonl
 agent/memory.sqlite-shm
 agent/memory.sqlite-wal
+.env
