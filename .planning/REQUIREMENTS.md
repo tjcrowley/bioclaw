@@ -15,7 +15,7 @@
 ### Foundation Models
 
 - [x] **FM-01**: Agent calls real scGPT inference (not a stub) for cell-type annotation, returning per-cell-type predictions with a k-NN vote-fraction confidence proxy alongside the existing decoupler statistical baseline
-- [ ] **FM-02**: Agent can invoke Geneformer as a second perturbation-response model, returning a ranked gene list by cosine shift — explicitly distinct from the linear model's expression-vector output
+- [x] **FM-02**: Agent can invoke Geneformer as a second perturbation-response model, returning a ranked gene list by cosine shift — explicitly distinct from the linear model's expression-vector output
 
 ### Session UX
 
@@ -53,7 +53,7 @@
 | DATA-01 | Phase 12 | Complete |
 | DATA-02 | Phase 11 | Complete |
 | FM-01 | Phase 13 | Complete |
-| FM-02 | Phase 13 | Pending — foundation (13-02) and real inference pipeline (13-03) landed, agent tool wiring + human-verify checkpoint lands in 13-04 |
+| FM-02 | Phase 13 | Complete |
 | HIST-01 | Phase 11 | Complete |
 | EXPORT-01 | Phase 11 | Complete |
 | EXPORT-02 | Phase 12 | Complete |

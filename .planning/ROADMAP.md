@@ -28,7 +28,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 10: Packaging & Local Verification** - The webapp ships self-contained, runs via one documented command, and is manually verified end-to-end locally (completed 2026-09-15)
 - [x] **Phase 11: Quick Wins — History, h5ad Upload, CSV Export** - Session history replays in the UI, .h5ad files upload directly, and CSV export works — all independent of FM and network (completed 2026-09-17)
 - [x] **Phase 12: Agent Data Access + Script Export** - The agent fetches real public datasets from cellxgene-census, and researchers can export a reproducible scanpy script from any session (completed 2026-09-17)
-- [ ] **Phase 13: Real FM Inference — scGPT then Geneformer** - Real scGPT inference replaces the subprocess stub, then Geneformer adds a second perturbation model using the validated subprocess pattern
+- [x] **Phase 13: Real FM Inference — scGPT then Geneformer** - Real scGPT inference replaces the subprocess stub, then Geneformer adds a second perturbation model using the validated subprocess pattern (completed 2026-09-18)
 - [ ] **Phase 14: Docker Compose Deployment** - The full stack starts with a single `docker compose up` from a clean checkout, hard-coded to single-worker to preserve the in-memory queue registry
 
 ## Phase Details
@@ -286,5 +286,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 10. Packaging & Local Verification | 2/2 | Complete   | 2026-09-15 |
 | 11. Quick Wins — History Replay, h5ad Upload, CSV Export | 3/4 | Complete    | 2026-09-17 |
 | 12. Agent Data Access + Script Export | 3/3 | Complete    | 2026-09-17 |
-| 13. Real FM Inference — scGPT then Geneformer | 3/4 | In Progress|  |
+| 13. Real FM Inference — scGPT then Geneformer | 3/4 | Complete    | 2026-09-18 |
 | 14. Docker Compose Deployment | 0/TBD | Not started | - |
