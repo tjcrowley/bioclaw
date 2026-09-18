@@ -94,7 +94,7 @@ Key v1.2 roadmap decisions:
 
 ### Pending Todos
 
-- Execute 14-01-PLAN.md (unauthenticated GET /api/health probe + env-configurable SQLite/JSONL state paths) — scheduled to kick off after 22:00 PT on 2026-09-17
+- ~~Execute 14-01-PLAN.md~~ DONE 2026-09-17 (commits 849a7e7/aff4a33/4490085/b843a01; see 14-01-SUMMARY.md). Kickoff automation timed out headless; finished interactively. Next: execute 14-02 (Dockerfile).
 - Full-suite test-isolation bug: 14 failures in `tests/test_vcc_eval.py` / `tests/test_vcc_report.py`, all 25 pass in isolation. Root cause isolated during 13-03 — leaked global thread-count state makes `pdex` size numba's threadpool at 0, so `cell_eval.MetricsEvaluator.__init__` raises `ValueError: The number of threads must be between 1 and 10`. See phase 13 `deferred-items.md`; needs a cleanup plan.
 - VCC real dataset download (Phase 5 Task 3) still pending — non-blocking for v1.2
 
@@ -105,5 +105,5 @@ Key v1.2 roadmap decisions:
 ## Session Continuity
 
 Last session: 2026-09-18T03:50:00.000Z
-Stopped at: Completed Phase 13 (verified 8/8); Phase 14 researched and planned, no Phase 14 plans executed
-Resume file: .planning/phases/14-docker-compose-deployment/14-01-PLAN.md
+Stopped at: Phase 14 Plan 01 executed & committed (health probe + persistence env vars + Geneformer CUDA-fallback patch); fast tier green except the pre-existing 14 VCC isolation failures
+Resume file: .planning/phases/14-docker-compose-deployment/14-02-PLAN.md
