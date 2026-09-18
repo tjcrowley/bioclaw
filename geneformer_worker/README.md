@@ -102,11 +102,69 @@ step is where any *future* re-run's manual fallback (documented in this
 plan's `user_setup`) would be resolved, if the automated pull ever fails on
 a different machine/checkout.
 
-## What comes next
+## Worker script
 
-No worker script exists in this directory yet.
-`geneformer_worker/run_geneformer_perturb.py` (Plan 13-03) is where the real
-match-rate computation against Geneformer's token vocabulary, and the
+`geneformer_worker/run_geneformer_perturb.py` (Plan 13-03) implements the
+real match-rate computation against Geneformer's token vocabulary and the
 four-step pipeline orchestration with its on-disk checkpoints between
-stages, gets implemented — mirroring `bio_fm_worker/run_scgpt_embed.py`'s
-subprocess-worker shape.
+stages, mirroring `bio_fm_worker/run_scgpt_embed.py`'s subprocess-worker
+shape.
+
+## Real-run fixes (Plan 13-04 Task 3, 2026-09-17)
+
+Three real bugs surfaced only by running the actual (unmocked) four-step
+pipeline end to end against this checkpoint -- none were caught by the
+mocked unit tests in Plans 13-02/13-03, since those never execute real
+`geneformer`/`torch` code:
+
+1. **Missing V1 gene dictionaries (LFS pointer stubs).** The original
+   `git lfs pull --include="Geneformer-V1-10M/*"` (see "How it was created"
+   above) only fetched the checkpoint weights -- it missed
+   `geneformer/gene_dictionaries_30m/*.pkl` (token dictionary, gene median,
+   Ensembl mapping, gene name/ID dict), which live outside that path and are
+   required by `TranscriptomeTokenizer` for any V1 run. Those `.pkl` files
+   were still ~131-byte LFS pointer stubs, causing
+   `pickle.UnpicklingError: invalid load key, 'v'` (`'v'` from the pointer
+   file's `"version https://git-lfs..."` text) on first tokenize. Fixed by:
+   `cd geneformer_worker/src && git lfs pull --include="geneformer/gene_dictionaries_30m/*,geneformer/*.pkl"`.
+   If `src/` is ever rebuilt from scratch, add this to the LFS pull step in
+   "How it was created" above -- the original single `--include` was
+   insufficient.
+
+2. **Unconditional `device="cuda"` in the vendored `geneformer` package.**
+   `geneformer/emb_extractor.py`, `geneformer/in_silico_perturber.py`, and
+   `geneformer/perturber_utils.py` (as of upstream commit `1f7fbae`, 2026-09-12)
+   hardcode `device="cuda"` / `.to("cuda")` in ~15 spots with no
+   `torch.cuda.is_available()` fallback -- unlike `bio_fm_worker`'s scGPT,
+   which silently falls back to CPU (13-RESEARCH.md). This is a known,
+   unresolved upstream limitation (a community fork,
+   `petadimensionlab/Geneformer`, exists specifically to add a central
+   CPU/multi-backend device resolver). Patched **in place** in this
+   machine's `geneformer_worker/src/` checkout: every unconditional
+   `device="cuda"` / `.to("cuda")` now resolves
+   `"cuda" if torch.cuda.is_available() else "cpu"`, and every
+   `torch.cuda.empty_cache()` is guarded by the same check. **This patch is
+   NOT tracked by git** (`geneformer_worker/src/` is gitignored by the root
+   `.gitignore` as a separate nested clone) -- if `src/` is ever deleted and
+   re-cloned/re-installed on this or any other CPU-only machine, these same
+   ~15 edits must be reapplied before a real (non-CUDA) run will succeed.
+   Search for `device="cuda"` / `.to("cuda")` / `torch.cuda.empty_cache()` in
+   `emb_extractor.py`, `in_silico_perturber.py`, and `perturber_utils.py` to
+   find every spot.
+
+3. **`InSilicoPerturberStats.get_stats()` returns `None`, not the stats
+   DataFrame.** `run_geneformer_perturb.py`'s `_run_pipeline()` originally
+   assumed `get_stats()`'s return value was the aggregated cosine-shift
+   DataFrame (mirroring how most of Geneformer's other pipeline methods
+   behave) -- verified via `inspect.getsource` that its body ends on
+   `cos_sims_df.to_csv(output_path)` with no `return` statement at all. This
+   produced `'NoneType' object is not subscriptable` in
+   `_build_ranked_genes()`. Fixed (and committed, unlike fixes #1/#2 above)
+   by reading the just-written `<output_directory>/<output_prefix>.csv`
+   back via `pandas.read_csv()` instead of trusting a return value.
+
+Verified end to end after all three fixes: `uv run pytest
+tests/test_geneformer_integration.py -m geneformer_smoke -x -v -s` passes,
+real latency ~14s for a 24-cell/18-gene smoke fixture, non-degenerate
+cosine-shift values (range ~0.86-0.995 across 17 affected genes, target
+gene ACTB).

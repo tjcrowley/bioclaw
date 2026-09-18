@@ -162,12 +162,20 @@ def _run_pipeline(query_path, target_gene, target_ensembl_id, model_dir, work_di
         genes_perturbed=[target_ensembl_id],
         model_version="V1",
     )
-    result_df = stats.get_stats(
+    # InSilicoPerturberStats.get_stats() writes the result DataFrame to
+    # <output_directory>/<output_prefix>.csv as a side effect but does not
+    # return it (verified via inspect.getsource -- its body ends on
+    # `cos_sims_df.to_csv(output_path)` with no `return`) -- read it back
+    # from disk rather than relying on a return value that doesn't exist.
+    stats.get_stats(
         input_data_directory=str(perturb_out_dir),
         null_dist_data_directory=None,
         output_directory=str(stats_out_dir),
         output_prefix="query_stats",
     )
+    import pandas as pd
+
+    result_df = pd.read_csv(stats_out_dir / "query_stats.csv")
     return result_df
 
 
