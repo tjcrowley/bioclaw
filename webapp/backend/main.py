@@ -45,6 +45,15 @@ from webapp.backend.schemas import (
 app = FastAPI(title="bioclaw webapp backend")
 
 
+@app.get("/api/health")
+async def health() -> dict:
+    """Unauthenticated, cheap liveness probe for container orchestration
+    (Docker Compose healthcheck / DOCK-01 Wave 0 gap). No DB or FM calls --
+    deliberately does not use Depends(require_password), since container
+    health probes should not need BIOCLAW_WEB_PASSWORD."""
+    return {"status": "ok"}
+
+
 @app.post("/api/ask", dependencies=[Depends(require_password)])
 async def ask(
     req: AskRequest,

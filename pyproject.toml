@@ -32,4 +32,5 @@ markers = [
     "geneformer_smoke: requires a real pretrained Geneformer checkpoint in the isolated geneformer_worker/ environment, excluded from fast/CI runs",
     "vcc_data: requires the downloaded VCC public dataset, excluded from fast/CI runs",
     "census_data: requires real network access to cellxgene-census S3; excluded from fast/CI runs",
+    "docker_smoke: requires a built Docker image / running Docker daemon, excluded from fast/CI runs",
 ]
