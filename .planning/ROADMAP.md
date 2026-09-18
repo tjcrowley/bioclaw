@@ -30,6 +30,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 12: Agent Data Access + Script Export** - The agent fetches real public datasets from cellxgene-census, and researchers can export a reproducible scanpy script from any session (completed 2026-09-17)
 - [x] **Phase 13: Real FM Inference — scGPT then Geneformer** - Real scGPT inference replaces the subprocess stub, then Geneformer adds a second perturbation model using the validated subprocess pattern (completed 2026-09-18)
 - [ ] **Phase 14: Docker Compose Deployment** - The full stack starts with a single `docker compose up` from a clean checkout, hard-coded to single-worker to preserve the in-memory queue registry
+- [ ] **Phase 15: Jetson arm64 + GPU Port** (ROADMAP ONLY — not planned, not built) - The full stack runs natively on arm64 on a JetPack 6.2 Orin Nano 8GB, with Geneformer on the iGPU and the stack inside the 8GB unified-memory envelope
+- [ ] **Phase 16: Appliance Hardening** (ROADMAP ONLY — not planned, not built) - The Orin Nano behaves as a true benchtop appliance: cold power-on to working stack, network-discoverable over TLS, self-provisioning, power-loss tolerant, updatable headless
 
 ## Phase Details
 
@@ -267,10 +269,64 @@ Plans:
   3. A researcher can perform the complete workflow (upload or census-fetch a dataset, run analysis, call FM inference, download CSV export, export scanpy script) against the compose stack without any locally-installed Python dependencies.
 **Plans**: TBD
 
+---
+
+## Milestone v1.3: Edge Appliance (Phases 15-16)
+
+**Status**: ROADMAP ITEM ONLY — researched 2026-09-18, decisions locked 2026-09-18, deliberately not decomposed into plans and not built. Full evidence and rationale: `.planning/research/JETSON-ORIN-NANO.md`.
+
+**Target platform (locked)**: NVIDIA Jetson Orin Nano 8GB dev kit, **JetPack 6.2** (L4T r36.x, Ubuntu 22.04, Python 3.10, CUDA 12.6). JetPack 6.2 chosen because its system Python 3.10 matches `geneformer_worker/.venv` exactly and NVIDIA's cp310 CUDA torch wheels target it. Container CUDA must match host JetPack — a JetPack upgrade is an image rebuild, not a `docker pull`.
+
+**scGPT strategy (locked)**: shim out `torchtext`, gated on a blocking spike with a pre-declared pass condition and a pre-declared fallback to baseline-only annotation. `torchtext==0.18.0` has no linux-aarch64 wheel, no sdist, and is archived upstream; NVIDIA's Jetson CUDA wheels are cp310/cp312 only, so the worker's Python 3.9 floor and GPU acceleration are mutually exclusive. scGPT touches torchtext in exactly one class (`scgpt/tokenizer/gene_tokenizer.py`), and removing it also removes the reason for the `torch==2.3.0` pin — unblocking cp310 + CUDA. If the spike passes, the shim is upstreamed to the amd64 build in the same phase; two divergent vocab implementations across architectures is a correctness trap.
+
+**Scope boundary**: Edge *tool* execution only. The agent still calls the Anthropic API over the network; the appliance is not offline-capable.
+
+**Split rationale**: Phase 15 is verifiable with a keyboard and monitor attached. Phase 16 is verifiable only with them unplugged. Different goals, different risk.
+
+### Phase 15: Jetson arm64 + GPU Port
+**Goal**: The full BioClaw stack runs natively on arm64 on a JetPack 6.2 Orin Nano 8GB, with Geneformer perturbation accelerated on the integrated GPU, the whole stack inside the 8GB unified-memory budget, and the image built off-device and shipped rather than compiled on the box.
+**Depends on**: Phase 14
+**Requirements**: EDGE-01 (to be written)
+**Key constraints found**:
+  1. `Dockerfile:3-14` pins every stage to `linux/amd64`. QEMU is not a fallback — an emulated x86 container gets no iGPU passthrough, so this must be a native arm64 build. (Inversion: the Apple Silicon dev machine is the *native* arm64 builder.)
+  2. `tiledbsoma` (via `cellxgene-census`) and `cell-eval` aarch64 wheel availability is **unverified** — a potential repeat of the torchtext problem, and the first task of the port plan.
+  3. Geneformer is the low-friction path and sequences first: JP6.2's Python 3.10 matches the worker venv, and the CUDA-fallback patch already landed in 14-01.
+  4. `docker-compose.gpu.yml`'s device-reservation syntax does not work on Jetson; the iGPU needs `runtime: nvidia` and an L4T/CUDA base image instead of `python:3.13-slim`.
+  5. 8GB is shared CPU/GPU. FM subprocess calls must be serialized (no coordination exists today), `forward_batch_size=100` needs a measured Jetson default, and the census reference index must be pre-baked off-device.
+  6. The FM client timeouts (7200s Geneformer, 3600s scGPT) are workstation-sized. On slower hardware they fail *after* burning the full budget; they must be re-derived from measured device wall-clock.
+  7. Expected image size 12-16GB against a microSD-booting dev kit — NVMe is a prerequisite, not an optimization.
+**Draft Success Criteria** (what must be TRUE):
+  1. `docker compose up` on a JetPack 6.2 Orin Nano 8GB, from a clean checkout, starts backend and frontend natively on arm64 (no QEMU) serving `/api/health` 200, with `--workers 1` still non-overridable.
+  2. Geneformer perturbation runs on the Orin GPU — `torch.cuda.is_available()` true inside the container — returning non-empty `ranked_genes` with non-zero cosine shifts within a measured, documented wall-clock budget that the client timeouts respect.
+  3. Cell-type annotation on device is verified equivalent to the amd64 build (identical vocab mapping, embeddings within stated tolerance), or the phase documents that the fallback shipped and annotation runs baseline-only — never a silent behavioural difference.
+  4. The complete researcher workflow (census fetch → analysis → FM inference → CSV export → script export) completes on device with no OOM kill, worst-case resident memory measured and recorded.
+  5. Total on-device disk footprint is documented and fits the storage configuration, with the image built off-device.
+**Plans**: none yet — 6 proposed (spike / arm64 base / Geneformer+CUDA / scGPT / memory envelope / cross-build+ship).
+
+### Phase 16: Appliance Hardening
+**Goal**: The Orin Nano behaves as a true benchtop appliance — cold power-on to a working stack with no monitor, keyboard, or shell access; discoverable by name on the lab network over TLS; self-provisioning on first run; tolerant of power loss; updatable and recoverable headless.
+**Depends on**: Phase 15
+**Requirements**: EDGE-02 (to be written)
+**Key constraints found**:
+  1. **Phases 7-10 scoped the webapp to localhost, no deployment.** An appliance on a LAN is the first time BioClaw is reachable from another machine, and the auth surface is young — the blank-password bypass found in 14-04 was acceptable risk at localhost scope, not unexamined at LAN scope.
+  2. **Provisioning is a chicken-and-egg problem.** `docker-compose.yml`'s `${VAR:?}` guards deliberately refuse to start without an API key and password — on a headless box that is a permanently failed boot with no way to say why. Resolved by a first-run setup mode, with `/api/health` distinguishing unprovisioned from broken.
+  3. A shared password over plain HTTP on a LAN is cleartext credentials on the wire; needs local-CA TLS termination plus login rate limiting, which does not exist today.
+  4. `ANTHROPIC_API_KEY` sits in `.env` on a physically portable box — a stolen appliance is a stolen key. Dedicated per-appliance key with its own spend limit.
+  5. No UPS: SQLite WAL survives power loss reasonably, but the `.h5ad` dataset store is not transactional and a yanked cord mid-ingest can leave a partial dataset.
+  6. Initial install and updates want different mechanisms at 12-16GB — `docker save`/`load` for install, registry pull for updates, plus a rollback path.
+**Draft Success Criteria** (what must be TRUE):
+  1. From cold power-on with no monitor, keyboard, or shell access, an unprovisioned appliance reaches a reachable setup surface, accepts an API key and password, and transitions to a working stack.
+  2. A researcher on the same LAN reaches the appliance by name over TLS, logs in, and completes the full workflow.
+  3. Pulling the power mid-session and restoring it returns the appliance to a working, consistent state with no manual intervention and no corrupted dataset store.
+  4. Sustained FM inference holds the chosen power mode without thermal throttling that breaches the Phase 15 wall-clock budgets.
+  5. An image update and a rollback both complete over the network without a monitor.
+  6. `/api/health` alone is sufficient to distinguish unprovisioned, starting, healthy, and degraded states.
+**Plans**: none yet — 6 proposed (storage / first-run setup / network+TLS / boot+recovery / update+rollback / headless acceptance).
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12 → 13 → 14
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12 → 13 → 14 → (15 → 16, deferred)
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -288,3 +344,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 12. Agent Data Access + Script Export | 3/3 | Complete    | 2026-09-17 |
 | 13. Real FM Inference — scGPT then Geneformer | 3/4 | Complete    | 2026-09-18 |
 | 14. Docker Compose Deployment | 0/TBD | Not started | - |
+| 15. Jetson arm64 + GPU Port | 0/0 | Roadmap item (deferred) | - |
+| 16. Appliance Hardening | 0/0 | Roadmap item (deferred) | - |
