@@ -59,6 +59,31 @@ Phase-by-phase detail, success criteria, and the per-plan build log live in
 Not on the roadmap — no phases, no dates. Recorded because the architecture was
 shaped with them in mind.
 
+**Protein structure & function.** Passed over for the MVP for a different reason
+than genomics below — not that it is hard, but that it is crowded. Chai
+Discovery, EvolutionaryScale, and Xaira are well-funded and already there, and
+structure prediction is the one corner of bio-FM tooling where the ingest
+problem is largely solved: a sequence is a string, and ESM-2 embeddings or an
+AlphaFold/Boltz structure call need no alignment pipeline to get started. The
+technical lift here is the smallest of the three wedges. The positioning
+question is the largest.
+
+So the precondition is not an engineering one. It is having an answer to *why
+this agent rather than the incumbents' own tooling* — most plausibly that the
+value is in composition rather than prediction: a researcher who wants
+"annotate these cells, then pull structures for the top differentially expressed
+surface receptors, then tell me which are druggable" is describing a workflow no
+single-purpose structure tool spans. That is the same interpretive, multi-tool
+loop Phase 6 already proves on single-cell data. It is a real hypothesis, not a
+validated one.
+
+Mechanically it would be the cheapest worker to add — a sequence-in/structure-out
+subprocess needs no new canonical-data contract, so most of Phase 1's machinery
+is simply not required. The statistical-baseline rule still applies: pLDDT and
+PAE are the model's own confidence, not an independent check, so a structure
+call would need something external — a homology hit, a known-fold comparison —
+to satisfy the ANNOT-02 pattern rather than quietly exempting itself from it.
+
 **Genomics / DNA language models.** Deliberately passed over for the MVP (see
 [MVP wedge](#mvp-wedge-single-cell-transcriptomics) above): the blocker was never
 model availability — Evo2, Nucleotide Transformer, and DNABERT-2 are all
@@ -77,10 +102,12 @@ What would have to be true to revisit it:
 - Enough hardware headroom that long-context DNA models are not competing with
   the single-cell stack for the same GPU
 
-The tool-routing, session-memory, citation, and subprocess-isolation layers are
-model-agnostic and would carry over unchanged; the three-interpreter pattern in
-the Dockerfile exists precisely because bio FMs each bring an incompatible
-dependency set, and a DNA-LM would slot in as a fourth worker.
+Common to both: the tool-routing, session-memory, citation, and
+subprocess-isolation layers are model-agnostic and carry over unchanged. The
+three-interpreter pattern in the Dockerfile exists precisely because bio FMs
+each bring a mutually incompatible dependency set, so either of these would
+arrive the same way the existing two did — its own pinned interpreter, its own
+venv, reached over a subprocess boundary the main app never imports across.
 
 ## Docker
 
