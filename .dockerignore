@@ -1,4 +1,10 @@
 .git/
+# Never bake real secrets into an image layer. .env holds ANTHROPIC_API_KEY and
+# BIOCLAW_WEB_PASSWORD; docker-compose injects both at run time via env_file, so
+# the image never needs the file. Deleting it in a later RUN would NOT help --
+# it survives in the underlying COPY layer. .env.example stays: no real values.
+.env
+.env.local
 .venv/
 bio_fm_worker/.venv/
 geneformer_worker/.venv/
