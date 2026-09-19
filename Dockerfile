@@ -218,7 +218,32 @@ print('runtime Geneformer OK:', sys.version.split()[0])" \
  && test -d /app/geneformer_worker/src/Geneformer-V1-10M \
  && test -f /app/bio_fm_worker/reference/reference.h5ad
 
-RUN chmod +x /app/docker/entrypoint.sh
+# Normalize permissions on everything COPY brought in from the build context.
+# COPY preserves the HOST's modes, and a macOS home directory with a
+# restrictive umask yields dirs at 700 and files at 600 -- all owned by root.
+# The non-root user below can then neither traverse /app/agent nor read a
+# single .py file, so the app cannot even import itself. The first symptom is
+# obscure:
+#   /bin/sh: 0: cannot open /app/docker/entrypoint.sh: Permission denied
+# "cannot open", not "not executable" -- a shell script needs READ permission
+# because the kernel hands the file to /bin/sh to open. `chmod +x` alone turns
+# 600 into 711, which still cannot be read, so it does NOT fix this.
+#
+# .venv is pruned deliberately. chmod -R across the three venvs would copy
+# ~15GB of files into a new layer for a metadata change and roughly double the
+# image. Those trees are built in-image with a sane umask and are already
+# world-readable; only context-copied paths are broken.
+#
+# a+rX (capital X) sets the execute bit on directories and on files that are
+# already executable, never on plain data files.
+# The .env guard is not decoration: .dockerignore omitted .env, so COPY baked a
+# real ANTHROPIC_API_KEY into a distributable image layer. Deleting it in a
+# later RUN does not undo that -- the file survives in the underlying COPY
+# layer -- so .dockerignore is the fix and this asserts it stays fixed.
+RUN find /app -name .venv -prune -o -exec chmod a+rX {} + \
+ && chmod 755 /app/docker/entrypoint.sh \
+ && test ! -e /app/.env
+
 ENV BIOCLAW_STORE_ROOT=/app/state/data
 ENV BIOCLAW_MEMORY_DB=/app/state/agent/memory.sqlite
 ENV BIOCLAW_LOG_PATH=/app/state/tool_calls.jsonl
@@ -242,7 +267,30 @@ ENV BIOCLAW_LOG_PATH=/app/state/tool_calls.jsonl
 # change requires `docker compose down -v` once.
 RUN useradd --create-home --uid 1000 --shell /usr/sbin/nologin bioclaw \
  && mkdir -p /app/state/data /app/state/agent \
- && chown -R bioclaw:bioclaw /app/state
+ && chown -R bioclaw:bioclaw /app/state \
+ && mkdir -p /home/bioclaw/.cache/matplotlib \
+ && chown -R bioclaw:bioclaw /home/bioclaw
+
+# Assert the permission fix AS the unprivileged user. Running these as root
+# proves nothing -- root bypasses permission bits entirely, which is exactly
+# why the previous build passed every check and still crash-looped on
+# "cannot open /app/docker/entrypoint.sh". Each path below is one the
+# container actually touches at startup.
+RUN su -s /bin/sh bioclaw -c '\
+      test -r /app/docker/entrypoint.sh \
+   && test -x /app/docker/entrypoint.sh \
+   && test -r /app/agent/session.py \
+   && test -r /app/webapp/backend/main.py \
+   && test -r /app/bio_fm_worker/run_scgpt_embed.py \
+   && test -r /app/geneformer_worker/run_geneformer_perturb.py \
+   && test -x /app/.venv/bin/python \
+   && test -x /app/bio_fm_worker/.venv/bin/python \
+   && test -x /app/geneformer_worker/.venv/bin/python \
+   && test -r /app/bio_fm_worker/reference/reference.h5ad \
+   && test -w /app/state/data \
+   && test -w /app/state/agent \
+   && /app/.venv/bin/python -c "import webapp.backend.main" \
+   && echo "runtime non-root access OK"'
 
 # The CLI writes credentials/config under $HOME; matplotlib (via scanpy) wants
 # a writable cache dir and warns noisily on every import without one.
