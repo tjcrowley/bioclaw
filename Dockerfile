@@ -222,5 +222,33 @@ RUN chmod +x /app/docker/entrypoint.sh
 ENV BIOCLAW_STORE_ROOT=/app/state/data
 ENV BIOCLAW_MEMORY_DB=/app/state/agent/memory.sqlite
 ENV BIOCLAW_LOG_PATH=/app/state/tool_calls.jsonl
+
+# Run as non-root. This is NOT just hardening -- it is load-bearing.
+# agent/session.py's build_options() sets permission_mode="bypassPermissions",
+# which the Claude Code CLI translates to --dangerously-skip-permissions, and
+# that flag is REFUSED outright when euid is 0:
+#   "--dangerously-skip-permissions cannot be used with root/sudo privileges"
+# The CLI then exits 1, the SDK raises ProcessError from
+# ClaudeSDKClient.connect(), and every POST /api/ask returns 500. It never
+# surfaced on a dev host because a developer shell is not root. Dropping the
+# flag is not an alternative: there is no TTY in a container to approve tool
+# calls from, so the agent loop would block forever instead.
+#
+# /app/state is created and chowned HERE, before the VOLUME is ever mounted,
+# because Docker seeds a fresh named volume from the image path's contents and
+# ownership. Skipping this yields a root-owned volume that the non-root process
+# cannot write -- the dataset store, memory DB, and tool-call log all live
+# under it. An ALREADY-EXISTING volume keeps its old root ownership, so this
+# change requires `docker compose down -v` once.
+RUN useradd --create-home --uid 1000 --shell /usr/sbin/nologin bioclaw \
+ && mkdir -p /app/state/data /app/state/agent \
+ && chown -R bioclaw:bioclaw /app/state
+
+# The CLI writes credentials/config under $HOME; matplotlib (via scanpy) wants
+# a writable cache dir and warns noisily on every import without one.
+ENV HOME=/home/bioclaw
+ENV MPLCONFIGDIR=/home/bioclaw/.cache/matplotlib
+
+USER bioclaw
 EXPOSE 8000
 ENTRYPOINT ["/app/docker/entrypoint.sh"]
