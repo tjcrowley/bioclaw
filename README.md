@@ -109,6 +109,66 @@ each bring a mutually incompatible dependency set, so either of these would
 arrive the same way the existing two did — its own pinned interpreter, its own
 venv, reached over a subprocess boundary the main app never imports across.
 
+### Self-extension: BioClaw builds its own tools
+
+The domain wedges above each assume someone hand-writes the pipeline. The
+alternative is that a researcher *describes* the pipeline they need — "add a
+cardiac subtype panel," "add tumor/normal deconvolution" — and BioClaw
+orchestrates a coding model to build it, test it, and open a pull request
+against this repo for human review.
+
+Structurally this is a short reach. BioClaw already runs on the Claude Agent
+SDK, and a new analysis capability is already just a `@tool`-decorated async
+handler in `agent/tools.py` registered in `agent/server.py` — a well-bounded
+contract for generated code to target. The tool-call audit log already records
+every action in a form a PR description can cite.
+
+**Most of the demand does not need code generation at all.** A cardiac or cancer
+pipeline is usually a marker-gene panel, an ontology subset, and a prompt —
+domain knowledge, not new algorithms, composed from Phase 1–2 primitives that
+already exist. So the honest sequencing is three tiers, cheapest first:
+
+| Tier | What a researcher adds | Risk surface |
+|---|---|---|
+| **1. Declarative** | Marker panels, tool specs, prompts — as *data* | None new. No code execution, no repo access |
+| **2. Ephemeral** | Generated analysis code, run once, never merged | Roughly what scanpy-script export already does |
+| **3. Self-extension** | Generated tools, tested, submitted as PRs | Large — a write credential and an agent that writes code |
+
+Tier 1 probably covers the cardiac/cancer case outright, and it is worth
+building first regardless, because it is also the thing Tier 3 would generate.
+
+Tier 3 is the interesting one, and it is a real privilege escalation: today the
+agent calls read-only analysis tools against local data, and this makes it an
+agent that writes code and holds a repository credential. That is a defensible
+thing to build — "propose a change for a human to review" is the same bounded
+pattern coding agents already use — but only with the boundaries stated up
+front, not discovered later:
+
+- **Pull requests only.** Never a push to `main`, never an auto-merge. Human
+  review is not a nicety here; it *is* the safety model, and nothing else in
+  the design substitutes for it.
+- **A credential scoped to a fork or a branch**, never write access to `main`.
+- **CI as a hard gate.** The existing test suite has to run on every generated
+  PR — the Phase 1 raw-counts immutability contract in particular is exactly
+  the invariant a plausible-looking generated tool would quietly break.
+- **The statistical-baseline rule still applies.** A generated tool that
+  reports results without the ANNOT-02 / PERT-02 style comparison is not a
+  valid BioClaw tool, however well it runs.
+- **Build and test in a throwaway container**, not on the host serving the app.
+- **Provenance on every PR** — originating session ID, the prompt that produced
+  it, and a link to the tool-call log entries, so a reviewer can see what was
+  asked and what the agent actually did.
+
+One interaction worth flagging now: this **conflicts with the Phase 16
+appliance threat model**. A benchtop box that can be carried out of a lab
+should not hold a credential that can write to the project repository. On an
+appliance, self-extension should default to off, or the credential should live
+somewhere the appliance can reach but an attacker holding the hardware cannot.
+
+Unscheduled, like everything else in this section — but unlike the domain
+wedges, this one is mostly an access-control and review-workflow design
+problem, not a bioinformatics one.
+
 ## Docker
 
 CPU-only (always works, no GPU required):
