@@ -137,6 +137,18 @@ already exist. So the honest sequencing is three tiers, cheapest first:
 Tier 1 probably covers the cardiac/cancer case outright, and it is worth
 building first regardless, because it is also the thing Tier 3 would generate.
 
+**Tier 1 is scoped** — see [`.planning/MILESTONE-CONTEXT.md`](.planning/MILESTONE-CONTEXT.md).
+The integration seam already exists: `annotation/baseline.py`'s
+`baseline_annotate()` takes an optional caller-supplied marker DataFrame and
+skips its network resource fetch when given one, so a domain panel *is* that
+input. What is missing is everything around it — persistence in the
+`bioclaw-state` volume, a panel format and validator, an agent-facing surface,
+and honest provenance. Scoping it against the real code also surfaced four
+latent defects that only appear once a custom panel is used, including results
+still being labelled "decoupler ORA vs PanglaoDB" when PanglaoDB was never
+fetched, and panels below decoupler's minimum source size vanishing with no
+error. Those are recorded with the scope.
+
 Tier 3 is the interesting one, and it is a real privilege escalation: today the
 agent calls read-only analysis tools against local data, and this makes it an
 agent that writes code and holds a repository credential. That is a defensible

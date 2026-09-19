@@ -323,6 +323,95 @@ Plans:
   6. `/api/health` alone is sufficient to distinguish unprovisioned, starting, healthy, and degraded states.
 **Plans**: none yet — 6 proposed (storage / first-run setup / network+TLS / boot+recovery / update+rollback / headless acceptance).
 
+---
+
+## Candidate milestones (not scheduled, no phase numbers assigned)
+
+Recorded so the planning tree and README.md agree. None of these have
+requirements, phases, or success criteria yet. Assigning a version number is a
+user decision at `/gsd:new-milestone` step 3 — note that **v1.3 is currently
+claimed by Edge Appliance**, and the panels candidate below has a nearer-term
+payoff, so a renumber is likely.
+
+### Candidate: Declarative domain panels (self-extension tier 1)
+
+**Status**: SCOPED, not planned. Full intake: `.planning/MILESTONE-CONTEXT.md`
+(written 2026-09-18, consumed automatically by `/gsd:new-milestone`).
+
+**Origin**: a request for BioClaw to build its own domain pipelines — the stated
+examples were cardiac and cancer — by orchestrating a coding model to clone the
+repo and submit PRs. That full capability is tier 3 (below). This candidate is
+tier 1: the same researcher outcome delivered as **data, not generated code**.
+
+**Why it sequences first**: a cardiac subtype panel or a tumor/normal split is a
+marker-gene set plus a grouping, composing Phase 1-2 primitives that already
+exist. It is also precisely the artifact tier 3 would generate, so it must exist
+either way.
+
+**Grounding — the integration seam already exists**: `annotation/baseline.py`'s
+`baseline_annotate(adata, groupby, markers=None, resource_name="PanglaoDB")`
+already accepts a caller-supplied decoupler-shaped `source`/`target` DataFrame
+and skips the `dc.op.resource()` network fetch entirely when given one. A user
+panel *is* that DataFrame. This candidate is plumbing, not new science.
+
+**Missing around that seam**: persistence under `/app/state` (Phase 14 — only
+the `bioclaw-state` volume survives `docker compose down`); a panel format and
+validator; an agent-facing surface; truthful provenance.
+
+**Latent defects this use case exposes** (all currently invisible because only
+unit tests pass `markers` directly — full detail in MILESTONE-CONTEXT.md):
+  1. `reference_dataset` is built from `resource_name`, which stays
+     `"PanglaoDB"` even when a custom panel was supplied — an ANNOT-03
+     provenance violation.
+  2. `dc.mt.ora` drops sources below `tmin` (default 5), so a 3-gene subtype
+     panel silently produces nothing.
+  3. `n_up` is 10% of `n_vars`, diluting small panels on large datasets.
+  4. Panel genes absent from `var_names` contribute nothing with no diagnostic.
+
+**Open decisions**: whether panels may declare Cell Ontology terms (baseline
+`ontology_term_id` is documented as permanently `None`); what plays the
+statistical-baseline role if a panel becomes a primary annotation path; the
+authoring surface; whether "panel" covers only marker sets.
+
+**Explicitly out of scope**: any code generation, `git` operation, or repository
+credential; new foundation models or worker interpreters.
+
+### Candidate: Self-extension tier 3 — agent-authored pull requests
+
+**Status**: recorded in README.md only, with boundaries written down. Not scoped.
+
+BioClaw orchestrates a coding model to build a new tool, test it, and open a PR
+against this repo. A real privilege escalation from today's read-only analysis
+tools: an agent that writes code and holds a repository credential. Boundaries
+already stated — PRs only with human review as the safety model, fork- or
+branch-scoped credentials never holding write on `main`, CI as a hard gate (the
+Phase 1 raw-counts immutability contract is the invariant a plausible-looking
+generated tool would quietly break), sandboxed builds off-host, and provenance
+on every PR.
+
+**Conflicts with Phase 16.** A portable appliance must not hold a credential
+that can write to the project repository; on an appliance this defaults off, or
+the credential lives off-device.
+
+### Candidate: Protein structure & function
+
+**Status**: recorded in README.md only. Not scoped.
+
+Deferred on competitive positioning rather than difficulty — the ingest problem
+is largely solved for sequences. Precondition is a composition hypothesis (value
+in spanning multi-tool workflows, not in prediction), not an engineering one.
+Note that pLDDT/PAE are model self-confidence and would **not** satisfy the
+ANNOT-02 baseline rule; an independent check would be required.
+
+### Candidate: Genomics / DNA language models
+
+**Status**: recorded in README.md only. Not scoped.
+
+Blocker is a second ingest pipeline for raw FASTQ (alignment + variant calling),
+not model availability. Preconditions: a canonical-artifact ingest layer
+mirroring Phase 1, a statistical baseline matching ANNOT-02 / PERT-02, and GPU
+headroom so long-context DNA models do not compete with the single-cell stack.
+
 ## Progress
 
 **Execution Order:**
@@ -343,6 +432,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 11. Quick Wins — History Replay, h5ad Upload, CSV Export | 3/4 | Complete    | 2026-09-17 |
 | 12. Agent Data Access + Script Export | 3/3 | Complete    | 2026-09-17 |
 | 13. Real FM Inference — scGPT then Geneformer | 3/4 | Complete    | 2026-09-18 |
-| 14. Docker Compose Deployment | 0/TBD | Not started | - |
+| 14. Docker Compose Deployment | 4/5 | In progress — 14-05 at blocking human-verify gate | - |
 | 15. Jetson arm64 + GPU Port | 0/0 | Roadmap item (deferred) | - |
 | 16. Appliance Hardening | 0/0 | Roadmap item (deferred) | - |
