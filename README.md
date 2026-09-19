@@ -30,11 +30,57 @@ v1.2 — **real foundation-model inference is live.** Both models run for real a
 
 Also in v1.2: chat history replay, `.h5ad` upload, CSV + scanpy-script export, and `cellxgene-census` dataset fetch.
 
-Remaining for v1.2: Phase 14, a single-service Docker Compose deployment.
+Remaining for v1.2: Phase 14, a single-service Docker Compose deployment. The image
+builds and the stack comes up — final end-to-end verification is still pending.
 
 Earlier — v1.1: web UI complete (login, chat, live tool-activity streaming, citation resolution, session sidebar, dataset upload).
 
 See [CONCEPT.md](CONCEPT.md) for architecture detail and `.planning/` for the phased build history.
+
+## Roadmap
+
+Built bottom-up in dependency order: the deterministic, agent-independent pieces
+first (so there is trustworthy data to reason about), then the agentic loop on
+cheap tools, then the foundation models — each shipped with a statistical
+baseline so no FM output is ever presented as ground truth on its own.
+
+| Milestone | Phases | What it delivers | Status |
+|---|---|---|---|
+| **v1.0** | 1–6 | Ingest + QC → analysis tools → agent loop → scGPT annotation → perturbation + VCC benchmark → natural-language Q&A capstone | Shipped |
+| **v1.1** | 7–10 | Local web UI: password-gated FastAPI backend, WebSocket tool-activity streaming, chat frontend, session sidebar, upload | Shipped |
+| **v1.2** | 11–14 | Real data and real inference: history replay, `.h5ad` upload, CSV + scanpy-script export, cellxgene-census fetch, live scGPT + Geneformer, Docker Compose | Phases 11–13 shipped; 14 in progress |
+| **v1.3** | 15–16 | Edge appliance: native arm64 + iGPU on a Jetson Orin Nano 8GB, then appliance hardening (headless provisioning, LAN TLS, power-loss tolerance, headless updates) | Roadmap only — not planned, not built |
+
+Phase-by-phase detail, success criteria, and the per-plan build log live in
+[`.planning/ROADMAP.md`](.planning/ROADMAP.md).
+
+### Future capabilities (unscheduled)
+
+Not on the roadmap — no phases, no dates. Recorded because the architecture was
+shaped with them in mind.
+
+**Genomics / DNA language models.** Deliberately passed over for the MVP (see
+[MVP wedge](#mvp-wedge-single-cell-transcriptomics) above): the blocker was never
+model availability — Evo2, Nucleotide Transformer, and DNABERT-2 are all
+self-hostable — it was that raw FASTQ needs alignment and variant-calling before
+a model ever sees a token. That is a second ingest pipeline with its own
+reference genomes, its own compute profile, and its own correctness burden,
+which is a poor thing to take on before the agentic loop has earned trust.
+
+What would have to be true to revisit it:
+
+- A genomics ingest layer producing a canonical, versioned artifact the way
+  Phase 1 does for `.h5ad` — the agent's contract is with canonical data, not
+  with file formats, so this is the real work
+- A statistical baseline for whatever the DNA-LM claims, matching the
+  ANNOT-02 / PERT-02 pattern where every FM call ships with a comparison
+- Enough hardware headroom that long-context DNA models are not competing with
+  the single-cell stack for the same GPU
+
+The tool-routing, session-memory, citation, and subprocess-isolation layers are
+model-agnostic and would carry over unchanged; the three-interpreter pattern in
+the Dockerfile exists precisely because bio FMs each bring an incompatible
+dependency set, and a DNA-LM would slot in as a fourth worker.
 
 ## Docker
 
