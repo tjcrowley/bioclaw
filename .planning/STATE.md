@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Real Data + Bio FM Integration
-status: completed
-stopped_at: Completed Phase 13; Phase 14 researched and planned, not executed
-last_updated: "2026-09-18T03:50:00.000Z"
-last_activity: 2026-09-17 — Completed Phase 13 (13-04-PLAN.md wired predict_perturbation_geneformer_tool into the agent server with a real end-to-end smoke test); 13-VERIFICATION.md passed 8/8; Phase 14 research + validation strategy + plans 14-01..14-05 drafted
+status: in_progress
+stopped_at: Phase 14 executed in full; 14-VERIFICATION.md is PARTIAL (7/8) — one blocking gap: FM inference never invoked against the Compose stack
+last_updated: "2026-10-13T00:00:00.000Z"
+last_activity: 2026-10-13 — Phase 14 close-out. Wrote the missing 14-05-SUMMARY.md and 14-VERIFICATION.md retroactively, pushed the three unpushed docker fixes (9d9f92e..6ec5ff6), verified both export endpoints live against the running container (which surfaced an EXPORT-02 defect), and re-confirmed all three interpreters inside the long-running container.
 progress:
   total_phases: 14
   completed_phases: 13
-  total_plans: 53
-  completed_plans: 53
+  total_plans: 54
+  completed_plans: 54
 ---
 
 # Project State
@@ -20,20 +20,36 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-15)
 
 **Core value:** A Biopunk Labs researcher can ask a plain-language question about a single-cell dataset and get back a QC'd, annotated, interpreted answer without writing a scanpy script by hand.
-**Current focus:** v1.2 — Real Data + Bio FM Integration (phases 11-14); Phases 11-13 complete, Phase 14 planned and ready to execute.
+**Current focus:** v1.2 — Real Data + Bio FM Integration (phases 11-14); Phases 11-13 complete, Phase 14 all 5 plans executed but verification is PARTIAL with one blocking gap.
 
 ## Current Position
 
-Milestone: v1.2 Real Data + Bio FM Integration — Phase 14 in progress (waves 1-2 done)
-Phase: Phase 14 Docker Compose deployment — 4 of 5 plans complete
-Plan: Next action is 14-05-PLAN.md (docs — `autonomous: false`, needs human review: real Compose smoke test against the full image, then docker/README.md + top-level README Docker section, ending in human sign-off)
-Status: 14-01 complete (unauthenticated GET /api/health, BIOCLAW_MEMORY_DB / BIOCLAW_LOG_PATH env overrides, committed Geneformer CUDA-fallback patch artifact). 14-02 complete (multi-stage Dockerfile → python:3.13-slim at WORKDIR /app, .dockerignore, .env.example, docker/entrypoint.sh). 14-04 complete (docker-compose.yml + GPU overlay + smoke script). 14-03 complete 2026-09-18 (commit 3db0821) — `bioclaw:latest` (15.6GB) builds green and all three interpreters verified in FRESH CONTAINERS, not just build-time RUN steps: main 3.13.15, scGPT 3.9.25 (torch 2.3.0+cu121 / torchtext 0.18.0+cpu / scgpt 0.2.4), Geneformer 3.10.21. Both checkpoints + census reference index confirmed at the exact paths the subprocess shims hardcode; best_model.pt is 205MB of real weights (Google Drive Pitfall 2 did not bite); all four gene_dictionaries_30m pickles present; CUDA-fallback patch applied. Remaining: 14-05 docs (autonomous: false, needs human review).
-Last activity: 2026-09-18 — Completed 14-03 after three build cycles under x86_64 emulation. Interpreter relocation (`cp -a /usr/local /opt/pyXX`) confirmed load-bearing: the previously-shipped image had a scGPT venv resolving to Python 3.13 with site-packages in lib/python3.9, so `import torch` raised ModuleNotFoundError despite a green build — runtime-stage assertions now catch this class after the COPY. Two undocumented dependency gaps fixed: `build-essential` (geneformer → tdigest → accumulation-tree is a Cython sdist, no compiler in python:3.10-slim) and `ipython==8.18.1` (undeclared upstream dep of scgpt 0.2.4).
+Milestone: v1.2 Real Data + Bio FM Integration — Phase 14 executed, verification partial
+Phase: Phase 14 Docker Compose deployment — **5 of 5 plans complete**, `14-VERIFICATION.md` status `partial` (7/8 truths)
+Plan: No plan pending. **Next action is the one open gap:** invoke `annotate_cell_type` (scGPT) and/or `predict_perturbation` (Geneformer) through the agent against the running Compose container and record latency + output. That is all DOCK-01 criterion 3 still needs.
+Status: 14-01 complete (unauthenticated GET /api/health, BIOCLAW_MEMORY_DB / BIOCLAW_LOG_PATH env overrides, committed Geneformer CUDA-fallback patch artifact). 14-02 complete (multi-stage Dockerfile → python:3.13-slim at WORKDIR /app, .dockerignore, .env.example, docker/entrypoint.sh). 14-03 complete (all three interpreters verified in fresh containers; best_model.pt 205MB of real weights; CUDA-fallback patch applied). 14-04 complete (docker-compose.yml + GPU overlay + smoke script). **14-05 complete 2026-09-19** — docs committed (63d0bf7), then the first real end-to-end run exposed three startup defects fixed in a78bd1d / 461d1c5 / 6ec5ff6 (non-root user, .env baked into image, /app unreadable). The resulting image has been **up and healthy for 3 weeks** (149,791 clean healthchecks).
+Last activity: 2026-10-13 — Phase 14 close-out, performed retroactively because 14-05 left no summary and STATE was frozen at "next action is 14-05". Pushed the three orphaned docker fixes. Wrote 14-05-SUMMARY.md and 14-VERIFICATION.md from live container evidence. Closed the CSV-export and script-export legs of the 14-05 human checkpoint by exercising both endpoints against the running container — which surfaced a genuine EXPORT-02 defect (`sc.read_h5ad("")`). Re-confirmed all three interpreters importable inside the long-running container. FM inference against the stack remains the single unverified leg.
 
 ```
-v1.2 Progress [########--] 85% (3.4/4 phases)
-Overall     [#########-] 96% (13.4/14 phases)
+v1.2 Progress [#########-] 94% (3.75/4 phases)
+Overall     [#########-] 98% (13.75/14 phases)
 ```
+
+## Phase 14 open gap (blocks marking v1.2 complete)
+
+`14-VERIFICATION.md` is `status: partial`, 7/8 truths. DOCK-01 criteria 1 and 2 are
+fully satisfied with live evidence. Criterion 3 is 5 of 6 legs verified — upload,
+analysis (incl. real DE), session history, CSV export, and script export all
+confirmed against the container. **FM inference was never invoked against the
+Compose stack.** `tool_calls.jsonl` shows `ToolSearch` loaded `annotate_cell_type`
+and `predict_perturbation` on 2026-09-19 but neither was called.
+
+The capability is proven baked in (scGPT py3.9.25/torch 2.3.0+cu121 and Geneformer
+py3.10.21/torch 2.14.0+cu130 both import cleanly in the running container;
+checkpoint and reference index present at the hardcoded paths) — but importable is
+not the same as an inference completing through the agent path. Expect it to be
+slow: the image is amd64 under emulation on this arm64 host, against native
+baselines of 11.2s (scGPT) and 15.0s (Geneformer).
 
 ## Performance Metrics
 
@@ -98,6 +114,10 @@ Key v1.2 roadmap decisions:
 - ~~Execute 14-02-PLAN.md~~ DONE 2026-09-17 (see 14-02-SUMMARY.md). Base image builds and serves; `--workers 1` proven non-overridable.
 - ~~Execute 14-04-PLAN.md~~ DONE 2026-09-18 (see 14-04-SUMMARY.md). Compose stack up/health/down verified, GPU overlay merges onto the same service, state persists across down/up.
 - ~~**SECURITY follow-up (from 14-04):** blank `BIOCLAW_WEB_PASSWORD` authenticated anyone sending an empty `session` cookie~~ FIXED 2026-09-18. `_valid()` now guards `if not expected or not password:`; `tests/test_auth_blank_password.py` (15 tests) covers both HTTP and WebSocket entry points. Note the vector first reported in 14-04-SUMMARY/commit 9920b5a (`?password=`) was wrong — that path collapses to `None` and was already rejected; the real one was `Cookie: session=`. See phase 14 `deferred-items.md`.
+- ~~Execute 14-05-PLAN.md~~ DONE 2026-09-19 (see 14-05-SUMMARY.md, written retroactively 2026-10-13). Docs landed 2026-09-18; the real run on 2026-09-19 exposed and fixed three startup defects. The blocking human checkpoint was started but never signed off — FM inference leg still open.
+- **OPEN (closes Phase 14): run FM inference against the Compose container.** Invoke `annotate_cell_type` and/or `predict_perturbation` through the agent at `http://localhost:8000`, record latency + output, then flip `14-VERIFICATION.md` to `passed` 8/8 and tick Phase 14 in ROADMAP.md.
+- **OPEN (EXPORT-02 defect, found 2026-10-13):** exported scanpy script emits `adata = sc.read_h5ad("")` for uploaded datasets at every version — `export_script.py:91-92` degrades a `None` `source_path` to `""`, and the registry only records `source_path` on v1 (as a since-deleted temp path). Census datasets unaffected, which is why tests missed it. Three candidate fixes in phase 14 `deferred-items.md`; needs a regression test for the uploaded-dataset path.
+- **OPEN (docs):** `docker/README.md` predates the non-root fixes and omits runtime file ownership — the most likely thing to break a rebuild. See phase 14 `deferred-items.md`.
 - Do NOT run GSD plan execution as a headless automation — plan execution has interactive gates and the 14-01 kickoff stalled on one mid-run, leaving a half-finished tree. Run plans interactively.
 - 14-03 will need real network + disk: it fetches the scGPT whole-human checkpoint, clones Geneformer, and builds a census-derived reference index inside the image build. Base image is already 1.61GB before any of that.
 - Full-suite test-isolation bug: 14 failures in `tests/test_vcc_eval.py` / `tests/test_vcc_report.py`, all 25 pass in isolation. Root cause isolated during 13-03 — leaked global thread-count state makes `pdex` size numba's threadpool at 0, so `cell_eval.MetricsEvaluator.__init__` raises `ValueError: The number of threads must be between 1 and 10`. See phase 13 `deferred-items.md`; needs a cleanup plan.
@@ -110,6 +130,11 @@ Key v1.2 roadmap decisions:
 
 ## Session Continuity
 
-Last session: 2026-09-18T03:50:00.000Z
-Stopped at: Phase 14 Plan 01 executed & committed (health probe + persistence env vars + Geneformer CUDA-fallback patch); fast tier green except the pre-existing 14 VCC isolation failures
-Resume file: .planning/phases/14-docker-compose-deployment/14-02-PLAN.md
+Last session: 2026-10-13
+Stopped at: Phase 14 close-out complete — all 5 plans executed, 14-05-SUMMARY.md and 14-VERIFICATION.md written, three orphaned docker fixes pushed (origin/main at 6ec5ff6). Verification is `partial` 7/8; the only open leg is FM inference against the Compose stack.
+Resume file: .planning/phases/14-docker-compose-deployment/14-VERIFICATION.md (see "To close")
+
+Note on the 3-week gap: no work occurred between 2026-09-19 and 2026-10-13. The
+container kept running throughout, so the live evidence this close-out relies on
+is continuous with the 14-05 execution session rather than reconstructed from a
+rebuild.

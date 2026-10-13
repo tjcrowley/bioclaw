@@ -29,7 +29,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 11: Quick Wins — History, h5ad Upload, CSV Export** - Session history replays in the UI, .h5ad files upload directly, and CSV export works — all independent of FM and network (completed 2026-09-17)
 - [x] **Phase 12: Agent Data Access + Script Export** - The agent fetches real public datasets from cellxgene-census, and researchers can export a reproducible scanpy script from any session (completed 2026-09-17)
 - [x] **Phase 13: Real FM Inference — scGPT then Geneformer** - Real scGPT inference replaces the subprocess stub, then Geneformer adds a second perturbation model using the validated subprocess pattern (completed 2026-09-18)
-- [ ] **Phase 14: Docker Compose Deployment** - The full stack starts with a single `docker compose up` from a clean checkout, hard-coded to single-worker to preserve the in-memory queue registry
+- [~] **Phase 14: Docker Compose Deployment** - The full stack starts with a single `docker compose up` from a clean checkout, hard-coded to single-worker to preserve the in-memory queue registry — **all 5 plans executed; `14-VERIFICATION.md` is `partial` (7/8). DOCK-01 criteria 1-2 pass; criterion 3 needs one thing: FM inference invoked against the Compose stack.**
 - [ ] **Phase 15: Jetson arm64 + GPU Port** (ROADMAP ONLY — not planned, not built) - The full stack runs natively on arm64 on a JetPack 6.2 Orin Nano 8GB, with Geneformer on the iGPU and the stack inside the 8GB unified-memory envelope
 - [ ] **Phase 16: Appliance Hardening** (ROADMAP ONLY — not planned, not built) - The Orin Nano behaves as a true benchtop appliance: cold power-on to working stack, network-discoverable over TLS, self-provisioning, power-loss tolerant, updatable headless
 
@@ -267,7 +267,13 @@ Plans:
   1. Running `docker compose up` from a clean checkout of the repo, with only environment variables configured, starts a working backend, frontend, and optional GPU worker — no manual setup steps required beyond env vars.
   2. The compose configuration hard-codes `--workers 1` for the backend service; multi-worker is explicitly blocked since the in-memory queue registry does not survive across workers.
   3. A researcher can perform the complete workflow (upload or census-fetch a dataset, run analysis, call FM inference, download CSV export, export scanpy script) against the compose stack without any locally-installed Python dependencies.
-**Plans**: TBD
+
+**Status**: executed 2026-09-17 → 2026-09-19; verified `partial` 2026-10-13 (`14-VERIFICATION.md`, 7/8 truths).
+  - Criterion 1 — SATISFIED. Image built 2026-09-19, container up and healthy 3 weeks, 149,791 clean healthchecks. Caveat: the build came from the working repo (with `.dockerignore` isolating host artifacts), not the fresh-`git clone` scratch directory 14-VALIDATION.md's sampling rate specified.
+  - Criterion 2 — SATISFIED. `--workers 1` lives in the image ENTRYPOINT (`docker/entrypoint.sh:8`), not in Compose; resolved `docker compose config` has no `command:`/`entrypoint:` to override it. Single `backend` service in both base and GPU-merged configs.
+  - Criterion 3 — PARTIAL. Upload, analysis (incl. real DE), session history, CSV export, and script export confirmed against the container. **FM inference never invoked** — the one remaining item.
+
+**Plans**: 14-01 (health probe + persistence env vars + CUDA-fallback patch), 14-02 (multi-stage Dockerfile + entrypoint), 14-03 (scGPT / reference-index / Geneformer builder stages), 14-04 (compose stack + GPU override + smoke test), 14-05 (real run + docs + human checkpoint) — all complete.
 
 ---
 
